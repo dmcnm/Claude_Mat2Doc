@@ -1,0 +1,14 @@
+Mat2Doc — MATLAB port of python-docx
+=====================================
+
+This toolbox is a functional port of python-docx to MATLAB.
+
+Upstream:
+  Project:  python-docx
+  Author:   Steve Canny
+  URL:      https://github.com/python-openxml/python-docx
+  Version:  1.2.0 (tag v1.2.0, commit e45454602b53e8e572b179ccf1c91093ec9f4ed7)
+  License:  MIT
+
+The default document template (templates/default.docx) and ported code
+structure, API, and behavior derive from python-docx.

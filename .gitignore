@@ -1,0 +1,19 @@
+# MATLAB
+*.asv
+*.autosave
+*.mex*
+slprj/
+codegen/
+
+# Office temp/lock files
+~$*.pptx
+~$*.docx
+*.tmp
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Scratch outputs
+scratch/
