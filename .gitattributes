@@ -1,0 +1,11 @@
+*.pptx binary
+*.docx binary
+*.xlsx binary
+*.emf binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.bmp binary
+*.tiff binary
+*.m text
+*.md text
