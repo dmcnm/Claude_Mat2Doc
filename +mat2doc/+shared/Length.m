@@ -166,7 +166,8 @@ classdef Length < double
             if abs(x - r) == 0.5
                 r = 2 * round(x / 2);
             end
-            n = r;
+            n = r + 0;   % normalize IEEE -0.0 -> 0 (Python int() never yields -0;
+                         % the -1..-317 EMU band rounds to -0.0 without this)
         end
     end
 end
