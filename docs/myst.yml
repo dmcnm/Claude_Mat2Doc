@@ -1,0 +1,25 @@
+version: 1
+project:
+  id: mat2doc-manual
+  title: Mat2Doc
+  description: >-
+    Mat2Doc API reference — an exact functional MATLAB (R2024b, base-only)
+    replica of python-docx v1.2.0 for creating and manipulating Word
+    .docx files.
+  keywords:
+    - MATLAB
+    - Word
+    - docx
+    - python-docx
+    - OOXML
+  toc:
+    - file: index.md
+    - title: Foundation & utilities
+      children:
+        - file: api/shared.md
+    - title: Python ↔ MATLAB mapping
+      children:
+        - file: python_matlab_mapping.md
+site:
+  template: book-theme
+  title: Mat2Doc manual

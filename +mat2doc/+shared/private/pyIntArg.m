@@ -14,9 +14,11 @@ function d = pyIntArg(value, strMode)
 %       logical scalar   -> 0/1 (Python bool is an int subclass:
 %                           int(True) == 1, int(False) == 0)
 %       char row/string  -> strMode "parse" (Length, Emu -- upstream applies
-%                           int() directly to the raw argument; LIVE path is
-%                           the docx oxml simpletypes ST_ length lexer which
-%                           returns Emu(str_value)):
+%                           int() directly to the raw argument. Faithful to
+%                           Python int(str) but DEAD in docx: every simpletypes
+%                           ST_ length caller pre-int()s the raw XML string
+%                           (Emu(int(str_value)) etc., simpletypes.py:204/350/
+%                           366/402/424) before construction):
 %                           base-10 int-literal PARSE per int(str) --
 %                           optional surrounding whitespace, optional single
 %                           +/- sign, digits with single underscores strictly

@@ -1,0 +1,623 @@
+{
+ "schema": "mso-p1_1-probe/1",
+ "wp": "P1-1",
+ "count": 88,
+ "records": [
+  {
+   "id": "len_const/inch",
+   "group": "len_const",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "len_const/cm",
+   "group": "len_const",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4115f90000000000"
+  },
+  {
+   "id": "len_const/mm",
+   "group": "len_const",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "40e1940000000000"
+  },
+  {
+   "id": "len_const/pt",
+   "group": "len_const",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "40c8ce0000000000"
+  },
+  {
+   "id": "len_const/twip",
+   "group": "len_const",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4083d80000000000"
+  },
+  {
+   "id": "ctor/inches_1",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/inches_half",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "411be7c000000000"
+  },
+  {
+   "id": "ctor/inches_neg_half",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "c11be7c000000000"
+  },
+  {
+   "id": "ctor/cm_254",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/mm_254",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/mm_2405",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4160838a00000000"
+  },
+  {
+   "id": "ctor/pt_72",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/pt_half",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "40b8ce0000000000"
+  },
+  {
+   "id": "ctor/pt_neg_half",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "c0b8ce0000000000"
+  },
+  {
+   "id": "ctor/twips_1440",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/twips_09",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4081d80000000000"
+  },
+  {
+   "id": "ctor/emu_914400",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/emu_25",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4000000000000000"
+  },
+  {
+   "id": "ctor/emu_neg_25",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "c000000000000000"
+  },
+  {
+   "id": "ctor/length_neg_half_emu",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "ctor/emu_str",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "ctor/emu_str_ws_sign_us",
+   "group": "ctor",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "conv/914400_emu",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "conv/914400_inches",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "3ff0000000000000"
+  },
+  {
+   "id": "conv/914400_cm",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "400451eb851eb852"
+  },
+  {
+   "id": "conv/914400_mm",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4039666666666666"
+  },
+  {
+   "id": "conv/914400_pt",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4052000000000000"
+  },
+  {
+   "id": "conv/914400_twips",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4096800000000000"
+  },
+  {
+   "id": "conv/1000000_emu",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412e848000000000"
+  },
+  {
+   "id": "conv/1000000_inches",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "3ff17f70a86d4c60"
+  },
+  {
+   "id": "conv/1000000_cm",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "400638e38e38e38e"
+  },
+  {
+   "id": "conv/1000000_mm",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "403bc71c71c71c72"
+  },
+  {
+   "id": "conv/1000000_pt",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4053af5ebd7af5ec"
+  },
+  {
+   "id": "conv/1000000_twips",
+   "group": "conv",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "40989c0000000000"
+  },
+  {
+   "id": "twips_edge/e_317",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "twips_edge/e_318",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "3ff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_neg_318",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "bff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_635",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "3ff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_neg_635",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "bff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_952",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "3ff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_953",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4000000000000000"
+  },
+  {
+   "id": "twips_edge/e_neg_952",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "bff0000000000000"
+  },
+  {
+   "id": "twips_edge/e_neg_953",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "c000000000000000"
+  },
+  {
+   "id": "twips_edge/e_634999682",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412e847e00000000"
+  },
+  {
+   "id": "twips_edge/e_634999683",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "412e848000000000"
+  },
+  {
+   "id": "twips_edge/e_6349996825",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "416312cf60000000"
+  },
+  {
+   "id": "twips_edge/e_6350003175",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "416312d0a0000000"
+  },
+  {
+   "id": "twips_edge/e_20002",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "403f000000000000"
+  },
+  {
+   "id": "twips_edge/e_20003",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "4040000000000000"
+  },
+  {
+   "id": "twips_edge/e_neg_20003",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "c040000000000000"
+  },
+  {
+   "id": "twips_edge/band_neg_1",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "twips_edge/band_neg_317",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "twips_edge/band_pos_1",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "twips_edge/band_pos_317",
+   "group": "twips_edge",
+   "kind": "num",
+   "policy": "value_exact",
+   "canon": "0000000000000000"
+  },
+  {
+   "id": "rgb/str_ff0000",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "FF0000"
+  },
+  {
+   "id": "rgb/str_3c2f80",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "3C2F80"
+  },
+  {
+   "id": "rgb/str_000000",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "000000"
+  },
+  {
+   "id": "rgb/str_ffffff",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "FFFFFF"
+  },
+  {
+   "id": "rgb/repr_3c2f80",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "RGBColor(0x3c, 0x2f, 0x80)"
+  },
+  {
+   "id": "rgb/repr_ff0000",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "RGBColor(0xff, 0x00, 0x00)"
+  },
+  {
+   "id": "rgb/from_string_ff0000",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "FF0000"
+  },
+  {
+   "id": "rgb/from_string_lower",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "3C2F80"
+  },
+  {
+   "id": "rgb/from_string_repr",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "RGBColor(0x3c, 0x2f, 0x80)"
+  },
+  {
+   "id": "rgb/from_string_5char",
+   "group": "rgb",
+   "kind": "str",
+   "policy": "value_exact",
+   "canon": "3C2F08"
+  },
+  {
+   "id": "rgb/eq_true",
+   "group": "rgb",
+   "kind": "bool",
+   "policy": "value_exact",
+   "canon": "true"
+  },
+  {
+   "id": "rgb/eq_false",
+   "group": "rgb",
+   "kind": "bool",
+   "policy": "value_exact",
+   "canon": "false"
+  },
+  {
+   "id": "rgb/ne_true",
+   "group": "rgb",
+   "kind": "bool",
+   "policy": "value_exact",
+   "canon": "true"
+  },
+  {
+   "id": "err/rgb_high",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/rgb_low_neg",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/rgb_g_range",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/rgb_b_range",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/rgb_nonint_float",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "TypeError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/rgb_nonint_str",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "TypeError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/emu_parse_25",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|invalid literal for int() with base 10: '2.5'"
+  },
+  {
+   "id": "err/emu_parse_empty",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|invalid literal for int() with base 10: ''"
+  },
+  {
+   "id": "err/from_string_badhex",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|invalid literal for int() with base 16: 'GG'"
+  },
+  {
+   "id": "err/from_string_4char",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|invalid literal for int() with base 16: ''"
+  },
+  {
+   "id": "err/from_string_7char",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_msg_exact",
+   "canon": "ValueError|RGBColor() takes three integer values 0-255"
+  },
+  {
+   "id": "err/inches_str",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_only_d003",
+   "canon": "ValueError"
+  },
+  {
+   "id": "err/pt_str",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_only_d003",
+   "canon": "ValueError"
+  },
+  {
+   "id": "err/cm_str",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_only_d003",
+   "canon": "ValueError"
+  },
+  {
+   "id": "err/mm_str",
+   "group": "err",
+   "kind": "err",
+   "policy": "err_class_only_d003",
+   "canon": "ValueError"
+  },
+  {
+   "id": "dev/dstype1_rgb_float",
+   "group": "dev",
+   "kind": "str",
+   "policy": "dstype1_adopted",
+   "canon": "FF0000"
+  },
+  {
+   "id": "dev/dstype1_emu_float",
+   "group": "dev",
+   "kind": "num",
+   "policy": "dstype1_adopted",
+   "canon": "412be7c000000000"
+  },
+  {
+   "id": "dev/d004_emu_nan",
+   "group": "dev",
+   "kind": "raises",
+   "policy": "d004_raises",
+   "canon": "RAISES"
+  },
+  {
+   "id": "dev/d004_emu_inf",
+   "group": "dev",
+   "kind": "raises",
+   "policy": "d004_raises",
+   "canon": "RAISES"
+  },
+  {
+   "id": "dev/d002_twips_str_1",
+   "group": "dev",
+   "kind": "raises",
+   "policy": "d002_str_multiplier",
+   "canon": "RAISES"
+  },
+  {
+   "id": "dev/d002_twips_str_123456",
+   "group": "dev",
+   "kind": "raises",
+   "policy": "d002_str_multiplier",
+   "canon": "RAISES"
+  }
+ ]
+}

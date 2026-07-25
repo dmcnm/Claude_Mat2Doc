@@ -23,9 +23,12 @@ classdef Length < double
 %   Construction domain (Python int() applied to the raw argument): numeric
 %   is truncated toward zero (int() -> fix()); logical maps to 0/1 (Python
 %   int(True) == 1); a base-10 integer string/char is PARSED like int(str)
-%   ('2.5' errors, it is never truncated). The live string path is the docx
-%   oxml simpletypes ST_ length lexer, which constructs Emu(str_value) from
-%   a raw XML attribute string on essentially every opened document.
+%   ('2.5' errors, it is never truncated). The string-parse mode is faithful
+%   to Python int(str) but is DEAD in docx: every docx oxml simpletypes ST_
+%   length site applies int()/round() to the raw XML string BEFORE
+%   construction (e.g. Emu(int(str_value)), Twips(int(round(float(str_value)))),
+%   simpletypes.py:204/350/366/402/424), so no docx path hands a raw string to
+%   a Length constructor. Keeping the parse mode strengthens D-002.
 %
 %   Divergences from the Python original are all on DEAD paths (unreachable
 %   through any ported call site, API-invisible); adopted rulings carried
@@ -96,9 +99,10 @@ classdef Length < double
             %              non-finite raises (Python ValueError/
             %              OverflowError; identifier differs - D-004)
             %   string  -> base-10 int-literal PARSE, never truncation
-            %              ('2.5' raises mat2doc:ValueError). LIVE path:
-            %              the docx oxml simpletypes ST_ length lexer
-            %              constructs Emu(str_value) from a raw XML string.
+            %              ('2.5' raises mat2doc:ValueError). Faithful to
+            %              Python int(str) but DEAD in docx: all simpletypes
+            %              callers pre-int() the raw XML string before
+            %              construction (simpletypes.py:204/350/366/402/424).
             %   logical -> 0/1 (Python int(True) == 1)
             % Domain conversion via the shared package-private pyIntArg.
             emu = pyIntArg(emu, "parse");
