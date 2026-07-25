@@ -356,9 +356,11 @@ classdef XmlParser < handle
                     if ~mixed
                         kids(k).setTailRaw_([]);
                     end
-                else
-                    mixed = true;
                 end
+                % FIX-1 (Gate-2, Fable): a non-ws TAIL must NOT set mixed --
+                % libxml2 drops ws-only text/tail unless the element's own TEXT
+                % is non-blank; tails protect nothing (a09d/a09e). The removed
+                % `else; mixed=true;` leaked an extra blank byte vs lxml.
             end
         end
 
