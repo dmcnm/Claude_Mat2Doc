@@ -17,3 +17,6 @@ Desktop.ini
 
 # Scratch outputs
 scratch/
+
+# MyST docs build output
+docs/_build/
