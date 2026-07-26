@@ -1,0 +1,188 @@
+{
+  "sparts": [
+    {
+      "partname": "/docProps/core.xml",
+      "content_type": "application/vnd.openxmlformats-package.core-properties+xml",
+      "reltype": "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties",
+      "size": 753,
+      "sha256": "10bfd20ea5d9c8ab0236a2f4e49f99cdb207aac6711e4780cf7a390b322a1d40"
+    },
+    {
+      "partname": "/docProps/app.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.extended-properties+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties",
+      "size": 1132,
+      "sha256": "be664981c3141cddfc59362beb287ebf20d0773660e2dd6faac5968a5930a081"
+    },
+    {
+      "partname": "/word/document.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "size": 1594,
+      "sha256": "f5154b3c5dae749abb0e381e10ea02e19e137650065c4b1f11b059c6d75340bf"
+    },
+    {
+      "partname": "/word/styles.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+      "size": 438677,
+      "sha256": "09e350b95e121e7b63841485a6adacf2facd496c189297b2dba634bbb2898a88"
+    },
+    {
+      "partname": "/word/stylesWithEffects.xml",
+      "content_type": "application/vnd.ms-word.stylesWithEffects+xml",
+      "reltype": "http://schemas.microsoft.com/office/2007/relationships/stylesWithEffects",
+      "size": 438131,
+      "sha256": "463ae0928cf0d84775dbf8cf18d6c3029f6707c81bf590f6d6dd8757a5e93f15"
+    },
+    {
+      "partname": "/word/settings.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings",
+      "size": 2749,
+      "sha256": "31522d2d3c366aec5714c921ce556b4838ca7faa33fa795a66dc32575c710b27"
+    },
+    {
+      "partname": "/word/webSettings.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings",
+      "size": 438,
+      "sha256": "349d36de7434d09f86987ff671d8814964a0588c1e630c06e562cda7e75e9f95"
+    },
+    {
+      "partname": "/word/fontTable.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable",
+      "size": 2811,
+      "sha256": "79385fb7f60247507ecaffc292e9ebd52ea0657b8634f629ba6fccc54011d6bb"
+    },
+    {
+      "partname": "/word/theme/theme1.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.theme+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      "size": 10939,
+      "sha256": "e3a8ab7db9ca7afca56f5f2820a56e8b660016c647773555b060b0a02ac76941"
+    },
+    {
+      "partname": "/customXml/item1.xml",
+      "content_type": "application/xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+      "size": 262,
+      "sha256": "a86086ffc5d8e83ebd6c71a55d1d2efaa31b137977f5f3a752366e1023612144"
+    },
+    {
+      "partname": "/customXml/itemProps1.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps",
+      "size": 354,
+      "sha256": "c542307b13ec29a8b546217bb37936ab4822e044b265d2952985ec3d6afed24e"
+    },
+    {
+      "partname": "/word/numbering.xml",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering",
+      "size": 6747,
+      "sha256": "ca605d64e9ba232fd8ff401d700669f7b5c4351865b1c16b91fd5a4aac9be249"
+    },
+    {
+      "partname": "/docProps/thumbnail.jpeg",
+      "content_type": "image/jpeg",
+      "reltype": "http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail",
+      "size": 8324,
+      "sha256": "96367138dc44ce09bf2c8f0f8e49348a1478d2c5c0af69bbc2bbc38b63cdcead"
+    }
+  ],
+  "srels": [
+    {
+      "source_uri": "/",
+      "rId": "rId3",
+      "reltype": "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties",
+      "target": "/docProps/core.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/",
+      "rId": "rId4",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties",
+      "target": "/docProps/app.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/",
+      "rId": "rId1",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "target": "/word/document.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/",
+      "rId": "rId2",
+      "reltype": "http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail",
+      "target": "/docProps/thumbnail.jpeg",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId3",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+      "target": "/word/styles.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId4",
+      "reltype": "http://schemas.microsoft.com/office/2007/relationships/stylesWithEffects",
+      "target": "/word/stylesWithEffects.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId5",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings",
+      "target": "/word/settings.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId6",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/webSettings",
+      "target": "/word/webSettings.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId7",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable",
+      "target": "/word/fontTable.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId8",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      "target": "/word/theme/theme1.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId1",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+      "target": "/customXml/item1.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/word/document.xml",
+      "rId": "rId2",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering",
+      "target": "/word/numbering.xml",
+      "is_external": false
+    },
+    {
+      "source_uri": "/customXml/item1.xml",
+      "rId": "rId1",
+      "reltype": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps",
+      "target": "/customXml/itemProps1.xml",
+      "is_external": false
+    }
+  ]
+}

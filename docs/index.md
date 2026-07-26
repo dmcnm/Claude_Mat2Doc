@@ -40,7 +40,10 @@ syntax, description, example, ported-from).
   and the **packaging tier** above it — the `PackURI` partname algebra, the
   `phys_pkg` physical zip reader/writer factories (with the reproducible
   `1980-01-01` zip writer), and the `Relationships` collection that regenerates
-  each `.rels` part in insertion order.
+  each `.rels` part in insertion order; and the **package assembly tier** on top
+  — `PackageReader` (the serialized read path) and `PackageWriter` (whose
+  zip-entry traversal is the byte-critical M1 order), with the serialized
+  part/relationship value objects and the reader/writer content-type maps.
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 
