@@ -1,0 +1,982 @@
+{
+  "aliases": {
+    "wav_bottom_eq_canonical": true,
+    "wav_bottom_name": "BOTTOM",
+    "wav_from_both": "BOTH",
+    "wav_from_top": "TOP",
+    "wav_to_bottom": "bottom",
+    "wis_chart_value": 12,
+    "wis_not_implemented_value": -6,
+    "wis_picture_eq_canonical": true,
+    "wis_picture_name": "PICTURE",
+    "wrh_atleast_eq_canonical": true,
+    "wrh_atleast_name": "AT_LEAST",
+    "wrh_from_auto": "AUTO",
+    "wrh_to_exactly": "exact",
+    "ws_body_text_eq_canonical": true,
+    "ws_body_text_name": "BODY_TEXT",
+    "ws_body_text_value": -67,
+    "ws_count": 132,
+    "ws_heading_1_eq_canonical": true,
+    "ws_normal_value": -1,
+    "ws_toc_9_name": "TOC_9"
+  },
+  "baseenum": {
+    "wbs_body_text_int": -67,
+    "wbs_body_text_str": "BODY_TEXT (-67)",
+    "wbs_book_title_int": -265,
+    "wbs_book_title_str": "BOOK_TITLE (-265)",
+    "wbs_count": 132,
+    "wbs_heading_1_int": -2,
+    "wbs_heading_9_int": -10,
+    "wbs_index_heading_int": -34,
+    "wbs_index_heading_str": "INDEX_HEADING (-34)",
+    "wbs_normal_int": -1,
+    "wbs_normal_str": "NORMAL (-1)",
+    "wbs_toc_9_int": -28,
+    "wtd_count": 2,
+    "wtd_ltr_int": 0,
+    "wtd_ltr_str": "LTR (0)",
+    "wtd_rtl_int": 1,
+    "wtd_rtl_str": "RTL (1)"
+  },
+  "members": {
+    "WD_BUILTIN_STYLE": [
+      {
+        "doclen": 11,
+        "name": "BLOCK_QUOTATION",
+        "value": -85
+      },
+      {
+        "doclen": 10,
+        "name": "BODY_TEXT",
+        "value": -67
+      },
+      {
+        "doclen": 12,
+        "name": "BODY_TEXT_2",
+        "value": -81
+      },
+      {
+        "doclen": 12,
+        "name": "BODY_TEXT_3",
+        "value": -82
+      },
+      {
+        "doclen": 23,
+        "name": "BODY_TEXT_FIRST_INDENT",
+        "value": -78
+      },
+      {
+        "doclen": 25,
+        "name": "BODY_TEXT_FIRST_INDENT_2",
+        "value": -79
+      },
+      {
+        "doclen": 17,
+        "name": "BODY_TEXT_INDENT",
+        "value": -68
+      },
+      {
+        "doclen": 19,
+        "name": "BODY_TEXT_INDENT_2",
+        "value": -83
+      },
+      {
+        "doclen": 19,
+        "name": "BODY_TEXT_INDENT_3",
+        "value": -84
+      },
+      {
+        "doclen": 11,
+        "name": "BOOK_TITLE",
+        "value": -265
+      },
+      {
+        "doclen": 8,
+        "name": "CAPTION",
+        "value": -35
+      },
+      {
+        "doclen": 8,
+        "name": "CLOSING",
+        "value": -64
+      },
+      {
+        "doclen": 18,
+        "name": "COMMENT_REFERENCE",
+        "value": -40
+      },
+      {
+        "doclen": 13,
+        "name": "COMMENT_TEXT",
+        "value": -31
+      },
+      {
+        "doclen": 5,
+        "name": "DATE",
+        "value": -77
+      },
+      {
+        "doclen": 23,
+        "name": "DEFAULT_PARAGRAPH_FONT",
+        "value": -66
+      },
+      {
+        "doclen": 9,
+        "name": "EMPHASIS",
+        "value": -89
+      },
+      {
+        "doclen": 18,
+        "name": "ENDNOTE_REFERENCE",
+        "value": -43
+      },
+      {
+        "doclen": 13,
+        "name": "ENDNOTE_TEXT",
+        "value": -44
+      },
+      {
+        "doclen": 17,
+        "name": "ENVELOPE_ADDRESS",
+        "value": -37
+      },
+      {
+        "doclen": 16,
+        "name": "ENVELOPE_RETURN",
+        "value": -38
+      },
+      {
+        "doclen": 7,
+        "name": "FOOTER",
+        "value": -33
+      },
+      {
+        "doclen": 19,
+        "name": "FOOTNOTE_REFERENCE",
+        "value": -39
+      },
+      {
+        "doclen": 14,
+        "name": "FOOTNOTE_TEXT",
+        "value": -30
+      },
+      {
+        "doclen": 7,
+        "name": "HEADER",
+        "value": -32
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_1",
+        "value": -2
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_2",
+        "value": -3
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_3",
+        "value": -4
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_4",
+        "value": -5
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_5",
+        "value": -6
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_6",
+        "value": -7
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_7",
+        "value": -8
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_8",
+        "value": -9
+      },
+      {
+        "doclen": 10,
+        "name": "HEADING_9",
+        "value": -10
+      },
+      {
+        "doclen": 13,
+        "name": "HTML_ACRONYM",
+        "value": -96
+      },
+      {
+        "doclen": 13,
+        "name": "HTML_ADDRESS",
+        "value": -97
+      },
+      {
+        "doclen": 10,
+        "name": "HTML_CITE",
+        "value": -98
+      },
+      {
+        "doclen": 10,
+        "name": "HTML_CODE",
+        "value": -99
+      },
+      {
+        "doclen": 16,
+        "name": "HTML_DFN",
+        "value": -100
+      },
+      {
+        "doclen": 14,
+        "name": "HTML_KBD",
+        "value": -101
+      },
+      {
+        "doclen": 13,
+        "name": "HTML_NORMAL",
+        "value": -95
+      },
+      {
+        "doclen": 18,
+        "name": "HTML_PRE",
+        "value": -102
+      },
+      {
+        "doclen": 12,
+        "name": "HTML_SAMP",
+        "value": -103
+      },
+      {
+        "doclen": 16,
+        "name": "HTML_TT",
+        "value": -104
+      },
+      {
+        "doclen": 14,
+        "name": "HTML_VAR",
+        "value": -105
+      },
+      {
+        "doclen": 10,
+        "name": "HYPERLINK",
+        "value": -86
+      },
+      {
+        "doclen": 19,
+        "name": "HYPERLINK_FOLLOWED",
+        "value": -87
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_1",
+        "value": -11
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_2",
+        "value": -12
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_3",
+        "value": -13
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_4",
+        "value": -14
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_5",
+        "value": -15
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_6",
+        "value": -16
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_7",
+        "value": -17
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_8",
+        "value": -18
+      },
+      {
+        "doclen": 8,
+        "name": "INDEX_9",
+        "value": -19
+      },
+      {
+        "doclen": 13,
+        "name": "INDEX_HEADING",
+        "value": -34
+      },
+      {
+        "doclen": 17,
+        "name": "INTENSE_EMPHASIS",
+        "value": -262
+      },
+      {
+        "doclen": 14,
+        "name": "INTENSE_QUOTE",
+        "value": -182
+      },
+      {
+        "doclen": 18,
+        "name": "INTENSE_REFERENCE",
+        "value": -264
+      },
+      {
+        "doclen": 12,
+        "name": "LINE_NUMBER",
+        "value": -41
+      },
+      {
+        "doclen": 5,
+        "name": "LIST",
+        "value": -48
+      },
+      {
+        "doclen": 7,
+        "name": "LIST_2",
+        "value": -51
+      },
+      {
+        "doclen": 7,
+        "name": "LIST_3",
+        "value": -52
+      },
+      {
+        "doclen": 7,
+        "name": "LIST_4",
+        "value": -53
+      },
+      {
+        "doclen": 7,
+        "name": "LIST_5",
+        "value": -54
+      },
+      {
+        "doclen": 12,
+        "name": "LIST_BULLET",
+        "value": -49
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_BULLET_2",
+        "value": -55
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_BULLET_3",
+        "value": -56
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_BULLET_4",
+        "value": -57
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_BULLET_5",
+        "value": -58
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_CONTINUE",
+        "value": -69
+      },
+      {
+        "doclen": 16,
+        "name": "LIST_CONTINUE_2",
+        "value": -70
+      },
+      {
+        "doclen": 16,
+        "name": "LIST_CONTINUE_3",
+        "value": -71
+      },
+      {
+        "doclen": 16,
+        "name": "LIST_CONTINUE_4",
+        "value": -72
+      },
+      {
+        "doclen": 16,
+        "name": "LIST_CONTINUE_5",
+        "value": -73
+      },
+      {
+        "doclen": 12,
+        "name": "LIST_NUMBER",
+        "value": -50
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_NUMBER_2",
+        "value": -59
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_NUMBER_3",
+        "value": -60
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_NUMBER_4",
+        "value": -61
+      },
+      {
+        "doclen": 14,
+        "name": "LIST_NUMBER_5",
+        "value": -62
+      },
+      {
+        "doclen": 15,
+        "name": "LIST_PARAGRAPH",
+        "value": -180
+      },
+      {
+        "doclen": 11,
+        "name": "MACRO_TEXT",
+        "value": -46
+      },
+      {
+        "doclen": 15,
+        "name": "MESSAGE_HEADER",
+        "value": -74
+      },
+      {
+        "doclen": 13,
+        "name": "NAV_PANE",
+        "value": -90
+      },
+      {
+        "doclen": 7,
+        "name": "NORMAL",
+        "value": -1
+      },
+      {
+        "doclen": 14,
+        "name": "NORMAL_INDENT",
+        "value": -29
+      },
+      {
+        "doclen": 30,
+        "name": "NORMAL_OBJECT",
+        "value": -158
+      },
+      {
+        "doclen": 32,
+        "name": "NORMAL_TABLE",
+        "value": -106
+      },
+      {
+        "doclen": 13,
+        "name": "NOTE_HEADING",
+        "value": -80
+      },
+      {
+        "doclen": 12,
+        "name": "PAGE_NUMBER",
+        "value": -42
+      },
+      {
+        "doclen": 11,
+        "name": "PLAIN_TEXT",
+        "value": -91
+      },
+      {
+        "doclen": 6,
+        "name": "QUOTE",
+        "value": -181
+      },
+      {
+        "doclen": 11,
+        "name": "SALUTATION",
+        "value": -76
+      },
+      {
+        "doclen": 10,
+        "name": "SIGNATURE",
+        "value": -65
+      },
+      {
+        "doclen": 7,
+        "name": "STRONG",
+        "value": -88
+      },
+      {
+        "doclen": 9,
+        "name": "SUBTITLE",
+        "value": -75
+      },
+      {
+        "doclen": 16,
+        "name": "SUBTLE_EMPHASIS",
+        "value": -261
+      },
+      {
+        "doclen": 17,
+        "name": "SUBTLE_REFERENCE",
+        "value": -263
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_COLORFUL_GRID",
+        "value": -172
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_COLORFUL_LIST",
+        "value": -171
+      },
+      {
+        "doclen": 17,
+        "name": "TABLE_COLORFUL_SHADING",
+        "value": -170
+      },
+      {
+        "doclen": 10,
+        "name": "TABLE_DARK_LIST",
+        "value": -169
+      },
+      {
+        "doclen": 11,
+        "name": "TABLE_LIGHT_GRID",
+        "value": -161
+      },
+      {
+        "doclen": 20,
+        "name": "TABLE_LIGHT_GRID_ACCENT_1",
+        "value": -175
+      },
+      {
+        "doclen": 11,
+        "name": "TABLE_LIGHT_LIST",
+        "value": -160
+      },
+      {
+        "doclen": 20,
+        "name": "TABLE_LIGHT_LIST_ACCENT_1",
+        "value": -174
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_LIGHT_SHADING",
+        "value": -159
+      },
+      {
+        "doclen": 23,
+        "name": "TABLE_LIGHT_SHADING_ACCENT_1",
+        "value": -173
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_MEDIUM_GRID_1",
+        "value": -166
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_MEDIUM_GRID_2",
+        "value": -167
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_MEDIUM_GRID_3",
+        "value": -168
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_MEDIUM_LIST_1",
+        "value": -164
+      },
+      {
+        "doclen": 23,
+        "name": "TABLE_MEDIUM_LIST_1_ACCENT_1",
+        "value": -178
+      },
+      {
+        "doclen": 14,
+        "name": "TABLE_MEDIUM_LIST_2",
+        "value": -165
+      },
+      {
+        "doclen": 17,
+        "name": "TABLE_MEDIUM_SHADING_1",
+        "value": -162
+      },
+      {
+        "doclen": 26,
+        "name": "TABLE_MEDIUM_SHADING_1_ACCENT_1",
+        "value": -176
+      },
+      {
+        "doclen": 17,
+        "name": "TABLE_MEDIUM_SHADING_2",
+        "value": -163
+      },
+      {
+        "doclen": 26,
+        "name": "TABLE_MEDIUM_SHADING_2_ACCENT_1",
+        "value": -177
+      },
+      {
+        "doclen": 21,
+        "name": "TABLE_OF_AUTHORITIES",
+        "value": -45
+      },
+      {
+        "doclen": 17,
+        "name": "TABLE_OF_FIGURES",
+        "value": -36
+      },
+      {
+        "doclen": 6,
+        "name": "TITLE",
+        "value": -63
+      },
+      {
+        "doclen": 12,
+        "name": "TOAHEADING",
+        "value": -47
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_1",
+        "value": -20
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_2",
+        "value": -21
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_3",
+        "value": -22
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_4",
+        "value": -23
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_5",
+        "value": -24
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_6",
+        "value": -25
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_7",
+        "value": -26
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_8",
+        "value": -27
+      },
+      {
+        "doclen": 6,
+        "name": "TOC_9",
+        "value": -28
+      }
+    ],
+    "WD_CELL_VERTICAL_ALIGNMENT": [
+      {
+        "doclen": 46,
+        "name": "TOP",
+        "value": 0,
+        "xml": "top"
+      },
+      {
+        "doclen": 42,
+        "name": "CENTER",
+        "value": 1,
+        "xml": "center"
+      },
+      {
+        "doclen": 49,
+        "name": "BOTTOM",
+        "value": 3,
+        "xml": "bottom"
+      },
+      {
+        "doclen": 238,
+        "name": "BOTH",
+        "value": 101,
+        "xml": "both"
+      }
+    ],
+    "WD_INLINE_SHAPE_TYPE": [
+      {
+        "name": "CHART",
+        "value": 12
+      },
+      {
+        "name": "LINKED_PICTURE",
+        "value": 4
+      },
+      {
+        "name": "PICTURE",
+        "value": 3
+      },
+      {
+        "name": "SMART_ART",
+        "value": 15
+      },
+      {
+        "name": "NOT_IMPLEMENTED",
+        "value": -6
+      }
+    ],
+    "WD_ROW_HEIGHT_RULE": [
+      {
+        "doclen": 71,
+        "name": "AUTO",
+        "value": 0,
+        "xml": "auto"
+      },
+      {
+        "doclen": 53,
+        "name": "AT_LEAST",
+        "value": 1,
+        "xml": "atLeast"
+      },
+      {
+        "doclen": 33,
+        "name": "EXACTLY",
+        "value": 2,
+        "xml": "exact"
+      }
+    ],
+    "WD_STYLE_TYPE": [
+      {
+        "doclen": 16,
+        "name": "CHARACTER",
+        "value": 2,
+        "xml": "character"
+      },
+      {
+        "doclen": 11,
+        "name": "LIST",
+        "value": 4,
+        "xml": "numbering"
+      },
+      {
+        "doclen": 16,
+        "name": "PARAGRAPH",
+        "value": 1,
+        "xml": "paragraph"
+      },
+      {
+        "doclen": 12,
+        "name": "TABLE",
+        "value": 3,
+        "xml": "table"
+      }
+    ],
+    "WD_TABLE_ALIGNMENT": [
+      {
+        "doclen": 12,
+        "name": "LEFT",
+        "value": 0,
+        "xml": "left"
+      },
+      {
+        "doclen": 15,
+        "name": "CENTER",
+        "value": 1,
+        "xml": "center"
+      },
+      {
+        "doclen": 14,
+        "name": "RIGHT",
+        "value": 2,
+        "xml": "right"
+      }
+    ],
+    "WD_TABLE_DIRECTION": [
+      {
+        "doclen": 76,
+        "name": "LTR",
+        "value": 0
+      },
+      {
+        "doclen": 77,
+        "name": "RTL",
+        "value": 1
+      }
+    ]
+  },
+  "roundtrip": {
+    "WD_CELL_VERTICAL_ALIGNMENT": [
+      {
+        "from_xml": "TOP",
+        "name": "TOP",
+        "to_xml_int": "top",
+        "to_xml_member": "top",
+        "xml": "top"
+      },
+      {
+        "from_xml": "CENTER",
+        "name": "CENTER",
+        "to_xml_int": "center",
+        "to_xml_member": "center",
+        "xml": "center"
+      },
+      {
+        "from_xml": "BOTTOM",
+        "name": "BOTTOM",
+        "to_xml_int": "bottom",
+        "to_xml_member": "bottom",
+        "xml": "bottom"
+      },
+      {
+        "from_xml": "BOTH",
+        "name": "BOTH",
+        "to_xml_int": "both",
+        "to_xml_member": "both",
+        "xml": "both"
+      }
+    ],
+    "WD_ROW_HEIGHT_RULE": [
+      {
+        "from_xml": "AUTO",
+        "name": "AUTO",
+        "to_xml_int": "auto",
+        "to_xml_member": "auto",
+        "xml": "auto"
+      },
+      {
+        "from_xml": "AT_LEAST",
+        "name": "AT_LEAST",
+        "to_xml_int": "atLeast",
+        "to_xml_member": "atLeast",
+        "xml": "atLeast"
+      },
+      {
+        "from_xml": "EXACTLY",
+        "name": "EXACTLY",
+        "to_xml_int": "exact",
+        "to_xml_member": "exact",
+        "xml": "exact"
+      }
+    ],
+    "WD_STYLE_TYPE": [
+      {
+        "from_xml": "CHARACTER",
+        "name": "CHARACTER",
+        "to_xml_int": "character",
+        "to_xml_member": "character",
+        "xml": "character"
+      },
+      {
+        "from_xml": "LIST",
+        "name": "LIST",
+        "to_xml_int": "numbering",
+        "to_xml_member": "numbering",
+        "xml": "numbering"
+      },
+      {
+        "from_xml": "PARAGRAPH",
+        "name": "PARAGRAPH",
+        "to_xml_int": "paragraph",
+        "to_xml_member": "paragraph",
+        "xml": "paragraph"
+      },
+      {
+        "from_xml": "TABLE",
+        "name": "TABLE",
+        "to_xml_int": "table",
+        "to_xml_member": "table",
+        "xml": "table"
+      }
+    ],
+    "WD_TABLE_ALIGNMENT": [
+      {
+        "from_xml": "LEFT",
+        "name": "LEFT",
+        "to_xml_int": "left",
+        "to_xml_member": "left",
+        "xml": "left"
+      },
+      {
+        "from_xml": "CENTER",
+        "name": "CENTER",
+        "to_xml_int": "center",
+        "to_xml_member": "center",
+        "xml": "center"
+      },
+      {
+        "from_xml": "RIGHT",
+        "name": "RIGHT",
+        "to_xml_int": "right",
+        "to_xml_member": "right",
+        "xml": "right"
+      }
+    ],
+    "err_wcva_from_bogus": {
+      "id": "mat2doc:ValueError",
+      "msg": "WD_CELL_VERTICAL_ALIGNMENT has no XML mapping for 'bogus'"
+    },
+    "err_wcva_to_99": {
+      "id": "mat2doc:ValueError",
+      "msg": "99 is not a valid WD_CELL_VERTICAL_ALIGNMENT"
+    },
+    "err_wrhr_from_bogus": {
+      "id": "mat2doc:ValueError",
+      "msg": "WD_ROW_HEIGHT_RULE has no XML mapping for 'bogus'"
+    },
+    "err_wrhr_to_99": {
+      "id": "mat2doc:ValueError",
+      "msg": "99 is not a valid WD_ROW_HEIGHT_RULE"
+    },
+    "err_wst_from_bogus": {
+      "id": "mat2doc:ValueError",
+      "msg": "WD_STYLE_TYPE has no XML mapping for 'bogus'"
+    },
+    "err_wst_to_99": {
+      "id": "mat2doc:ValueError",
+      "msg": "99 is not a valid WD_STYLE_TYPE"
+    },
+    "err_wta_from_bogus": {
+      "id": "mat2doc:ValueError",
+      "msg": "WD_TABLE_ALIGNMENT has no XML mapping for 'bogus'"
+    },
+    "err_wta_to_99": {
+      "id": "mat2doc:ValueError",
+      "msg": "99 is not a valid WD_TABLE_ALIGNMENT"
+    }
+  },
+  "shape": {
+    "chart_value": 12,
+    "linked_picture_value": 4,
+    "member_count": 5,
+    "not_implemented_value": -6,
+    "picture_name": "PICTURE",
+    "picture_value": 3,
+    "smart_art_value": 15
+  }
+}
