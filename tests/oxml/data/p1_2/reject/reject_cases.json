@@ -1,0 +1,23 @@
+[
+  {
+    "case": "d006_doctype",
+    "input": "<!DOCTYPE w:document><w:p xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "note": "D-006: port rejects DOCTYPE (mat2doc:XMLSyntaxError); lxml accepts/ignores",
+    "lxml": "ACCEPT",
+    "lxml_serialize": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:p xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>"
+  },
+  {
+    "case": "d002_hex_zz",
+    "input": "<w:t xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">&#xZZ;</w:t>",
+    "note": "D-002: ASCII hex-digit grammar; both reject",
+    "lxml": "REJECT",
+    "lxml_error": "CharRef: invalid hexadecimal value, line 1, column 80 (<string>, line 1)"
+  },
+  {
+    "case": "d002_dec_1a",
+    "input": "<w:t xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">&#1a;</w:t>",
+    "note": "D-002: ASCII dec-digit grammar; both reject",
+    "lxml": "REJECT",
+    "lxml_error": "CharRef: invalid decimal value, line 1, column 80 (<string>, line 1)"
+  }
+]
