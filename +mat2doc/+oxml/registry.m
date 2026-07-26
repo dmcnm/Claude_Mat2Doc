@@ -78,8 +78,11 @@ map = dictionary(string.empty(0, 1), string.empty(0, 1));
 %
 %   map = registerElementCls_(map, "w:document", "mat2doc.oxml.CT_Document");
 %
-% EMPTY at P1-2 (see file header). The H10 dispatch-matrix probe (row count vs
-% Python, target 120) applies once CT_* rows start landing.
+% The H10 dispatch-matrix probe (row count vs Python, target 120) applies as
+% CT_* rows land. FIRST row added by P1-7 (coreprops): cp:coreProperties. The
+% remaining 119 are appended by their CT_* WPs in docx/oxml/__init__.py order.
+map = registerElementCls_(map, "cp:coreProperties", ...
+    "mat2doc.oxml.coreprops.CT_CoreProperties");   % __init__.py:96 (P1-7)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
