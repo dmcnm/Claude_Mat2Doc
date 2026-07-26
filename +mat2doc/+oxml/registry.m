@@ -87,6 +87,37 @@ map = registerElementCls_(map, "w:body", ...
     "mat2doc.oxml.document.CT_Body");              % __init__.py:100 (P2-3)
 map = registerElementCls_(map, "w:document", ...
     "mat2doc.oxml.document.CT_Document");          % __init__.py:101 (P2-3)
+% -- font block (docx/oxml/__init__.py:198-225), P4-1a. 28 rows in __init__.py
+% -- source order (alphabetical by tag). 21 target the shared CT_OnOff/CT_String
+% -- (C3 fold-in), the other 7 target the +text font children / CT_RPr.
+map = registerElementCls_(map, "w:b",          "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:198
+map = registerElementCls_(map, "w:bCs",        "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:199
+map = registerElementCls_(map, "w:caps",       "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:200
+map = registerElementCls_(map, "w:color",      "mat2doc.oxml.text.CT_Color");              % __init__.py:201
+map = registerElementCls_(map, "w:cs",         "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:202
+map = registerElementCls_(map, "w:dstrike",    "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:203
+map = registerElementCls_(map, "w:emboss",     "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:204
+map = registerElementCls_(map, "w:highlight",  "mat2doc.oxml.text.CT_Highlight");          % __init__.py:205
+map = registerElementCls_(map, "w:i",          "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:206
+map = registerElementCls_(map, "w:iCs",        "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:207
+map = registerElementCls_(map, "w:imprint",    "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:208
+map = registerElementCls_(map, "w:noProof",    "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:209
+map = registerElementCls_(map, "w:oMath",      "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:210
+map = registerElementCls_(map, "w:outline",    "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:211
+map = registerElementCls_(map, "w:rFonts",     "mat2doc.oxml.text.CT_Fonts");              % __init__.py:212
+map = registerElementCls_(map, "w:rPr",        "mat2doc.oxml.text.CT_RPr");                % __init__.py:213
+map = registerElementCls_(map, "w:rStyle",     "mat2doc.oxml.shared.CT_String");           % __init__.py:214
+map = registerElementCls_(map, "w:rtl",        "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:215
+map = registerElementCls_(map, "w:shadow",     "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:216
+map = registerElementCls_(map, "w:smallCaps",  "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:217
+map = registerElementCls_(map, "w:snapToGrid", "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:218
+map = registerElementCls_(map, "w:specVanish", "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:219
+map = registerElementCls_(map, "w:strike",     "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:220
+map = registerElementCls_(map, "w:sz",         "mat2doc.oxml.text.CT_HpsMeasure");         % __init__.py:221
+map = registerElementCls_(map, "w:u",          "mat2doc.oxml.text.CT_Underline");          % __init__.py:222
+map = registerElementCls_(map, "w:vanish",     "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:223
+map = registerElementCls_(map, "w:vertAlign",  "mat2doc.oxml.text.CT_VerticalAlignRun");   % __init__.py:224
+map = registerElementCls_(map, "w:webHidden",  "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:225
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE

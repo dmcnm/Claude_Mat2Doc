@@ -1,0 +1,318 @@
+{
+  "h11": {
+    "loose_scramble8": {
+      "add_order": [
+        "u",
+        "b",
+        "color",
+        "sz",
+        "rStyle",
+        "vertAlign",
+        "highlight",
+        "i"
+      ],
+      "result_localnames": [
+        "rStyle",
+        "b",
+        "i",
+        "color",
+        "sz",
+        "highlight",
+        "u",
+        "vertAlign"
+      ],
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle/><w:b/><w:i/><w:color w:val=\"000000\"/><w:sz/><w:highlight/><w:u/><w:vertAlign/></w:rPr>"
+    },
+    "loose_reversed27": {
+      "add_order": [
+        "oMath",
+        "specVanish",
+        "cs",
+        "rtl",
+        "vertAlign",
+        "u",
+        "highlight",
+        "sz",
+        "color",
+        "webHidden",
+        "vanish",
+        "snapToGrid",
+        "noProof",
+        "imprint",
+        "emboss",
+        "shadow",
+        "outline",
+        "dstrike",
+        "strike",
+        "smallCaps",
+        "caps",
+        "iCs",
+        "i",
+        "bCs",
+        "b",
+        "rFonts",
+        "rStyle"
+      ],
+      "result_localnames": [
+        "rStyle",
+        "rFonts",
+        "b",
+        "bCs",
+        "i",
+        "iCs",
+        "caps",
+        "smallCaps",
+        "strike",
+        "dstrike",
+        "outline",
+        "shadow",
+        "emboss",
+        "imprint",
+        "noProof",
+        "snapToGrid",
+        "vanish",
+        "webHidden",
+        "color",
+        "sz",
+        "highlight",
+        "u",
+        "vertAlign",
+        "rtl",
+        "cs",
+        "specVanish",
+        "oMath"
+      ],
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle/><w:rFonts/><w:b/><w:bCs/><w:i/><w:iCs/><w:caps/><w:smallCaps/><w:strike/><w:dstrike/><w:outline/><w:shadow/><w:emboss/><w:imprint/><w:noProof/><w:snapToGrid/><w:vanish/><w:webHidden/><w:color w:val=\"000000\"/><w:sz/><w:highlight/><w:u/><w:vertAlign/><w:rtl/><w:cs/><w:specVanish/><w:oMath/></w:rPr>"
+    },
+    "loose_shuffle27": {
+      "add_order": [
+        "vertAlign",
+        "b",
+        "oMath",
+        "color",
+        "rStyle",
+        "highlight",
+        "i",
+        "sz",
+        "u",
+        "specVanish",
+        "caps",
+        "webHidden",
+        "rFonts",
+        "strike",
+        "bCs",
+        "rtl",
+        "vanish",
+        "iCs",
+        "cs",
+        "smallCaps",
+        "dstrike",
+        "noProof",
+        "outline",
+        "shadow",
+        "emboss",
+        "imprint",
+        "snapToGrid"
+      ],
+      "result_localnames": [
+        "rStyle",
+        "rFonts",
+        "b",
+        "bCs",
+        "i",
+        "iCs",
+        "caps",
+        "smallCaps",
+        "strike",
+        "dstrike",
+        "outline",
+        "shadow",
+        "emboss",
+        "imprint",
+        "noProof",
+        "snapToGrid",
+        "vanish",
+        "webHidden",
+        "color",
+        "sz",
+        "highlight",
+        "u",
+        "vertAlign",
+        "rtl",
+        "cs",
+        "specVanish",
+        "oMath"
+      ],
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle/><w:rFonts/><w:b/><w:bCs/><w:i/><w:iCs/><w:caps/><w:smallCaps/><w:strike/><w:dstrike/><w:outline/><w:shadow/><w:emboss/><w:imprint/><w:noProof/><w:snapToGrid/><w:vanish/><w:webHidden/><w:color w:val=\"000000\"/><w:sz/><w:highlight/><w:u/><w:vertAlign/><w:rtl/><w:cs/><w:specVanish/><w:oMath/></w:rPr>"
+    },
+    "parsed_nondesc": {
+      "add_order": [
+        "specVanish",
+        "vertAlign",
+        "u",
+        "highlight",
+        "sz",
+        "color",
+        "b",
+        "rStyle"
+      ],
+      "result_localnames": [
+        "rStyle",
+        "b",
+        "color",
+        "spacing",
+        "sz",
+        "szCs",
+        "highlight",
+        "u",
+        "vertAlign",
+        "lang",
+        "specVanish"
+      ],
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle/><w:b/><w:color w:val=\"000000\"/><w:spacing/><w:sz/><w:szCs/><w:highlight/><w:u/><w:vertAlign/><w:lang/><w:specVanish/></w:rPr>"
+    }
+  },
+  "new_color": {
+    "localname": "color",
+    "hex": "000000",
+    "rgb": [
+      0,
+      0,
+      0
+    ],
+    "serialized_rPr": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:color w:val=\"000000\"/></w:rPr>",
+    "get_or_add_is_idempotent": true
+  },
+  "children": {
+    "color_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:color xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"2F2F80\" w:themeColor=\"accent1\"/>",
+      "val_hex": "2F2F80",
+      "themeColor_name": "ACCENT_1"
+    },
+    "color_absent_themeColor": "none",
+    "rFonts_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rFonts xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:ascii=\"Arial\" w:hAnsi=\"Calibri\"/>",
+      "ascii": "Arial",
+      "hAnsi": "Calibri"
+    },
+    "rFonts_ascii_absent": "none",
+    "highlight_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:highlight xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"yellow\"/>",
+      "val_name": "YELLOW"
+    },
+    "sz_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:sz xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"24\"/>",
+      "val_emu": 152400
+    },
+    "u_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:u xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"single\"/>",
+      "val_name": "SINGLE"
+    },
+    "u_absent": "none",
+    "vertAlign_set": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:vertAlign xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"superscript\"/>",
+      "val": "superscript"
+    },
+    "rStyle_new": {
+      "serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rStyle xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"Emphasis\"/>",
+      "val": "Emphasis",
+      "class": "CT_String"
+    }
+  },
+  "ct_rpr_setters": {
+    "sz_nothing": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:sz w:val=\"24\"/></w:rPr>",
+    "sz_change": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:sz w:val=\"36\"/></w:rPr>",
+    "sz_remove": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "subscript_true": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:vertAlign w:val=\"subscript\"/></w:rPr>",
+    "subscript_false_on_empty": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "subscript_none_on_empty": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "subscript_false_removes": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "subscript_false_keeps_super": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:vertAlign w:val=\"superscript\"/></w:rPr>",
+    "superscript_true": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:vertAlign w:val=\"superscript\"/></w:rPr>",
+    "superscript_false_keeps_sub": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:vertAlign w:val=\"subscript\"/></w:rPr>",
+    "style_add": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle w:val=\"Heading1\"/></w:rPr>",
+    "style_change": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rStyle w:val=\"B\"/></w:rPr>",
+    "style_remove": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "rFonts_ascii_add": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rFonts w:ascii=\"Foo\"/></w:rPr>",
+    "rFonts_ascii_change": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rFonts w:hAnsi=\"Foo\" w:ascii=\"Bar\"/></w:rPr>",
+    "rFonts_ascii_none_removes_rFonts": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "rFonts_hAnsi_none_keeps_rFonts": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rFonts w:ascii=\"X\"/></w:rPr>",
+    "rFonts_hAnsi_none_on_empty_noop": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "u_val_add": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:u w:val=\"double\"/></w:rPr>",
+    "u_val_remove": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "u_val_remove_all_then_add": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:u w:val=\"wave\"/></w:rPr>",
+    "highlight_add": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:highlight w:val=\"yellow\"/></w:rPr>",
+    "highlight_remove": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>"
+  },
+  "bool_setters": {
+    "nothing_to_True": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:caps/></w:rPr>",
+    "nothing_to_False": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:b w:val=\"0\"/></w:rPr>",
+    "nothing_to_None": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "default_to_True": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:cs/></w:rPr>",
+    "default_to_False": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:bCs w:val=\"0\"/></w:rPr>",
+    "default_to_None": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "True_to_True": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:dstrike/></w:rPr>",
+    "True_to_False": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:emboss w:val=\"0\"/></w:rPr>",
+    "True_to_None": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "False_to_True": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:i/></w:rPr>",
+    "False_to_False": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:imprint w:val=\"0\"/></w:rPr>",
+    "False_to_None": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "mix_noProof": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:noProof w:val=\"0\"/></w:rPr>",
+    "mix_outline": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:outline/></w:rPr>",
+    "mix_rtl": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:rtl w:val=\"0\"/></w:rPr>",
+    "mix_smallCaps": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:smallCaps w:val=\"0\"/></w:rPr>",
+    "mix_snapToGrid": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:snapToGrid/></w:rPr>",
+    "mix_strike": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:strike/></w:rPr>",
+    "mix_webHidden": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:rPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:webHidden w:val=\"0\"/></w:rPr>"
+  },
+  "reads": {
+    "bool_states": {
+      "absent": "none",
+      "present_bare": "true",
+      "on": "true",
+      "off": "false",
+      "one": "true",
+      "zero": "false",
+      "true": "true",
+      "false": "false"
+    },
+    "subscript": {
+      "absent": "none",
+      "baseline": "false",
+      "subscript": "true",
+      "superscript": "false"
+    },
+    "superscript": {
+      "baseline": "false",
+      "subscript": "false",
+      "superscript": "true"
+    },
+    "sz_val": {
+      "absent": -1,
+      "present": 177800
+    },
+    "rFonts_ascii": {
+      "absent_no_rFonts": "none",
+      "absent_attr": "none",
+      "present": "Arial"
+    },
+    "style": {
+      "absent": "none",
+      "present": "Emphasis"
+    }
+  },
+  "ct_onoff": {
+    "absent_get": "true",
+    "set_false": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:b xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" w:val=\"0\"/>",
+    "set_true_removes_attr": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:b xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "set_none_removes_attr": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:b xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"/>",
+    "from_xml": {
+      "tok_1": "true",
+      "tok_true": "true",
+      "tok_on": "true",
+      "tok_0": "false",
+      "tok_false": "false",
+      "tok_off": "false"
+    }
+  }
+}
