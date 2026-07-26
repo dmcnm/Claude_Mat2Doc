@@ -102,9 +102,9 @@ classdef Document < mat2doc.shared.ElementProxy
         % ------------------------------------------------------------------
 
         function comment = add_comment(obj, runs, text, author, initials) %#ok<INUSD,MANU,STOUT>
-            % ADD_COMMENT STUB (document.py 41-88). P2 comments tier.
+            % ADD_COMMENT STUB (document.py 41-88). Owner: P8-2 comments tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_comment (owning WP: P2 comments " + ...
+                "mat2doc.document.Document.add_comment (owning WP: P8-2 comments " + ...
                 "tier) is not yet ported");
         end
 
@@ -137,30 +137,30 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         function section = add_section(obj, start_type) %#ok<INUSD,MANU,STOUT>
-            % ADD_SECTION STUB (document.py 140-148). P2 section tier.
+            % ADD_SECTION STUB (document.py 140-148). Owner: P5 section tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_section (owning WP: P2 section " + ...
+                "mat2doc.document.Document.add_section (owning WP: P5 section " + ...
                 "tier) is not yet ported");
         end
 
         function table = add_table(obj, rows, cols, style) %#ok<INUSD,MANU,STOUT>
-            % ADD_TABLE STUB (document.py 150-158). P2 table tier.
+            % ADD_TABLE STUB (document.py 150-158). Owner: P6 table tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_table (owning WP: P2 table tier) " + ...
+                "mat2doc.document.Document.add_table (owning WP: P6 table tier) " + ...
                 "is not yet ported");
         end
 
         function c = comments(obj) %#ok<MANU,STOUT>
-            % COMMENTS STUB (document.py 160-163). P2 comments tier.
+            % COMMENTS STUB (document.py 160-163). Owner: P8-2 comments tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.comments (owning WP: P2 comments " + ...
+                "mat2doc.document.Document.comments (owning WP: P8-2 comments " + ...
                 "tier) is not yet ported");
         end
 
         function s = inline_shapes(obj) %#ok<MANU,STOUT>
-            % INLINE_SHAPES STUB (document.py 170-178). P2 shape tier.
+            % INLINE_SHAPES STUB (document.py 170-178). Owner: P7 image/shape tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.inline_shapes (owning WP: P2 shape " + ...
+                "mat2doc.document.Document.inline_shapes (owning WP: P7 image/shape " + ...
                 "tier) is not yet ported");
         end
 
@@ -179,30 +179,30 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         function s = sections(obj) %#ok<MANU,STOUT>
-            % SECTIONS STUB (document.py 206-209). P2 section tier.
+            % SECTIONS STUB (document.py 206-209). Owner: P5 section tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.sections (owning WP: P2 section tier) " + ...
+                "mat2doc.document.Document.sections (owning WP: P5 section tier) " + ...
                 "is not yet ported");
         end
 
         function s = settings(obj) %#ok<MANU,STOUT>
-            % SETTINGS STUB (document.py 211-214). P2-2 settings tier.
+            % SETTINGS STUB (document.py 211-214). Owner: P5-1 settings tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.settings (owning WP: P2-2 settings " + ...
+                "mat2doc.document.Document.settings (owning WP: P5-1 settings " + ...
                 "tier) is not yet ported");
         end
 
         function s = styles(obj) %#ok<MANU,STOUT>
-            % STYLES STUB (document.py 216-219). P2-2 styles tier.
+            % STYLES STUB (document.py 216-219). Owner: P4-7 styles tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.styles (owning WP: P2-2 styles tier) " + ...
+                "mat2doc.document.Document.styles (owning WP: P4-7 styles tier) " + ...
                 "is not yet ported");
         end
 
         function t = tables(obj) %#ok<MANU,STOUT>
-            % TABLES STUB (document.py 221-230). P2 table tier.
+            % TABLES STUB (document.py 221-230). Owner: P6 table tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.tables (owning WP: P2 table tier) " + ...
+                "mat2doc.document.Document.tables (owning WP: P6 table tier) " + ...
                 "is not yet ported");
         end
     end

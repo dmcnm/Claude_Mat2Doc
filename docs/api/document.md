@@ -76,15 +76,20 @@ construction:
   (**VERIFY-M1-DOC-BASE**). Mat2Ppt precedent: WP8 reparented `Presentation`
   onto `PartElementProxy` with byte-neutral effect. Until then `Document` derives
   `handle` only and stores `element_`/`part_` directly.
-- **P2-2 — `StoryPart` + real sibling parts.** Inserts `BaseStoryPart` /
-  `StoryPart` **above** `DocumentPart` (**VERIFY-M1-DOCPART-BASE**), ports the
-  real `StylesPart` / `SettingsPart` / `NumberingPart` (and flips their
-  PartFactory rows — byte-identical output, only the reloaded type changes),
-  un-stubs the DocumentPart sibling accessors, discharges **task #60** (the
-  `drop_rel` → `rel_ref_count_` `xpath` reachability gap), and adds
-  `Relationships` `delitem` (`drop_rel`). Because those bases add methods only
+- **P2-2 — `StoryPart` + real sibling parts (DONE — see `parts.md`).** Inserts
+  `StoryPart` **above** `DocumentPart` (**VERIFY-M1-DOCPART-BASE** discharged;
+  note the real class is `StoryPart`, not the `BaseStoryPart` the M1 header
+  wrongly claimed — v1.2.0 has no such class), ports the thin `StylesPart` /
+  `SettingsPart` / `NumberingPart` `XmlPart` shells (and flips their PartFactory
+  rows — byte-identical output, only the reloaded type changes), un-stubs the
+  `DocumentPart._styles_part` / `_settings_part` object-graph accessors (feature
+  accessors stay stubbed at their real-phase owner), discharges **task #60** (the
+  `xpath` hoist onto `XmlElement` that closes the `drop_rel` → `rel_ref_count_`
+  reachability gap), and adds `Relationships` `delitem` + the live `Part.drop_rel`
+  (`< 2` refcount threshold). Because those bases add methods only
   (blob/load/element inherit from `XmlPart` unchanged), the reparented classes
-  emit identical bytes.
+  emit identical bytes (17/17 M1 sweep unchanged). The story-part tier is
+  documented in **`parts.md`**.
 - **P2-3 — `Document` feature shell.** Fills the content members
   (`add_paragraph` / `add_heading` / `add_page_break` / `paragraphs` /
   `iter_inner_content`, the `_Body` block-container, and stream-save hardening).

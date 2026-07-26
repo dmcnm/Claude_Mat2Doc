@@ -30,19 +30,19 @@ classdef PartFactory
 %   Mat2Doc's registry MUST reproduce this split so the same 4 parts collapse and
 %   the other XML siblings stay byte-verbatim. This is the concrete M1 requirement.
 %
-%   M1 STAND-IN (XmlPart-vs-Part split; P2 refines the subclasses): the eight
-%   registered part classes are all XmlPart subclasses in python-docx
+%   XmlPart-vs-Part split (progressively refined P1-8 -> P2-2 -> later): the
+%   eight registered part classes are all XmlPart subclasses in python-docx
 %   (CorePropertiesPart, CommentsPart, DocumentPart, FooterPart, HeaderPart,
-%   NumberingPart, SettingsPart, StylesPart -- verified: each extends XmlPart or
+%   NumberingPart, SettingsPart, StylesPart -- each extends XmlPart or
 %   StoryPart<XmlPart), and ImagePart (via the part_class_selector for reltype
-%   IMAGE) is a plain Part. Those feature subclasses are not ported until P2, so
-%   every registered content type here maps to the BASE mat2doc.opc.XmlPart, and
-%   the IMAGE selector maps to the BASE mat2doc.opc.Part. This yields the correct
-%   M1 collapse/passthrough BYTE behavior (an XmlPart subclass and the base
-%   XmlPart share XmlPart.blob = parse+re-serialize; ImagePart and the base Part
-%   share the verbatim Part.blob). P2 will REFINE each row to its specific
-%   subclass; because those subclasses inherit the same blob unchanged, the
-%   emitted bytes are identical -- only the reloaded part's TYPE changes.
+%   IMAGE) is a plain Part. As each subclass is ported its row is FLIPPED from
+%   the base-XmlPart stand-in to the real class; because every one inherits
+%   XmlPart.blob unchanged (parse+re-serialize), the emitted bytes are identical
+%   -- only the reloaded part's TYPE changes. Ported so far: CorePropertiesPart
+%   (P1-7), DocumentPart (P1-8), StylesPart/SettingsPart/NumberingPart (P2-2).
+%   Still base-XmlPart stand-ins: WML_COMMENTS (P8-2), WML_FOOTER/WML_HEADER
+%   (P5-3b). The IMAGE selector still maps to the base mat2doc.opc.Part (ImagePart
+%   is P7). This preserves the M1 collapse/passthrough BYTE behavior throughout.
 %
 %   ARG ORDER (docx): create(partname, content_type, reltype, blob, package) and
 %   Class.load(partname, content_type, blob, package) -- blob before package.
@@ -54,7 +54,7 @@ classdef PartFactory
 %   Example:
 %       CT = mat2doc.opc.CONTENT_TYPE;
 %       f  = @mat2doc.opc.PartFactory.part_cls_for_;
-%       disp(f(CT.WML_STYLES))            % "mat2doc.opc.XmlPart"  (reserialize)
+%       disp(f(CT.WML_STYLES))            % "mat2doc.parts.StylesPart" (P2-2 flip)
 %       disp(f(CT.WML_WEB_SETTINGS))      % "mat2doc.opc.Part"     (passthrough)
 %
 %   Ported from python-docx v1.2.0: src/docx/opc/part.py::PartFactory
@@ -117,26 +117,28 @@ classdef PartFactory
             %   refines each to its specific subclass (trailing comment) with
             %   byte-identical output.
             %
-            %   P1-8 ROW FLIPS (byte-neutral by blob inheritance): the two rows
-            %   whose subclasses are already ported are flipped to those classes.
-            %   Both CorePropertiesPart (P1-7) and DocumentPart (P1-8) inherit
-            %   XmlPart.blob unchanged (parse + serialize_part_xml) and their own
-            %   static `load` constructs the subclass, so the reloaded part's TYPE
-            %   changes but the emitted bytes are IDENTICAL to the base-XmlPart
-            %   dispatch. The DocumentPart flip is REQUIRED for M1 (mat2doc.Document
-            %   needs main_document_part.document); the CorePropertiesPart flip
-            %   closes the P1-6b VERIFY-core-props at zero byte-risk.
+            %   P1-8 + P2-2 ROW FLIPS (byte-neutral by blob inheritance): each
+            %   ported subclass inherits XmlPart.blob unchanged (parse +
+            %   serialize_part_xml) and declares its own static `load`
+            %   constructing the subclass, so the reloaded part's TYPE changes but
+            %   the emitted bytes are IDENTICAL to the base-XmlPart dispatch. The
+            %   P1-8 flips: OPC_CORE_PROPERTIES (P1-7 class), WML_DOCUMENT_MAIN
+            %   (M1-required). P2-2 flips the three thin XmlPart shells now ported:
+            %   WML_STYLES -> StylesPart, WML_SETTINGS -> SettingsPart,
+            %   WML_NUMBERING -> NumberingPart (mirrors docx/__init__.py 49-51).
+            %   Re-proven byte-neutral by the 17/17 M1 sweep. Still base-XmlPart
+            %   stand-ins: WML_COMMENTS (P8-2), WML_FOOTER/WML_HEADER (P5-3b).
             CT  = mat2doc.opc.CONTENT_TYPE;
             XP  = "mat2doc.opc.XmlPart";   % base XmlPart -> parse + re-serialize
             reg = [ ...
                 CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart";  ...  % P1-8 flip (P1-7 class)
-                CT.WML_COMMENTS,        XP;                             ...  % P2-2: CommentsPart (StoryPart<XmlPart)
+                CT.WML_COMMENTS,        XP;                             ...  % P8-2: CommentsPart (StoryPart<XmlPart)
                 CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";   ...  % P1-8 flip (M1-required)
-                CT.WML_FOOTER,          XP;                             ...  % P2-2: FooterPart (StoryPart<XmlPart)
-                CT.WML_HEADER,          XP;                             ...  % P2-2: HeaderPart (StoryPart<XmlPart)
-                CT.WML_NUMBERING,       XP;                             ...  % P2-2: NumberingPart (XmlPart)
-                CT.WML_SETTINGS,        XP;                             ...  % P2-2: SettingsPart (XmlPart)
-                CT.WML_STYLES,          XP];                                 % P2-2: StylesPart (XmlPart)
+                CT.WML_FOOTER,          XP;                             ...  % P5-3b: FooterPart (StoryPart<XmlPart)
+                CT.WML_HEADER,          XP;                             ...  % P5-3b: HeaderPart (StoryPart<XmlPart)
+                CT.WML_NUMBERING,       "mat2doc.parts.NumberingPart";  ...  % P2-2 flip (thin XmlPart shell)
+                CT.WML_SETTINGS,        "mat2doc.parts.SettingsPart";   ...  % P2-2 flip (thin XmlPart shell)
+                CT.WML_STYLES,          "mat2doc.parts.StylesPart"];         % P2-2 flip (thin XmlPart shell)
         end
 
         function cls = default_part_type_()

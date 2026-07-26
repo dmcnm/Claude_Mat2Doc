@@ -1,0 +1,4 @@
+# Byte-pin the toolbox templates so CRLF and exact bytes survive checkout/merge
+default.docx binary
+default-styles.xml binary
+default-settings.xml binary

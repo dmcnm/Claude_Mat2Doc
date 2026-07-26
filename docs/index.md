@@ -67,6 +67,16 @@ syntax, description, example, ported-from).
   byte-identical to python-docx — 17/17 L1 three-way — and opens clean in real
   Word). Documents what is live vs stubbed-until-P2 and the two byte-neutral
   PartFactory row flips.
+- **Story-part tier (parts)** — the part classes an opened `.docx` graph is
+  built from: `StoryPart` (the real base inserted above `DocumentPart`, with
+  `next_id` and the `_document_part` lazyproperty), the reparented
+  `DocumentPart` (whose `_styles_part` / `_settings_part` now return real
+  sibling parts), and the thin `StylesPart` / `SettingsPart` / `NumberingPart`
+  `XmlPart` shells. Documents the **object-graph-vs-feature-surface**
+  distinction P2-2 draws (part plumbing live, feature accessors stubbed at their
+  real-phase owner), the three byte-neutral PartFactory flips, and **task #60**
+  (the `xpath` hoist onto `XmlElement`, `Relationships.delitem`, and the live
+  `Part.drop_rel` with its `< 2` refcount threshold).
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 
