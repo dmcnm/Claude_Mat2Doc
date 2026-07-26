@@ -330,17 +330,33 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_partfactory_8_registered_to_xmlpart(testCase)
-            % Regression (H10, docx/__init__.py 44-51): all 8 registered content
-            % types map to mat2doc.opc.XmlPart (row-for-row, count 8=8).
+            % Regression (H10, docx/__init__.py 44-51; P1-8 row flips): the 8
+            % registered content types map to their registered part classes,
+            % row-for-row (count 8=8). P1-8 (validate_P1-8_skeleton_m1.md §7)
+            % INTENTIONALLY flips 2 of the former base-XmlPart stand-in rows to
+            % their now-ported subclasses -- OPC_CORE_PROPERTIES ->
+            % CorePropertiesPart, WML_DOCUMENT_MAIN -> DocumentPart (both IS-A
+            % XmlPart, so byte-neutral: the 17/17 L1 sweep is unchanged). The
+            % other 6 rows remain the base XmlPart stand-in (P2-2 refines them).
+            % Exact-class pin (not isa) -- the flip must land on the exact class.
             CT = mat2doc.opc.CONTENT_TYPE;
-            reg = [CT.OPC_CORE_PROPERTIES, CT.WML_COMMENTS, CT.WML_DOCUMENT_MAIN, ...
-                   CT.WML_FOOTER, CT.WML_HEADER, CT.WML_NUMBERING, ...
-                   CT.WML_SETTINGS, CT.WML_STYLES];
-            testCase.verifyEqual(numel(reg), 8, 'exactly 8 registered content types');
-            for ct = reg
+            XP = "mat2doc.opc.XmlPart";
+            expected = { ...
+                CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart"; ...  % P1-8 flip
+                CT.WML_COMMENTS,        XP;                                     ...
+                CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";           ...  % P1-8 flip
+                CT.WML_FOOTER,          XP;                                     ...
+                CT.WML_HEADER,          XP;                                     ...
+                CT.WML_NUMBERING,       XP;                                     ...
+                CT.WML_SETTINGS,        XP;                                     ...
+                CT.WML_STYLES,          XP};
+            testCase.verifyEqual(size(expected, 1), 8, 'exactly 8 registered content types');
+            for k = 1:size(expected, 1)
+                ct   = expected{k, 1};
+                want = expected{k, 2};
                 testCase.verifyEqual( ...
-                    mat2doc.opc.PartFactory.part_cls_for_(ct), "mat2doc.opc.XmlPart", ...
-                    sprintf('%s must dispatch to XmlPart', ct));
+                    mat2doc.opc.PartFactory.part_cls_for_(ct), want, ...
+                    sprintf('%s must dispatch to %s', ct, want));
             end
         end
 
@@ -376,9 +392,13 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
         end
 
         function test_partfactory_create_dispatch(testCase)
-            % Regression (H10, create() end-to-end): create(WML_DOCUMENT_MAIN) ->
-            % XmlPart (parsed); create(WML_WEB_SETTINGS) -> base Part (verbatim).
-            % Both dispatch through cls_method_fn(PartClass,"load").
+            % Regression (H10, create() end-to-end; P1-8 flip): create(
+            % WML_DOCUMENT_MAIN) -> mat2doc.parts.DocumentPart (parsed via its own
+            % static load; P1-8 flip per validate_P1-8_skeleton_m1.md §7 -- was the
+            % base-XmlPart stand-in); create(WML_WEB_SETTINGS) -> base Part
+            % (verbatim). Both dispatch through cls_method_fn(PartClass,"load").
+            % Exact-class pin: DocumentPart IS-A XmlPart but the factory must land
+            % on the exact subclass (else .document would be missing).
             CT = mat2doc.opc.CONTENT_TYPE;
             RT = mat2doc.opc.RELATIONSHIP_TYPE;
             docBlob = uint8(['<w:document xmlns:w="http://schemas.openxmlformats.org' ...
@@ -386,8 +406,8 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
             xp = mat2doc.opc.PartFactory.create( ...
                 mat2doc.opc.PackURI("/word/document.xml"), CT.WML_DOCUMENT_MAIN, ...
                 RT.OFFICE_DOCUMENT, docBlob, []);
-            testCase.verifyEqual(class(xp), 'mat2doc.opc.XmlPart', ...
-                'create(WML_DOCUMENT_MAIN) must return XmlPart');
+            testCase.verifyEqual(class(xp), 'mat2doc.parts.DocumentPart', ...
+                'create(WML_DOCUMENT_MAIN) must return DocumentPart (P1-8 flip)');
             bp = mat2doc.opc.PartFactory.create( ...
                 mat2doc.opc.PackURI("/word/webSettings.xml"), CT.WML_WEB_SETTINGS, ...
                 RT.WEB_SETTINGS, uint8('<w:webSettings/>'), []);
@@ -433,12 +453,16 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
         end
 
         function test_h9_xmlpart_element_parsed_once(testCase)
-            % H9 (currency): the opened document.xml part is an XmlPart whose
-            % element() returns the SAME handle across calls (parsed once at load,
-            % never re-parsed).
+            % H9 (currency): the opened document.xml part's element() returns the
+            % SAME handle across calls (parsed once at load, never re-parsed). The
+            % opened part is now a mat2doc.parts.DocumentPart (P1-8 flip per
+            % validate_P1-8_skeleton_m1.md §7 -- was the base XmlPart stand-in);
+            % DocumentPart IS-A XmlPart and inherits element() unchanged, so the
+            % H9 parsed-once currency is unaffected. Exact-class pin follows the
+            % post-flip class.
             xp = testCase.documentPart();
-            testCase.verifyEqual(class(xp), 'mat2doc.opc.XmlPart', ...
-                'document.xml part must be an XmlPart');
+            testCase.verifyEqual(class(xp), 'mat2doc.parts.DocumentPart', ...
+                'document.xml part must be a DocumentPart (P1-8 flip)');
             e1 = xp.element();
             e2 = xp.element();
             testCase.verifyTrue(e1 == e2, 'element() must be the same handle (parsed once)');

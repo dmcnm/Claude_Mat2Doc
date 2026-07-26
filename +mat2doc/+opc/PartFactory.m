@@ -112,20 +112,31 @@ classdef PartFactory
             % PART_TYPE_FOR_ Nx2 [content_type, class-name] table, a row-for-row
             %   mirror of docx/__init__.py PartFactory.part_type_for assignments
             %   (lines 44-51). ALL eight registered classes are XmlPart subclasses
-            %   in python-docx, so every row maps to the base mat2doc.opc.XmlPart
-            %   at M1 (the XmlPart-vs-Part split); P2 refines each to its specific
-            %   subclass (shown in the trailing comment) with byte-identical output.
+            %   in python-docx; the base mat2doc.opc.XmlPart is the M1 stand-in for
+            %   the six not-yet-ported subclasses (the XmlPart-vs-Part split), P2-2
+            %   refines each to its specific subclass (trailing comment) with
+            %   byte-identical output.
+            %
+            %   P1-8 ROW FLIPS (byte-neutral by blob inheritance): the two rows
+            %   whose subclasses are already ported are flipped to those classes.
+            %   Both CorePropertiesPart (P1-7) and DocumentPart (P1-8) inherit
+            %   XmlPart.blob unchanged (parse + serialize_part_xml) and their own
+            %   static `load` constructs the subclass, so the reloaded part's TYPE
+            %   changes but the emitted bytes are IDENTICAL to the base-XmlPart
+            %   dispatch. The DocumentPart flip is REQUIRED for M1 (mat2doc.Document
+            %   needs main_document_part.document); the CorePropertiesPart flip
+            %   closes the P1-6b VERIFY-core-props at zero byte-risk.
             CT  = mat2doc.opc.CONTENT_TYPE;
             XP  = "mat2doc.opc.XmlPart";   % base XmlPart -> parse + re-serialize
             reg = [ ...
-                CT.OPC_CORE_PROPERTIES, XP;  ...  % P2: CorePropertiesPart (XmlPart)
-                CT.WML_COMMENTS,        XP;  ...  % P2: CommentsPart (StoryPart<XmlPart)
-                CT.WML_DOCUMENT_MAIN,   XP;  ...  % P2: DocumentPart (StoryPart<XmlPart)
-                CT.WML_FOOTER,          XP;  ...  % P2: FooterPart (StoryPart<XmlPart)
-                CT.WML_HEADER,          XP;  ...  % P2: HeaderPart (StoryPart<XmlPart)
-                CT.WML_NUMBERING,       XP;  ...  % P2: NumberingPart (XmlPart)
-                CT.WML_SETTINGS,        XP;  ...  % P2: SettingsPart (XmlPart)
-                CT.WML_STYLES,          XP];      % P2: StylesPart (XmlPart)
+                CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart";  ...  % P1-8 flip (P1-7 class)
+                CT.WML_COMMENTS,        XP;                             ...  % P2-2: CommentsPart (StoryPart<XmlPart)
+                CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";   ...  % P1-8 flip (M1-required)
+                CT.WML_FOOTER,          XP;                             ...  % P2-2: FooterPart (StoryPart<XmlPart)
+                CT.WML_HEADER,          XP;                             ...  % P2-2: HeaderPart (StoryPart<XmlPart)
+                CT.WML_NUMBERING,       XP;                             ...  % P2-2: NumberingPart (XmlPart)
+                CT.WML_SETTINGS,        XP;                             ...  % P2-2: SettingsPart (XmlPart)
+                CT.WML_STYLES,          XP];                                 % P2-2: StylesPart (XmlPart)
         end
 
         function cls = default_part_type_()
