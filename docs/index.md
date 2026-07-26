@@ -82,6 +82,14 @@ syntax, description, example, ported-from).
   real-phase owner), the three byte-neutral PartFactory flips, and **task #60**
   (the `xpath` hoist onto `XmlElement`, `Relationships.delitem`, and the live
   `Part.drop_rel` with its `< 2` refcount threshold).
+- **Enumerations (enum)** — the enumeration base tier: `BaseEnum` (MS-API-value
+  enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base machinery
+  **every docx enum extends** (P3-3/P3-4 concrete `WD_*` enums and the P4–P6
+  element classes that (de)serialize enumerated attributes). Documents the
+  MATLAB enum-with-associated-data idiom (value classdef + `enumeration` block),
+  the four **docx-vs-pptx semantic deltas** (chiefly `from_xml`'s absent
+  None-guard — load-bearing for the `INHERITED` members — and `to_xml`'s
+  Python-falsy reject), and the H3 None/`""`/`<missing>` tri-state.
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 

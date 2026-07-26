@@ -37,6 +37,9 @@ project:
     - title: Story-part tier (parts)
       children:
         - file: api/parts.md
+    - title: Enumerations (enum)
+      children:
+        - file: api/enums.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
