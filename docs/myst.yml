@@ -24,6 +24,7 @@ project:
     - title: OPC layer (opc)
       children:
         - file: api/opc_oxml.md
+        - file: api/opc_packaging.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
