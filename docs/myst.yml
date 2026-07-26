@@ -17,6 +17,9 @@ project:
     - title: Foundation & utilities
       children:
         - file: api/shared.md
+    - title: XML layer (oxml)
+      children:
+        - file: api/oxml_core.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
