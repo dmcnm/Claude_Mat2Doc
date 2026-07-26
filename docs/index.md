@@ -39,7 +39,11 @@ syntax, description, example, ported-from).
 - **XML layer (oxml)** — the byte-fidelity OOXML foundation: the namespace
   machinery, the order-preserving parser and `XmlElement` tree, the part-XML
   serializer, and the xmlchemy element-class / attribute-descriptor / XPath
-  engine.
+  engine — plus the **simple-type validator tier** (`+oxml\+simpletypes`: the 4
+  Base / 10 Xsd / 21 `ST_*` classes that validate and convert every typed `w:`
+  attribute value the P4–P6 element classes read and write; the D-STYPE-2 float
+  re-home, the `ST_HexColor`/`ST_HexColorAuto` split, `ST_OnOff`, and the
+  `ST_UniversalMeasure` unit grammar live here).
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC
