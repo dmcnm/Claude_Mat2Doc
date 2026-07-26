@@ -20,6 +20,7 @@ project:
     - title: XML layer (oxml)
       children:
         - file: api/oxml_core.md
+        - file: api/oxml_xmlchemy.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md

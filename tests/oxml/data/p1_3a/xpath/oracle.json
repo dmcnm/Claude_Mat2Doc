@@ -1,0 +1,607 @@
+{
+  "X01": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}body",
+        "path": [
+          0
+        ]
+      }
+    ]
+  },
+  "X02": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "X03": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "X04": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          1
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          3
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          4
+        ]
+      }
+    ]
+  },
+  "X05": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+        "path": [
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+        "path": [
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+        "path": [
+          0,
+          4,
+          1
+        ]
+      }
+    ]
+  },
+  "X06": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "X07": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+        "path": [
+          0,
+          3,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "X08": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+        "path": [
+          0,
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "X09": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "X10": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          3
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          4
+        ]
+      }
+    ]
+  },
+  "X11": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr",
+        "path": [
+          0,
+          5
+        ]
+      }
+    ]
+  },
+  "X12": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          2,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "X13": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}body",
+        "path": [
+          0
+        ]
+      }
+    ]
+  },
+  "X14": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}pPr",
+        "path": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+        "path": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+        "path": [
+          0,
+          0,
+          3
+        ]
+      }
+    ]
+  },
+  "X15": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "X16": {
+    "kind": "nodes",
+    "value": []
+  },
+  "S01": {
+    "kind": "strings",
+    "value": [
+      "rId7",
+      "rId9"
+    ]
+  },
+  "S02": {
+    "kind": "strings",
+    "value": [
+      "Heading1"
+    ]
+  },
+  "S03": {
+    "kind": "strings",
+    "value": [
+      "preserve"
+    ]
+  },
+  "S04": {
+    "kind": "strings",
+    "value": [
+      "cell"
+    ]
+  },
+  "S05": {
+    "kind": "strings",
+    "value": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  "S06": {
+    "kind": "strings",
+    "value": [
+      "PT1",
+      "MID",
+      "END"
+    ]
+  },
+  "S07": {
+    "kind": "strings",
+    "value": [
+      "PT1",
+      "RT",
+      "MID",
+      "HL",
+      "END"
+    ]
+  },
+  "S08": {
+    "kind": "strings",
+    "value": []
+  },
+  "F01": {
+    "kind": "nodes",
+    "value": []
+  },
+  "F02": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+        "path": [
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "F03": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}body",
+        "path": [
+          0
+        ]
+      }
+    ]
+  },
+  "F04": {
+    "kind": "nodes",
+    "value": [
+      {
+        "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+        "path": [
+          0,
+          0,
+          2
+        ]
+      }
+    ]
+  },
+  "F05": {
+    "kind": "nodes",
+    "value": []
+  },
+  "R01": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": [
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            0
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            1
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+          "path": [
+            0,
+            2
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            3
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            4
+          ]
+        }
+      ]
+    }
+  },
+  "R02": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": [
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            0
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            1
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+          "path": [
+            0,
+            2
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            3
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            4
+          ]
+        }
+      ]
+    }
+  },
+  "R03": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": []
+    }
+  },
+  "R04": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": [
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            3
+          ]
+        },
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            4
+          ]
+        }
+      ]
+    }
+  },
+  "R05": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": []
+    }
+  },
+  "R06": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": [
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            0
+          ]
+        }
+      ]
+    }
+  },
+  "R07": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": [
+        {
+          "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+          "path": [
+            0,
+            4
+          ]
+        }
+      ]
+    }
+  },
+  "R08": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": []
+    }
+  },
+  "R09": {
+    "kind": "raise",
+    "would_be": {
+      "kind": "nodes",
+      "value": []
+    }
+  }
+}
