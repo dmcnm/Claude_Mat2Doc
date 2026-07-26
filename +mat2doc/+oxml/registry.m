@@ -25,11 +25,24 @@ function cls_name = registry(clark_name)
 %   register_element_cls) is its OWN element_class_lookup in docx and lands
 %   with the OPC-layer WP.
 %
-%   AT THIS WP (P1-2) THE TABLE IS EMPTY: no CT_* classes are ported yet
-%   (xmlchemy/BaseOxmlElement is P1-3; the CT_* families are later WPs). Every
-%   parsed/created element is therefore a plain XmlElement now, but the lookup
-%   hook is fully wired. Rows are appended by their CT_* WPs in
-%   docx/oxml/__init__.py source order.
+%   TABLE CONTENT: the 120 main-map rows (docx/oxml/__init__.py
+%   register_element_cls calls) are appended by their CT_* WPs in
+%   docx/oxml/__init__.py source order and remain EMPTY here until those WPs
+%   land. SEPARATELY, P1-4 merges the 5 OPC element classes (CT_Default /
+%   CT_Override / CT_Types / CT_Relationship / CT_Relationships) into this same
+%   lookup, keyed by their RAW CLARK NAMES (plan-audit planaudit_2026-07-25
+%   condition B2, option A). In docx these 5 live in a SEPARATE
+%   element_class_lookup on the OPC parser (docx/opc/oxml.py:240-247), bound via
+%   ct_namespace[...]/pr_namespace[...] rather than register_element_cls. Merging
+%   them here is behavior-preserving because the ct/pr namespaces are DISJOINT
+%   from the main w:* namespaces, so no tag resolves differently under one merged
+%   table than under docx's two separate lookups (see +opc/+oxml/parse_xml.m).
+%   The 5 OPC rows are added by raw Clark name via registerClark_ -- NOT via
+%   registerElementCls_, which would resolve the ct/pr prefixes through the main
+%   nsmap (mat2doc.oxml.nsmap has NO ct/pr) and hard-error.
+%
+%   COUNT GUARD (H10): 120 main-map rows (target, tracked as CT_* WPs land) + 5
+%   OPC rows (present now) = 125 total. The two groups are tracked separately.
 %
 %   Inputs:  clark_name - (1,1) string, e.g. "{http://.../main}p"
 %   Outputs: cls_name   - (1,1) string, e.g. "mat2doc.oxml.CT_P", or ""
@@ -59,7 +72,7 @@ function map = buildRegistry_()
 % BUILDREGISTRY_ The explicit registration table (built once).
 map = dictionary(string.empty(0, 1), string.empty(0, 1));
 % -------------------------------------------------------------------------
-% Registration table: one registerElementCls_ line per Python
+% MAIN-MAP rows (docx/oxml/__init__.py): one registerElementCls_ line per Python
 % register_element_cls call, in docx/oxml/__init__.py source order. Lines are
 % appended by the WP that ports the corresponding CT_* class, e.g.:
 %
@@ -68,6 +81,38 @@ map = dictionary(string.empty(0, 1), string.empty(0, 1));
 % EMPTY at P1-2 (see file header). The H10 dispatch-matrix probe (row count vs
 % Python, target 120) applies once CT_* rows start landing.
 % -------------------------------------------------------------------------
+% OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
+% RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
+% so they are IDENTICAL to the xmlns the CT_*.new factories emit and the parser
+% resolves -- guaranteeing the parsed element's Clark key matches this row. NOT
+% routed through registerElementCls_ (ct/pr are absent from the main nsmap).
+NS = mat2doc.opc.NAMESPACE;
+map = registerClark_(map, "{" + NS.OPC_CONTENT_TYPES + "}Default", ...
+    "mat2doc.opc.oxml.CT_Default");        % ct_namespace["Default"]  opc/oxml.py:241
+map = registerClark_(map, "{" + NS.OPC_CONTENT_TYPES + "}Override", ...
+    "mat2doc.opc.oxml.CT_Override");       % ct_namespace["Override"] opc/oxml.py:242
+map = registerClark_(map, "{" + NS.OPC_CONTENT_TYPES + "}Types", ...
+    "mat2doc.opc.oxml.CT_Types");          % ct_namespace["Types"]    opc/oxml.py:243
+map = registerClark_(map, "{" + NS.OPC_RELATIONSHIPS + "}Relationship", ...
+    "mat2doc.opc.oxml.CT_Relationship");   % pr_namespace["Relationship"]  opc/oxml.py:246
+map = registerClark_(map, "{" + NS.OPC_RELATIONSHIPS + "}Relationships", ...
+    "mat2doc.opc.oxml.CT_Relationships");  % pr_namespace["Relationships"] opc/oxml.py:247
+end
+
+function map = registerClark_(map, clark, cls_name)
+% REGISTERCLARK_ Register cls_name for a RAW Clark tag key (no prefix resolution).
+%   Used for OPC classes whose ct/pr prefixes are not in the main nsmap, so the
+%   NamespacePrefixedTag path in registerElementCls_ cannot be used.
+arguments
+    map dictionary
+    clark (1,1) string
+    cls_name (1,1) string
+end
+if isKey(map, clark)
+    error("mat2doc:InternalError", ...
+        "duplicate element-class registration for '%s'", clark);
+end
+map(clark) = cls_name;
 end
 
 function map = registerElementCls_(map, tag, cls_name) %#ok<DEFNU> -- invoked by table lines as CT_* WPs add them
