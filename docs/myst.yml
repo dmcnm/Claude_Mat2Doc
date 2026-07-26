@@ -41,6 +41,7 @@ project:
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
+        - file: api/enums_content.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
