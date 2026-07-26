@@ -103,6 +103,30 @@ classdef Relationships < handle
             n = numel(obj.rIds_);
         end
 
+        function delitem(obj, rId)
+            % __delitem__ / `del rels[rId]` (P2-2: the inherited dict delete,
+            %   Relationships(Dict[str, _Relationship]) does NOT override it).
+            %   Removes the rId -> _Relationship mapping; KeyError if absent.
+            %   FAITHFUL SEPARATION (H3/H11): Python `del self.rels[rId]` is plain
+            %   dict.__delitem__ -- it removes ONLY the dict entry (here rIds_ /
+            %   rels_) and does NOT touch the parallel `_target_parts_by_rId` map.
+            %   Reproduced exactly (target_parts_by_rId_ is left untouched), so a
+            %   stale related_parts entry survives a drop exactly as in python-docx.
+            %   The sole consumer is Part.drop_rel (opc/part.py 75-82).
+            arguments
+                obj (1,1) mat2doc.opc.Relationships
+                rId (1,1) string
+            end
+            idx = find(obj.rIds_ == rId, 1);
+            if isempty(idx)
+                % Python dict.__delitem__ raises KeyError(rId); message form
+                % matches this collection's getitem (P1-5 convention).
+                error("mat2doc:KeyError", "no relationship with key '%s'", rId);
+            end
+            obj.rIds_(idx) = [];
+            obj.rels_(idx) = [];
+        end
+
         % ---- rel.py public API ----
         function rel = add_relationship(obj, reltype, target, rId, is_external)
             % ADD_RELATIONSHIP Add and return a Relationship_ (rel.py 21-29).

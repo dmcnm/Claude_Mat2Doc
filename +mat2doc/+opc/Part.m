@@ -104,19 +104,18 @@ classdef Part < handle & matlab.mixin.Heterogeneous
         function drop_rel(obj, rId)
             % DROP_REL Remove relationship `rId` if its reference count < 2
             %   (part.py 75-82). A ref-count of 0 is an implicit relationship.
+            %   LIVE at P2-2 (was a notYetPorted stub at P1-6b): rel_ref_count_
+            %   is XmlPart's `element.xpath("//@r:id")` count (0 for the base
+            %   Part), and the delete is Relationships.delitem (`del self.rels
+            %   [rId]`), both ported in this WP. Real callers land in P5 (Section
+            %   footer/header handling) and P5-3b (DocumentPart.drop_header_part);
+            %   proven now by a direct unit check.
+            arguments
+                obj
+                rId (1,1) string
+            end
             if obj.rel_ref_count_(rId) < 2
-                % Python: del self.rels[rId]  (inherited dict __delitem__)
-                % VERIFY-drop-rel: Relationships.__delitem__ is NOT yet ported
-                % (P1-5 realized the read/add Dict surface -- getitem/contains/
-                % keys/values/len -- but not delitem). drop_rel is UNREACHABLE at
-                % M1: its only callers are DocumentPart.drop_header_part /
-                % Section footer handling (docx document.py:65, section.py:417),
-                % which land in P2. Per the not-yet-ported-dependency rule, the
-                % delete raises rather than silently no-op'ing.
-                error("mat2doc:notYetPorted", "%s", ...
-                    "mat2doc.opc.Relationships delitem (del self.rels[rId]) " + ...
-                    "is not yet ported (owning WP: P1-5 Relationships dict " + ...
-                    "surface); required by mat2doc.opc.Part.drop_rel");
+                obj.rels().delitem(rId);   % Python: del self.rels[rId]
             end
         end
 
