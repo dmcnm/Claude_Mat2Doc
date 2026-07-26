@@ -4,9 +4,9 @@ classdef Document < mat2doc.shared.ElementProxy
 %   Not intended to be constructed directly. Use the package-level factory
 %   MAT2DOC.DOCUMENT (`+mat2doc\Document.m`) to open or create a document.
 %
-%   THIN M1 SLICE: this is the walking-skeleton proxy. Only `save` and
-%   `core_properties` (and the trivial `part` accessor) are LIVE; every content
-%   member (add_paragraph / add_heading / add_table / add_picture / paragraphs /
+%   P2-3 SLICE: `save`, `core_properties`, `part`, and the private object-graph
+%   accessors `body_` / `block_width_` are LIVE; every content member
+%   (add_paragraph / add_heading / add_table / add_picture / paragraphs /
 %   sections / styles / settings / inline_shapes / tables / comments / ...) is a
 %   mat2doc:notYetPorted stub. NONE is on the open->save path.
 %
@@ -37,22 +37,30 @@ classdef Document < mat2doc.shared.ElementProxy
 %
 %   UNDERSCORE ROTATION (design.md section 2): Python `_element`/`_part` ->
 %   element_/part_. Post-retrofit, element_ is the base's protected property;
-%   only part_ is declared here. (Python's `__body` cache belongs to the
-%   feature `_body` accessor, which is P2-3; it is not carried at M1.)
+%   only part_ is declared here. (Python's `__body` cache rotates to the
+%   body__ property, carried since P2-3.)
 %
 %   Example:
 %       d = mat2doc.Document();     % opens the bundled default template
 %       d.save("out.docx");
 %
 %   Ported from python-docx v1.2.0: src/docx/document.py::Document
-%   (the M1 slice: __init__ 35-39, core_properties 165-168, part 193-196,
-%   save 198-204. Base class ElementProxy is retrofitted in P2-1.)
+%   (live members: __init__ 35-39, core_properties 165-168, part 193-196,
+%   save 198-204, _block_width 232-239, _body 241-246. Base class ElementProxy
+%   retrofitted in P2-1; body_/block_width_ added in P2-3.)
 
     properties (Access = private)
         part_           % the owning mat2doc.parts.DocumentPart
         % NOTE: the wrapped w:document CT_Document root is now held by the base
         % mat2doc.shared.ElementProxy (protected `element_`); this class no
         % longer declares its own element_ (P2-1 VERIFY-M1-DOC-BASE retrofit).
+        body__ = []     % __body: the cached _Body proxy, or [] (None) until first
+                        % _body access. Python `self.__body` (name-mangled private
+                        % cache); double leading underscore rotates -> body__
+                        % (design.md section 2). NOT a lazyproperty: the manual
+                        % is-None cache mirrors document.py 242-246 exactly. The
+                        % sentinel is the None-literal [] (a _Body handle is never
+                        % [], so isequal(.,[]) is a sound cache-empty test, H3).
     end
 
     methods
@@ -64,8 +72,8 @@ classdef Document < mat2doc.shared.ElementProxy
             %       self._part = part
             %       self.__body = None                       # P2-3 body cache
             %   The redundant `self._element = element` is a no-op (the base
-            %   already stored it) and is not repeated here. `__body` is the
-            %   P2-3 body-cache concern, not carried at M1.
+            %   already stored it) and is not repeated here. `__body = None` is
+            %   the body_ accessor's cache, ported at P2-3 -> body__ = [].
             %
             %   Inputs:  element - the w:document root element.
             %            part    - the owning mat2doc.parts.DocumentPart.
@@ -74,6 +82,7 @@ classdef Document < mat2doc.shared.ElementProxy
             %   Ported from python-docx v1.2.0: src/docx/document.py::Document.__init__
             obj@mat2doc.shared.ElementProxy(element);   % base: element_=element, parent_=[] (None)
             obj.part_ = part;
+            obj.body__ = [];                            % self.__body = None (H3)
         end
 
         function p = part(obj)
@@ -97,7 +106,72 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         % ------------------------------------------------------------------
-        % Feature stubs (mat2doc:notYetPorted) -- P2-3 (content) / P2 tiers
+        % LIVE object-graph SHELL (P2-3): the private _body / _block_width
+        % accessors. NEITHER is on the clean open->save path (proven: a bare
+        % Document().save() fires ZERO stubs), so they are live plumbing without
+        % pulling P4/P5/P6 forward. body_ is fully functional now; block_width_
+        % is ported faithfully but transitively hits the `sections` stub (P5) --
+        % it is reached only by add_table (itself a P6 stub), so no live caller.
+        % ------------------------------------------------------------------
+
+        function b = body_(obj)
+            % _BODY (document.py 241-246, @property): the _Body instance containing
+            %   the content for this document. Python:
+            %       if self.__body is None:
+            %           self.__body = _Body(self._element.body, self)
+            %       return self.__body
+            %   MANUAL is-None cache (NOT a lazyproperty): body__ starts [] (None)
+            %   and is populated on first access, then returned as-is. Because the
+            %   cache holds the SAME _Body handle across calls, repeated body_()
+            %   reads return one identical proxy (H5/H9 -- matches Python's cached
+            %   @property; contrast DocumentPart.document, which is UNcached and
+            %   yields a fresh Document each call). `self._element.body` is the
+            %   CT_Document.body descriptor getter (the live <w:body> CT_Body).
+            %   Underscore rotation: _body -> body_, __body -> body__.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document._body
+            if isequal(obj.body__, [])                  % if self.__body is None (H3)
+                obj.body__ = mat2doc.document.Body_(obj.element_.body, obj);
+            end
+            b = obj.body__;
+        end
+
+        function w = block_width_(obj)
+            % _BLOCK_WIDTH (document.py 232-239, @property): a Length giving the
+            %   space between margins in the last section. Python:
+            %       section = self.sections[-1]
+            %       page_width  = section.page_width  or Inches(8.5)
+            %       left_margin = section.left_margin or Inches(1)
+            %       right_margin= section.right_margin or Inches(1)
+            %       return Emu(page_width - left_margin - right_margin)
+            %   Ported FAITHFULLY, but `sections` is a P5 stub, so this transitively
+            %   raises mat2doc:notYetPorted when invoked -- reached only via
+            %   add_table (a P6 stub), so there is no live caller at P2-3. The
+            %   Python `x or Inches(...)` falsy-default (H4: Length(0) is falsy) is
+            %   ported for when sections goes live; Emu/Inches are the shared Length
+            %   subclasses (arithmetic in EMU, H6). Underscore rotation:
+            %   _block_width -> block_width_.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document._block_width
+            section = obj.sections();                        % P5 stub -> notYetPorted
+            section = section(end);                          % sections[-1] (H1: end)
+            page_width = section.page_width();
+            if isequal(page_width, []) || page_width == 0    % `or Inches(8.5)` (H4)
+                page_width = mat2doc.shared.Inches(8.5);
+            end
+            left_margin = section.left_margin();
+            if isequal(left_margin, []) || left_margin == 0  % `or Inches(1)` (H4)
+                left_margin = mat2doc.shared.Inches(1);
+            end
+            right_margin = section.right_margin();
+            if isequal(right_margin, []) || right_margin == 0 % `or Inches(1)` (H4)
+                right_margin = mat2doc.shared.Inches(1);
+            end
+            w = mat2doc.shared.Emu(page_width - left_margin - right_margin);
+        end
+
+        % ------------------------------------------------------------------
+        % Feature stubs (mat2doc:notYetPorted) -- the P4/P5/P6/P7/P8 tiers
         % un-stub these. NONE is on the open->save path.
         % ------------------------------------------------------------------
 
@@ -109,24 +183,24 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         function p = add_heading(obj, text, level) %#ok<INUSD,MANU,STOUT>
-            % ADD_HEADING STUB (document.py 90-101). P2-3 document content tier.
+            % ADD_HEADING STUB (document.py 90-101). Owner: P4 content tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_heading (owning WP: P2-3 document " + ...
-                "content tier) is not yet ported");
+                "mat2doc.document.Document.add_heading (owning WP: P4 content " + ...
+                "tier) is not yet ported");
         end
 
         function p = add_page_break(obj) %#ok<MANU,STOUT>
-            % ADD_PAGE_BREAK STUB (document.py 103-107). P2-3 document content tier.
+            % ADD_PAGE_BREAK STUB (document.py 103-107). Owner: P4 content tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_page_break (owning WP: P2-3 " + ...
-                "document content tier) is not yet ported");
+                "mat2doc.document.Document.add_page_break (owning WP: P4 " + ...
+                "content tier) is not yet ported");
         end
 
         function p = add_paragraph(obj, text, style) %#ok<INUSD,MANU,STOUT>
-            % ADD_PARAGRAPH STUB (document.py 109-119). P2-3 document content tier.
+            % ADD_PARAGRAPH STUB (document.py 109-119). Owner: P4 content tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_paragraph (owning WP: P2-3 " + ...
-                "document content tier) is not yet ported");
+                "mat2doc.document.Document.add_paragraph (owning WP: P4 " + ...
+                "content tier) is not yet ported");
         end
 
         function shape = add_picture(obj, image_path_or_stream, width, height) %#ok<INUSD,MANU,STOUT>
@@ -165,17 +239,17 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         function it = iter_inner_content(obj) %#ok<MANU,STOUT>
-            % ITER_INNER_CONTENT STUB (document.py 180-182). P2-3 document content tier.
+            % ITER_INNER_CONTENT STUB (document.py 180-182). Owner: P4/P6 content tiers.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.iter_inner_content (owning WP: P2-3 " + ...
-                "document content tier) is not yet ported");
+                "mat2doc.document.Document.iter_inner_content (owning WP: P4/P6 " + ...
+                "content tiers) is not yet ported");
         end
 
         function p = paragraphs(obj) %#ok<MANU,STOUT>
-            % PARAGRAPHS STUB (document.py 184-191). P2-3 document content tier.
+            % PARAGRAPHS STUB (document.py 184-191). Owner: P4 content tier.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.paragraphs (owning WP: P2-3 document " + ...
-                "content tier) is not yet ported");
+                "mat2doc.document.Document.paragraphs (owning WP: P4 content " + ...
+                "tier) is not yet ported");
         end
 
         function s = sections(obj) %#ok<MANU,STOUT>

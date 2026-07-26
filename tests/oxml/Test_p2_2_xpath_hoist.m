@@ -39,11 +39,15 @@ classdef Test_p2_2_xpath_hoist < matlab.unittest.TestCase
 %     resolves the SAME single definition (DefiningClass still XmlElement -- the
 %     P1-3 copy was RELOCATED, not duplicated). RED if a future edit re-adds a
 %     BaseOxmlElement copy or moves the definition back.
-%   * Equivalence (frozen s0014 oracle) -- a PLAIN unregistered `w:document` root
-%     (runtime class == `mat2doc.oxml.XmlElement`, the exact production condition
-%     of StoryPart.next_id / XmlPart.rel_ref_count_ before P2-3) evaluates
+%   * Equivalence (frozen s0014 oracle) -- the parsed `w:document` root evaluates
 %     `//@id` == ["7","12","notnum"] and `//@r:id` == ["rId9","rId9","rId3"]
-%     byte-for-byte against the frozen python-docx/lxml oracle.
+%     byte-for-byte against the frozen python-docx/lxml oracle. (P2-2 NOTE, kept
+%     for provenance: at P2-2 this root was the PLAIN unregistered
+%     `mat2doc.oxml.XmlElement` -- the exact production condition of
+%     StoryPart.next_id / XmlPart.rel_ref_count_. P2-3 registers CT_Document, so
+%     the root is now a CT_Document; the hoisted `.xpath` is inherited unchanged
+%     and the frozen vectors still hold. The plain-fallback #60 pin now lives in
+%     test_registered_root_is_CT_Document via a genuinely-unregistered element.)
 %   * Edge (H3 typed-empty return) -- `//@nomatch` on the plain root returns
 %     `string.empty(1,0)` (a TYPED empty attribute-value array), NEVER [] (None):
 %     callers use numel/~isempty, so the H3 contract must hold post-hoist.
@@ -118,19 +122,38 @@ classdef Test_p2_2_xpath_hoist < matlab.unittest.TestCase
         end
 
         % =============================================================== %
-        % 2. PLAIN unregistered element evaluates xpath (frozen s0014)     %
+        % 2. Registered root (CT_Document @ P2-3) evaluates the hoisted    %
+        %    xpath; plain-fallback #60 pin preserved in the first method    %
         % =============================================================== %
 
-        function test_plain_root_is_unregistered_XmlElement(testCase)
-            % Equivalence/pre-condition (validate_P2-2 Bar 2): a parsed
-            % w:document root has runtime class EXACTLY mat2doc.oxml.XmlElement
-            % (unregistered until P2-3). This is the exact class of
-            % StoryPart.next_id's `element` and XmlPart.rel_ref_count_'s
-            % `element` before CT_Document registration -- the class #60 must
-            % serve. If P2-3 later registers CT_Document this pin flips (expected).
+        function test_registered_root_is_CT_Document(testCase)
+            % P2-3 REGISTRATION FLIP (expected; this file's line ~130 comment,
+            % below, pre-declared it): P2-3 registers w:document -> CT_Document, so
+            % the parsed s0014 root now has runtime class EXACTLY
+            % mat2doc.oxml.document.CT_Document -- NOT the old unregistered
+            % XmlElement fallback. CT_Document IS-A mat2doc.oxml.XmlElement via
+            % BaseOxmlElement, so it still carries the #60 hoisted `.xpath` (the
+            % value tests below run on this same root and pass).
+            % (validate_P2-3_document_shell.md JOB A, stale-pin #4.)
             root = testCase.plainRoot();
-            testCase.verifyEqual(class(root), 'mat2doc.oxml.XmlElement', ...
-                'parsed w:document root must be the UNREGISTERED fallback XmlElement');
+            testCase.verifyEqual(class(root), 'mat2doc.oxml.document.CT_Document', ...
+                'parsed w:document root now resolves to the registered CT_Document (P2-3)');
+            testCase.verifyInstanceOf(root, 'mat2doc.oxml.XmlElement', ...
+                'CT_Document IS-A XmlElement, so the #60 hoisted xpath is still available');
+
+            % #60 COVERAGE PRESERVED. The whole point of #60 is that the hoisted
+            % `.xpath` reaches a PLAIN (unregistered) fallback element -- the
+            % production condition of StoryPart.next_id / XmlPart.rel_ref_count_
+            % on any not-yet-registered root. Now that w:document is registered,
+            % that plain-element condition must be pinned with a GENUINELY
+            % unregistered tag: a bare custom element still resolves to the plain
+            % mat2doc.oxml.XmlElement fallback AND still evaluates the hoisted xpath.
+            plain = testCase.unregisteredRoot();
+            testCase.verifyEqual(class(plain), 'mat2doc.oxml.XmlElement', ...
+                'a genuinely-unregistered root must still be the plain XmlElement fallback');
+            ids = plain.xpath("//@id");
+            testCase.verifyEqual(ids, ["3" "8"], ...
+                'the #60 hoisted xpath must work on the plain XmlElement fallback');
         end
 
         function test_plain_root_xpath_id_values_match_oracle(testCase)
@@ -198,14 +221,28 @@ classdef Test_p2_2_xpath_hoist < matlab.unittest.TestCase
     methods (Access = private)
 
         function root = plainRoot(testCase)
-            % Parse the frozen s0014 w:document blob into a plain (unregistered)
-            % XmlElement root. Rebuilt per case -- parsing is cheap and keeps the
-            % cases independent.
+            % Parse the frozen s0014 w:document blob into its root. NOTE (P2-3):
+            % w:document is now registered, so this root is a CT_Document (an
+            % XmlElement subclass) rather than the bare fallback it was at P2-2 --
+            % the hoisted `.xpath` is inherited, so the frozen-oracle value tests
+            % below are unchanged. Rebuilt per case (parsing is cheap; keeps the
+            % cases independent).
             blob = "<w:document xmlns:w=""" + testCase.W_URI + """ " + ...
                 "xmlns:r=""" + testCase.R_URI + """><w:body>" + ...
                 "<w:p id=""7""/><w:p id=""12""/><w:p id=""notnum""/>" + ...
                 "<w:x r:id=""rId9""/><w:y r:id=""rId9""/><w:z r:id=""rId3""/>" + ...
                 "</w:body></w:document>";
+            root = mat2doc.oxml.parse_xml(uint8(unicode2native(char(blob), "UTF-8")));
+        end
+
+        function root = unregisteredRoot(~)
+            % A GENUINELY-unregistered root (a bare custom-namespace element that
+            % no registry row claims -- unlike w:document, registered at P2-3).
+            % Its runtime class is the plain mat2doc.oxml.XmlElement fallback, so
+            % it is the post-P2-3 vehicle for the #60 "xpath on a plain element"
+            % pin. Carries two unprefixed id attributes for the //@id probe.
+            blob = "<z:doc xmlns:z=""urn:mat2doc:test"">" + ...
+                "<z:a id=""3""/><z:b id=""8""/></z:doc>";
             root = mat2doc.oxml.parse_xml(uint8(unicode2native(char(blob), "UTF-8")));
         end
 
