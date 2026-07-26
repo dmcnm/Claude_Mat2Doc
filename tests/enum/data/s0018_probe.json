@@ -1,0 +1,752 @@
+{
+  "break_alias": {
+    "line_value": 6,
+    "member_count": 10,
+    "member_names": [
+      "COLUMN",
+      "LINE",
+      "LINE_CLEAR_LEFT",
+      "LINE_CLEAR_RIGHT",
+      "LINE_CLEAR_ALL",
+      "PAGE",
+      "SECTION_CONTINUOUS",
+      "SECTION_EVEN_PAGE",
+      "SECTION_NEXT_PAGE",
+      "SECTION_ODD_PAGE"
+    ],
+    "tw_eq_line": false,
+    "tw_eq_line_clear_all": true,
+    "tw_name": "LINE_CLEAR_ALL",
+    "tw_value": 11
+  },
+  "members": {
+    "MSO_COLOR_TYPE": [
+      {
+        "doclen": 42,
+        "name": "RGB",
+        "value": 1
+      },
+      {
+        "doclen": 40,
+        "name": "THEME",
+        "value": 2
+      },
+      {
+        "doclen": 53,
+        "name": "AUTO",
+        "value": 101
+      }
+    ],
+    "MSO_THEME_COLOR_INDEX": [
+      {
+        "doclen": 41,
+        "name": "NOT_THEME_COLOR",
+        "value": 0,
+        "xml": "UNMAPPED"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_1",
+        "value": 5,
+        "xml": "accent1"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_2",
+        "value": 6,
+        "xml": "accent2"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_3",
+        "value": 7,
+        "xml": "accent3"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_4",
+        "value": 8,
+        "xml": "accent4"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_5",
+        "value": 9,
+        "xml": "accent5"
+      },
+      {
+        "doclen": 35,
+        "name": "ACCENT_6",
+        "value": 10,
+        "xml": "accent6"
+      },
+      {
+        "doclen": 39,
+        "name": "BACKGROUND_1",
+        "value": 14,
+        "xml": "background1"
+      },
+      {
+        "doclen": 39,
+        "name": "BACKGROUND_2",
+        "value": 16,
+        "xml": "background2"
+      },
+      {
+        "doclen": 33,
+        "name": "DARK_1",
+        "value": 1,
+        "xml": "dark1"
+      },
+      {
+        "doclen": 33,
+        "name": "DARK_2",
+        "value": 3,
+        "xml": "dark2"
+      },
+      {
+        "doclen": 50,
+        "name": "FOLLOWED_HYPERLINK",
+        "value": 12,
+        "xml": "followedHyperlink"
+      },
+      {
+        "doclen": 42,
+        "name": "HYPERLINK",
+        "value": 11,
+        "xml": "hyperlink"
+      },
+      {
+        "doclen": 34,
+        "name": "LIGHT_1",
+        "value": 2,
+        "xml": "light1"
+      },
+      {
+        "doclen": 34,
+        "name": "LIGHT_2",
+        "value": 4,
+        "xml": "light2"
+      },
+      {
+        "doclen": 33,
+        "name": "TEXT_1",
+        "value": 13,
+        "xml": "text1"
+      },
+      {
+        "doclen": 33,
+        "name": "TEXT_2",
+        "value": 15,
+        "xml": "text2"
+      }
+    ],
+    "WD_BREAK_TYPE": [
+      {
+        "name": "COLUMN",
+        "value": 8
+      },
+      {
+        "name": "LINE",
+        "value": 6
+      },
+      {
+        "name": "LINE_CLEAR_LEFT",
+        "value": 9
+      },
+      {
+        "name": "LINE_CLEAR_RIGHT",
+        "value": 10
+      },
+      {
+        "name": "LINE_CLEAR_ALL",
+        "value": 11
+      },
+      {
+        "name": "PAGE",
+        "value": 7
+      },
+      {
+        "name": "SECTION_CONTINUOUS",
+        "value": 3
+      },
+      {
+        "name": "SECTION_EVEN_PAGE",
+        "value": 4
+      },
+      {
+        "name": "SECTION_NEXT_PAGE",
+        "value": 2
+      },
+      {
+        "name": "SECTION_ODD_PAGE",
+        "value": 5
+      }
+    ],
+    "WD_COLOR_INDEX": [
+      {
+        "doclen": 44,
+        "name": "INHERITED",
+        "value": -1,
+        "xml": null
+      },
+      {
+        "doclen": 40,
+        "name": "AUTO",
+        "value": 0,
+        "xml": "default"
+      },
+      {
+        "doclen": 12,
+        "name": "BLACK",
+        "value": 1,
+        "xml": "black"
+      },
+      {
+        "doclen": 10,
+        "name": "BLUE",
+        "value": 2,
+        "xml": "blue"
+      },
+      {
+        "doclen": 19,
+        "name": "BRIGHT_GREEN",
+        "value": 4,
+        "xml": "green"
+      },
+      {
+        "doclen": 16,
+        "name": "DARK_BLUE",
+        "value": 9,
+        "xml": "darkBlue"
+      },
+      {
+        "doclen": 15,
+        "name": "DARK_RED",
+        "value": 13,
+        "xml": "darkRed"
+      },
+      {
+        "doclen": 18,
+        "name": "DARK_YELLOW",
+        "value": 14,
+        "xml": "darkYellow"
+      },
+      {
+        "doclen": 24,
+        "name": "GRAY_25",
+        "value": 16,
+        "xml": "lightGray"
+      },
+      {
+        "doclen": 24,
+        "name": "GRAY_50",
+        "value": 15,
+        "xml": "darkGray"
+      },
+      {
+        "doclen": 12,
+        "name": "GREEN",
+        "value": 11,
+        "xml": "darkGreen"
+      },
+      {
+        "doclen": 11,
+        "name": "PINK",
+        "value": 5,
+        "xml": "magenta"
+      },
+      {
+        "doclen": 10,
+        "name": "RED",
+        "value": 6,
+        "xml": "red"
+      },
+      {
+        "doclen": 11,
+        "name": "TEAL",
+        "value": 10,
+        "xml": "darkCyan"
+      },
+      {
+        "doclen": 16,
+        "name": "TURQUOISE",
+        "value": 3,
+        "xml": "cyan"
+      },
+      {
+        "doclen": 13,
+        "name": "VIOLET",
+        "value": 12,
+        "xml": "darkMagenta"
+      },
+      {
+        "doclen": 12,
+        "name": "WHITE",
+        "value": 8,
+        "xml": "white"
+      },
+      {
+        "doclen": 13,
+        "name": "YELLOW",
+        "value": 7,
+        "xml": "yellow"
+      }
+    ],
+    "WD_HEADER_FOOTER_INDEX": [
+      {
+        "doclen": 46,
+        "name": "PRIMARY",
+        "value": 1,
+        "xml": "default"
+      },
+      {
+        "doclen": 33,
+        "name": "FIRST_PAGE",
+        "value": 2,
+        "xml": "first"
+      },
+      {
+        "doclen": 45,
+        "name": "EVEN_PAGE",
+        "value": 3,
+        "xml": "even"
+      }
+    ],
+    "WD_LINE_SPACING": [
+      {
+        "doclen": 24,
+        "name": "SINGLE",
+        "value": 0,
+        "xml": "UNMAPPED"
+      },
+      {
+        "doclen": 30,
+        "name": "ONE_POINT_FIVE",
+        "value": 1,
+        "xml": "UNMAPPED"
+      },
+      {
+        "doclen": 14,
+        "name": "DOUBLE",
+        "value": 2,
+        "xml": "UNMAPPED"
+      },
+      {
+        "doclen": 73,
+        "name": "AT_LEAST",
+        "value": 3,
+        "xml": "atLeast"
+      },
+      {
+        "doclen": 73,
+        "name": "EXACTLY",
+        "value": 4,
+        "xml": "exact"
+      },
+      {
+        "doclen": 115,
+        "name": "MULTIPLE",
+        "value": 5,
+        "xml": "auto"
+      }
+    ],
+    "WD_ORIENTATION": [
+      {
+        "doclen": 21,
+        "name": "PORTRAIT",
+        "value": 0,
+        "xml": "portrait"
+      },
+      {
+        "doclen": 22,
+        "name": "LANDSCAPE",
+        "value": 1,
+        "xml": "landscape"
+      }
+    ],
+    "WD_PARAGRAPH_ALIGNMENT": [
+      {
+        "doclen": 12,
+        "name": "LEFT",
+        "value": 0,
+        "xml": "left"
+      },
+      {
+        "doclen": 15,
+        "name": "CENTER",
+        "value": 1,
+        "xml": "center"
+      },
+      {
+        "doclen": 14,
+        "name": "RIGHT",
+        "value": 2,
+        "xml": "right"
+      },
+      {
+        "doclen": 16,
+        "name": "JUSTIFY",
+        "value": 3,
+        "xml": "both"
+      },
+      {
+        "doclen": 71,
+        "name": "DISTRIBUTE",
+        "value": 4,
+        "xml": "distribute"
+      },
+      {
+        "doclen": 52,
+        "name": "JUSTIFY_MED",
+        "value": 5,
+        "xml": "mediumKashida"
+      },
+      {
+        "doclen": 50,
+        "name": "JUSTIFY_HI",
+        "value": 7,
+        "xml": "highKashida"
+      },
+      {
+        "doclen": 49,
+        "name": "JUSTIFY_LOW",
+        "value": 8,
+        "xml": "lowKashida"
+      },
+      {
+        "doclen": 46,
+        "name": "THAI_JUSTIFY",
+        "value": 9,
+        "xml": "thaiDistribute"
+      }
+    ],
+    "WD_SECTION_START": [
+      {
+        "doclen": 25,
+        "name": "CONTINUOUS",
+        "value": 0,
+        "xml": "continuous"
+      },
+      {
+        "doclen": 25,
+        "name": "NEW_COLUMN",
+        "value": 1,
+        "xml": "nextColumn"
+      },
+      {
+        "doclen": 23,
+        "name": "NEW_PAGE",
+        "value": 2,
+        "xml": "nextPage"
+      },
+      {
+        "doclen": 25,
+        "name": "EVEN_PAGE",
+        "value": 3,
+        "xml": "evenPage"
+      },
+      {
+        "doclen": 32,
+        "name": "ODD_PAGE",
+        "value": 4,
+        "xml": "oddPage"
+      }
+    ],
+    "WD_TAB_ALIGNMENT": [
+      {
+        "doclen": 13,
+        "name": "LEFT",
+        "value": 0,
+        "xml": "left"
+      },
+      {
+        "doclen": 15,
+        "name": "CENTER",
+        "value": 1,
+        "xml": "center"
+      },
+      {
+        "doclen": 14,
+        "name": "RIGHT",
+        "value": 2,
+        "xml": "right"
+      },
+      {
+        "doclen": 16,
+        "name": "DECIMAL",
+        "value": 3,
+        "xml": "decimal"
+      },
+      {
+        "doclen": 12,
+        "name": "BAR",
+        "value": 4,
+        "xml": "bar"
+      },
+      {
+        "doclen": 26,
+        "name": "LIST",
+        "value": 6,
+        "xml": "list"
+      },
+      {
+        "doclen": 28,
+        "name": "CLEAR",
+        "value": 101,
+        "xml": "clear"
+      },
+      {
+        "doclen": 28,
+        "name": "END",
+        "value": 102,
+        "xml": "end"
+      },
+      {
+        "doclen": 27,
+        "name": "NUM",
+        "value": 103,
+        "xml": "num"
+      },
+      {
+        "doclen": 27,
+        "name": "START",
+        "value": 104,
+        "xml": "start"
+      }
+    ],
+    "WD_TAB_LEADER": [
+      {
+        "doclen": 16,
+        "name": "SPACES",
+        "value": 0,
+        "xml": "none"
+      },
+      {
+        "doclen": 5,
+        "name": "DOTS",
+        "value": 1,
+        "xml": "dot"
+      },
+      {
+        "doclen": 7,
+        "name": "DASHES",
+        "value": 2,
+        "xml": "hyphen"
+      },
+      {
+        "doclen": 13,
+        "name": "LINES",
+        "value": 3,
+        "xml": "underscore"
+      },
+      {
+        "doclen": 13,
+        "name": "HEAVY",
+        "value": 4,
+        "xml": "heavy"
+      },
+      {
+        "doclen": 26,
+        "name": "MIDDLE_DOT",
+        "value": 5,
+        "xml": "middleDot"
+      }
+    ],
+    "WD_UNDERLINE": [
+      {
+        "doclen": 52,
+        "name": "INHERITED",
+        "value": -1,
+        "xml": null
+      },
+      {
+        "doclen": 405,
+        "name": "NONE",
+        "value": 0,
+        "xml": "none"
+      },
+      {
+        "doclen": 156,
+        "name": "SINGLE",
+        "value": 1,
+        "xml": "single"
+      },
+      {
+        "doclen": 32,
+        "name": "WORDS",
+        "value": 2,
+        "xml": "words"
+      },
+      {
+        "doclen": 14,
+        "name": "DOUBLE",
+        "value": 3,
+        "xml": "double"
+      },
+      {
+        "doclen": 5,
+        "name": "DOTTED",
+        "value": 4,
+        "xml": "dotted"
+      },
+      {
+        "doclen": 20,
+        "name": "THICK",
+        "value": 6,
+        "xml": "thick"
+      },
+      {
+        "doclen": 7,
+        "name": "DASH",
+        "value": 7,
+        "xml": "dash"
+      },
+      {
+        "doclen": 28,
+        "name": "DOT_DASH",
+        "value": 9,
+        "xml": "dotDash"
+      },
+      {
+        "doclen": 36,
+        "name": "DOT_DOT_DASH",
+        "value": 10,
+        "xml": "dotDotDash"
+      },
+      {
+        "doclen": 19,
+        "name": "WAVY",
+        "value": 11,
+        "xml": "wave"
+      },
+      {
+        "doclen": 11,
+        "name": "DOTTED_HEAVY",
+        "value": 20,
+        "xml": "dottedHeavy"
+      },
+      {
+        "doclen": 13,
+        "name": "DASH_HEAVY",
+        "value": 23,
+        "xml": "dashedHeavy"
+      },
+      {
+        "doclen": 40,
+        "name": "DOT_DASH_HEAVY",
+        "value": 25,
+        "xml": "dashDotHeavy"
+      },
+      {
+        "doclen": 42,
+        "name": "DOT_DOT_DASH_HEAVY",
+        "value": 26,
+        "xml": "dashDotDotHeavy"
+      },
+      {
+        "doclen": 18,
+        "name": "WAVY_HEAVY",
+        "value": 27,
+        "xml": "wavyHeavy"
+      },
+      {
+        "doclen": 12,
+        "name": "DASH_LONG",
+        "value": 39,
+        "xml": "dashLong"
+      },
+      {
+        "doclen": 19,
+        "name": "WAVY_DOUBLE",
+        "value": 43,
+        "xml": "wavyDouble"
+      },
+      {
+        "doclen": 18,
+        "name": "DASH_LONG_HEAVY",
+        "value": 55,
+        "xml": "dashLongHeavy"
+      }
+    ]
+  },
+  "mod_alias": {
+    "mtc_accent1_name": "ACCENT_1",
+    "mtc_accent1_value": 5,
+    "mtc_eq_canonical": true,
+    "mtc_from_accent6": "ACCENT_6",
+    "mtc_to_accent6": "accent6",
+    "wap_center_name": "CENTER",
+    "wap_center_value": 1,
+    "wap_eq_canonical": true,
+    "wap_from_both": "JUSTIFY",
+    "wap_to_center": "center",
+    "wb_eq_canonical": true,
+    "wb_page_name": "PAGE",
+    "wb_page_value": 7,
+    "wb_text_wrapping_name": "LINE_CLEAR_ALL",
+    "wc_auto_name": "AUTO",
+    "wc_auto_value": 0,
+    "wc_eq_canonical": true,
+    "wc_from_red": "RED",
+    "wc_to_auto": "default",
+    "whf_eq_canonical": true,
+    "whf_from_first": "FIRST_PAGE",
+    "whf_primary_name": "PRIMARY",
+    "whf_to_2": "first",
+    "wor_eq_canonical": true,
+    "wor_from_portrait": "PORTRAIT",
+    "wor_landscape_name": "LANDSCAPE",
+    "wor_to_1": "landscape",
+    "wsec_eq_canonical": true,
+    "wsec_from_continuous": "CONTINUOUS",
+    "wsec_newpage_name": "NEW_PAGE",
+    "wsec_to_2": "nextPage"
+  },
+  "mso_color": {
+    "auto_int": 101,
+    "auto_str": "AUTO (101)",
+    "rgb_int": 1,
+    "rgb_str": "RGB (1)",
+    "theme_int": 2,
+    "theme_str": "THEME (2)"
+  },
+  "roundtrip": {
+    "mtci_from_accent1": "ACCENT_1",
+    "mtci_from_dark1": "DARK_1",
+    "mtci_from_empty_msg": "MSO_THEME_COLOR_INDEX has no XML mapping for ''",
+    "mtci_from_unmapped": "NOT_THEME_COLOR",
+    "mtci_to_0": "UNMAPPED",
+    "mtci_to_11": "hyperlink",
+    "mtci_to_5": "accent1",
+    "mtci_to_not_theme": "UNMAPPED",
+    "wci_from_none": "INHERITED",
+    "wci_from_red": "RED",
+    "wci_to_6": "red",
+    "wci_to_inherited_msg": "WD_COLOR_INDEX.INHERITED has no XML representation",
+    "wci_to_neg1_msg": "WD_COLOR_INDEX.INHERITED has no XML representation",
+    "whfi_from_default": "PRIMARY",
+    "whfi_to_1": "default",
+    "wls_from_nosuch_msg": "WD_LINE_SPACING has no XML mapping for 'nosuch'",
+    "wls_from_unmapped": "SINGLE",
+    "wls_to_4": "exact",
+    "wls_to_single": "UNMAPPED",
+    "wo_from_landscape": "LANDSCAPE",
+    "wo_to_1": "landscape",
+    "wpa_from_both": "JUSTIFY",
+    "wpa_from_center": "CENTER",
+    "wpa_to_3": "both",
+    "wpa_to_999_msg": "999 is not a valid WD_PARAGRAPH_ALIGNMENT",
+    "wss_from_nextpage": "NEW_PAGE",
+    "wss_to_2": "nextPage",
+    "wta_from_start": "START",
+    "wta_to_104": "start",
+    "wta_to_999_msg": "999 is not a valid WD_TAB_ALIGNMENT",
+    "wtl_from_middledot": "MIDDLE_DOT",
+    "wtl_to_5": "middleDot",
+    "wu_from_none": "INHERITED",
+    "wu_from_single": "SINGLE",
+    "wu_to_1": "single",
+    "wu_to_inherited_msg": "WD_UNDERLINE.INHERITED has no XML representation"
+  }
+}
