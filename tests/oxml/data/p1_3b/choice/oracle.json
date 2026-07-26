@@ -1,0 +1,8 @@
+{
+  "add_gB_before_s": "[gB, s]",
+  "repeat_same_handle_is": true,
+  "change_to_gC": "[gC, s]",
+  "firstfound_argorder": "gC",
+  "removeChildren_result": "[]",
+  "note": "SYNTHETIC parity only. Choice/ZeroOrOneChoice are DEAD CODE in docx v1.2.0 (0 production uses). NO real-element byte-oracle exists or can exist until a docx element ever declares a choice group. These are engine-contract parity members mirroring the validated Mat2Ppt engine (where they ARE live)."
+}

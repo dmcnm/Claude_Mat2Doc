@@ -1,0 +1,6 @@
+{
+  "public_add_tab_exists": true,
+  "interleaved_localnames": "[tab, tab, tab]",
+  "interleaved_len": 3,
+  "note": "public add_x and _add_x both route through the same add primitive (_BaseChildElement._add_adder); engine-neutral, no D-number. The delta only decides WHICH per-class delegating member a future CT_* WP scaffolds (24 docx ZeroOrMore sites)."
+}

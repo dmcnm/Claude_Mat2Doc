@@ -12,15 +12,21 @@ the **mini-XPath engine** (`evaluate_xpath`) that `BaseOxmlElement.xpath`
 delegates to. It supplies, in one place, the tree-ops and the
 attribute-descriptor machinery the schema classes reuse.
 
-**P1-3a is slice 1 of 2.** This page documents exactly what P1-3a ports:
-the three `BaseOxmlElement` **tree-ops**, the **attribute-descriptor engine**
-(`OptionalAttribute` / `RequiredAttribute`), and the **XPath mini-engine**. The
-**child-element descriptor engine** (`ZeroOrOne` / `ZeroOrMore` /
-`OneAndOnlyOne` / `OneOrMore` / `Choice` / `ZeroOrOneChoice` and their
-`getChild` / `getOrAddChild` / `addChild` / `removeChild` / … generated
-members) is **P1-3b** and is *not* on this page. Gate-3 for P1-3a:
-`reports\p1_3a_validation.md` — **53/53, 0 new D-numbers** (38 xpath value/byte,
-10 attr-descriptor, 5 tree-ops), run over the parsed `w:document` tree.
+**xmlchemy ships in two slices; this page documents both.** **P1-3a** ports the
+three `BaseOxmlElement` **tree-ops**, the **attribute-descriptor engine**
+(`OptionalAttribute` / `RequiredAttribute`), and the **XPath mini-engine**;
+Gate-3 **53/53, 0 new D-numbers** (`reports\p1_3a_validation.md` — 38 xpath
+value/byte, 10 attr-descriptor, 5 tree-ops, over the parsed `w:document` tree).
+**P1-3b** (this extension) ports the **child-element descriptor engine** — the
+`ZeroOrOne` / `ZeroOrMore` / `OneAndOnlyOne` / `OneOrMore` / `Choice` /
+`ZeroOrOneChoice` descriptor families and the 11 generic `getChild` /
+`getRequiredChild` / `getChildList` / `newChild` / `insertChildInSequence` /
+`addChild` / `getOrAddChild` / `removeChild` / `firstChildFoundIn` /
+`removeChildren` / `getOrChangeToChild` engine methods every future `CT_*`
+child-descriptor member delegates to; Gate-3 **46/46, 0 new D-numbers**
+(`reports\p1_3b_validation.md` — the H11 successor-ordering battery
+byte-identical to a live python-docx 1.2.0 oracle). **P1-3b completes
+xmlchemy.**
 
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.
@@ -141,9 +147,12 @@ parser instantiates registered `CT_*` classes via
 `feval(cls, name, ownDecls)` with the Nx2 decl-pair, so a struct-typed guard here
 would break parsing.
 
-**Deferred, in their owning WPs** (not ported at P1-3a): the child-element
-descriptor engine (`getChild` / `getOrAddChild` / `addChild` / … — **P1-3b**);
-the `xml` property (`serialize_for_reading`, a pretty-printed test-only helper —
+The **child-element descriptor engine** (`getChild` / `getOrAddChild` /
+`addChild` / … — the 11 methods of P1-3b) is documented in its own section
+below.
+
+**Deferred, in their owning WPs** (still not ported): the `xml` property
+(`serialize_for_reading`, a pretty-printed test-only helper —
 the **doc-serialize/OPC WP**; provided here as a clean `mat2doc:notYetPorted`
 stub so an accidental caller gets a *named* error); and `__repr__` / `_nsptag`
 (display-only — note the rotated name `nsptag_` would collide with `XmlElement`'s
@@ -305,6 +314,483 @@ therefore **illustrative of the call pattern**, not runnable standalone until th
 ```
 
 *Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::OptionalAttribute` / `RequiredAttribute` `_getter` / `_setter` (lines 154–261)*
+
+---
+
+## The child-element descriptor engine (P1-3b)
+
+python-docx declares each child element on a `CT_*` class with a **child
+descriptor** — `ZeroOrOne` / `ZeroOrMore` / `OneAndOnlyOne` / `OneOrMore` /
+`Choice` / `ZeroOrOneChoice`. `MetaOxmlElement` walks the class body and, per
+descriptor, **generates** a family of accessor members (`get.x` / `x_lst` /
+`_new_x` / `_insert_x` / `_add_x` / `add_x` / `get_or_add_x` / `_remove_x` /
+`get_or_change_to_x` / `_remove_eg_x`) whose bodies all reduce to a handful of
+generic operations. As with the attribute engine (design.md §2), MATLAB has no
+metaclass hook, so the port carries those generic operations as **11 explicit
+engine methods** on `BaseOxmlElement`; a future `CT_*` class holds a `Constant`
+`_tag_seq` / successor / group-member table and its generated-member equivalents
+forward into these methods (no runtime metaprogramming).
+
+**Descriptor family → engine method** (docx `src/docx/oxml/xmlchemy.py`):
+
+| Descriptor (generated member it backs) | docx lines | engine method |
+|---|---|---|
+| `ZeroOrOne` / `Choice` (`get.x`) | 380–382 | `getChild` |
+| `OneAndOnlyOne` (`get.x`, required) | 499–505 | `getRequiredChild` |
+| `ZeroOrMore` / `OneOrMore` (`x_lst`) | 397–398 | `getChildList` |
+| `_new_x` (default creator) | 366–367 | `newChild` |
+| `_insert_x` | 319–321 | `insertChildInSequence` |
+| `_add_x` / `add_x` | 284–291 | `addChild` |
+| `ZeroOrOne` (`get_or_add_x`) | 557–562 | `getOrAddChild` |
+| `ZeroOrOne` (`_remove_x`) | 572–573 | `removeChild` |
+| `ZeroOrOneChoice` (`get.x`) | 622–623 | `firstChildFoundIn` |
+| `ZeroOrOneChoice` (`_remove_eg_x`) | 610–612 | `removeChildren` |
+| `Choice` (`get_or_change_to_x`) | 453–461 | `getOrChangeToChild` |
+
+Because no `CT_*` class exists yet (they arrive at P4+), these methods are the
+**engine contract** — audited line-by-line and frozen against a live oracle, but
+with **no production caller on the current surface**. Gate-3 drove them with the
+**real `CT_PPr._tag_seq`** (`oxml/text/parfmt.py` 64–119) as the successor
+slices; every serialized `w:pPr` fragment was **byte-identical** to
+python-docx 1.2.0.
+
+### H11 — the successor-ordering crux
+
+`insertChildInSequence` expands the class's `SUCCESSORS` constant (a string
+array of the tags that must sort **after** the inserted child) into the
+repeating tagname arguments of the P1-3a tree-op `insert_element_before`, which
+scans them in **argument order**, `addprevious`-es the **first present**
+successor, and otherwise **appends**. So a child always lands *before the first
+successor already in the tree* — the mechanism that keeps `w:pPr` children in
+schema order regardless of the order the API creates them.
+
+The successor list for a tag at schema position *N* is the schema slice
+`_tag_seq[N:]` (everything from *N* onward — the child sorts before all of it).
+The H1 0→1 base shift is applied **once, at declaration**, when the slice is
+encoded (`_tag_seq[N:]` → `tagSeq(N+1:end)`); the engine itself contains **no
+index arithmetic**. Gate-3 hand-encoded all 12 `CT_PPr` slices on both sides and
+replayed an 18-step out-of-order build (`get_or_add_*` in scrambled order, an
+H5 get-existing repeat, a remove+re-add, a foreign trailing child, and a
+`sectPr` re-add that takes the **append** path *after* the foreign child): the
+serialized `w:pPr` matched the python-docx oracle **byte-for-byte at every
+step**.
+
+### H5 — get-or-add identity
+
+`getOrAddChild` (and `getOrChangeToChild`) return the **live** child handle from
+`find` when the child is already present — never a copy — so back-to-back calls
+return the **same handle** (`a == b`, Python `is` true), and `addChild`'s return
+**is** the node now in the tree.
+
+### H9 — materialized child list
+
+`getChildList` returns `findall(...)`, a fully **materialized** `(1,N)`
+`mat2doc.oxml.XmlElement` array (Python returns a `list`, not a lazy iterator).
+"None present" is a typed **`1x0`** array — a real empty list, distinct from the
+`[]` (None) the single-child getters return. Because the array is a snapshot,
+removing children while iterating over it is safe in both languages.
+
+### H3 — the tri-state "absent" encoding
+
+Three distinct encodings of "not there", matching Python exactly:
+
+| Method | absent result | Python |
+|---|---|---|
+| `getChild` / `firstChildFoundIn` | `[]` (class `double`) | `None` |
+| `getChildList` | `1x0` typed `XmlElement` | `[]` (empty list) |
+| `getRequiredChild` | **raises** `mat2doc:InvalidXmlError` | `InvalidXmlError` |
+
+`getRequiredChild`'s message is byte-identical to python-docx, RST
+double-backticks and all — `` required ``<w:abstractNumId>`` child element not
+present `` (verified against the live `CT_Num.abstractNumId`, `numbering.py:20`).
+
+### docx-vs-pptx deltas
+
+The child-descriptor family is a **byte-identical re-port** of the SOLVED
+Mat2Ppt engine (no shared code — re-implemented `mat2doc:`-namespaced). docx
+v1.2.0 confirms the same surface, with **one generated-member delta**, plus two
+descriptor families that are **dead code**:
+
+- **D-delta-4 (engine-neutral, no D-number).** docx
+  `ZeroOrMore.populate_class_members` calls `_add_public_adder` (xmlchemy.py
+  536; hoisted up to `_BaseChildElement`, 340–352), so a docx `ZeroOrMore`
+  **also** generates a *public* `add_x()`; pptx's `ZeroOrMore` does not (only
+  `OneOrMore` does). The public `add_x()` routes through the **same `addChild`
+  primitive** as `_add_x`, so the engine surface here is unchanged. The delta
+  only decides **which per-class delegating member a future `CT_*` WP
+  scaffolds**: the genoxml scaffolder must emit a public `add_x → addChild`
+  delegator at each of the **24 docx `ZeroOrMore` sites** (pptx does not). This
+  is a **genoxml-scaffolder obligation**, recorded engine-neutrally — **no new
+  D-number**.
+- **`Choice` / `ZeroOrOneChoice` are dead code in docx v1.2.0.** A grep over
+  `src/docx/**/*.py` (excluding `xmlchemy.py`) finds **0** production
+  `Choice(` / `ZeroOrOneChoice(` uses, so `getOrChangeToChild`,
+  `firstChildFoundIn`, and `removeChildren` have **no real-element byte-oracle**
+  and cannot until a docx element ever declares a choice group. They are ported
+  for **engine-contract parity** with the descriptor family (and mirror the
+  *live, validated* Mat2Ppt engine, where the same methods back dml
+  fill/line/color). Gate-3 covers them with a **synthetic** value probe over
+  hand-built `w:gA` / `w:gB` / `w:gC` groups (5/5) — no package scenario is
+  possible or needed.
+
+:::{note}
+**Fold-forward + VERIFY-3.** The engine emits **no standalone XML part** — its
+accessors are consumed by `CT_*` classes that do not exist yet. So the
+**package-level L1 scenario lands at the first `CT_*` WP** (a `CT_PPr`
+out-of-order `get_or_add_*` build → a real `w:pPr` inside `document.xml`); this
+WP's Gate-3 is the **engine-probe freeze**, not a pkgcompare L0–L3 ladder. And
+because the registry is still **empty** at P1-3b, parsed trees remain
+**homogeneous** `XmlElement`, so the design.md §2 Sealed-method /
+heterogeneous-array risk is **not yet exercisable and MUST be re-verified at the
+first `CT_*` registration** (**VERIFY-3**, carried forward from P1-3a).
+:::
+
+---
+
+## `getChild`
+
+**Syntax**
+
+```matlab
+child = e.getChild(tag)
+```
+
+**Description**
+
+Returns the child element with prefixed tag `tag` (e.g. `"w:pPr"`), or `[]`
+(Python `None`, H3) when absent. Backs the `ZeroOrOne` and `Choice` getters
+(`get.x`) — `return obj.find(qn(nsptag))`.
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+p.append(mat2doc.oxml.OxmlElement("w:pPr"));
+pPr  = p.getChild("w:pPr");    % the live w:pPr handle
+none = p.getChild("w:r");      % [] (None, H3)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::_BaseChildElement._getter` (lines 380–382)*
+
+---
+
+## `getRequiredChild`
+
+**Syntax**
+
+```matlab
+child = e.getRequiredChild(tag)
+```
+
+**Description**
+
+Returns the child with prefixed tag `tag`, or **raises**
+`mat2doc:InvalidXmlError` when absent — the `OneAndOnlyOne` getter. A missing
+required child is malformed XML, not a sentinel. The message reproduces the
+Python RST double-backticks verbatim: `` required ``<tag>`` child element not
+present ``.
+
+**Example**
+
+```matlab
+num = mat2doc.oxml.BaseOxmlElement("w:num");
+try
+    num.getRequiredChild("w:abstractNumId");   % raises — child absent
+catch e
+    disp(e.identifier)   % "mat2doc:InvalidXmlError"
+end
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::OneAndOnlyOne._getter` (lines 499–505)*
+
+---
+
+## `getChildList`
+
+**Syntax**
+
+```matlab
+list = e.getChildList(tag)
+```
+
+**Description**
+
+Returns **all** children with prefixed tag `tag`, in document order, as a
+materialized `(1,N)` `mat2doc.oxml.XmlElement` array (H9). Backs `ZeroOrMore` /
+`OneOrMore` (`x_lst`) — `return obj.findall(qn(nsptag))`. "None present" is a
+typed **`1x0`** array (an empty *list*), **not** `[]` (None) — distinct from the
+single-child getters (H3). `findall` is already 1-based document order (H1 — no
+index shift).
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+p.append(mat2doc.oxml.OxmlElement("w:r"));
+p.append(mat2doc.oxml.OxmlElement("w:r"));
+runs = p.getChildList("w:r");         % 1x2 XmlElement array
+none = p.getChildList("w:hyperlink"); % 1x0 typed empty (materialized, H9)
+disp(numel(runs))                     % 2
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::_BaseChildElement._list_getter` (lines 397–398)*
+
+---
+
+## `newChild`
+
+**Syntax**
+
+```matlab
+child = e.newChild(tag)
+```
+
+**Description**
+
+Creates a **loose** child element of the correct type (via the registry — a
+registered `CT_*` class, or a plain `XmlElement` fallback), with no attributes
+and **not yet attached** to `e`. The default creator (`_new_x`) —
+`return OxmlElement(nsptag)`. `e` is unused (matches Python: the default creator
+ignores `obj`) but kept for method-call form; a `CT_*` class with a `_new_x`
+override supplies its own creator instead of this generic one.
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+r = p.newChild("w:r");   % loose <w:r/>, not yet in p
+disp(r.nsptag_str)       % "w:r"
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::_BaseChildElement._creator` (lines 366–367)*
+
+---
+
+## `insertChildInSequence`
+
+**Syntax**
+
+```matlab
+child = e.insertChildInSequence(child, successors)
+```
+
+**Description**
+
+Inserts `child` immediately **before** the first of `successors` already present
+in `e` (argument-order search via the P1-3a tree-op `insert_element_before`), or
+**appends** it when none is present; returns `child`. `successors` is a `(1,:)`
+string array — a `CT_*` class's `SUCCESSORS` constant, the schema slice
+`_tag_seq[N:]` for the child's tag. This is the mechanism behind H11
+successor-ordering; the H1 base shift lives in the *declaration* of the slice,
+never here.
+
+**Example**
+
+```matlab
+pPr = mat2doc.oxml.BaseOxmlElement("w:pPr");
+pPr.append(mat2doc.oxml.OxmlElement("w:jc"));
+% w:spacing must precede w:jc → pass w:jc as its successor:
+spacing = pPr.insertChildInSequence(mat2doc.oxml.OxmlElement("w:spacing"), "w:jc");
+% pPr is now <w:pPr><w:spacing/><w:jc/></w:pPr>
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::_BaseChildElement._add_inserter` (lines 319–321)*
+
+---
+
+## `addChild`
+
+**Syntax**
+
+```matlab
+child = e.addChild(tag, successors)
+child = e.addChild(tag, successors, name1, value1, ...)
+```
+
+**Description**
+
+Creates a child of type `tag` with the default creator (`newChild`), sets any
+trailing `name`/`value` attribute pairs (the Python `**attrs`, applied via the
+typed-property setter `child.(name) = value`), inserts it in schema sequence
+(`insertChildInSequence` against `successors`), and returns it. Backs the
+private `_add_x` and — in docx — the **public** `add_x` (D-delta-4); both route
+through this one primitive. A `CT_*` class with a `_new_x` / `_insert_x`
+override does **not** delegate here; it hand-routes through its own creator.
+
+:::{note}
+The `**attrs` typed-set path is **dormant** until a `CT_*` class with typed
+attribute properties exists (no current docx `_add_x(**attrs)` call site) —
+re-verified at the first such CT WP (VERIFY-3).
+:::
+
+**Example**
+
+```matlab
+pPr = mat2doc.oxml.BaseOxmlElement("w:pPr");
+pPr.append(mat2doc.oxml.OxmlElement("w:jc"));
+spacing = pPr.addChild("w:spacing", "w:jc");   % create + insert before w:jc
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::_BaseChildElement._add_adder` (lines 284–291)*
+
+---
+
+## `getOrAddChild`
+
+**Syntax**
+
+```matlab
+child = e.getOrAddChild(tag, successors)
+```
+
+**Description**
+
+Returns the child with prefixed tag `tag`, **creating and inserting it in
+sequence** (via `addChild` against `successors`) if it is absent — the
+`ZeroOrOne` `get_or_add_x`. When the child is already present, the **same live
+handle** is returned on every call (H5); no duplicate is created.
+
+**Example**
+
+```matlab
+pPr = mat2doc.oxml.BaseOxmlElement("w:pPr");
+jc      = pPr.getOrAddChild("w:jc",      string.empty(1,0));  % no successors → append
+spacing = pPr.getOrAddChild("w:spacing", "w:jc");             % before w:jc
+same    = pPr.getOrAddChild("w:spacing", "w:jc");             % H5: same handle
+disp(same == spacing)   % 1  (no new child added)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::ZeroOrOne._add_get_or_adder` (lines 557–562)*
+
+---
+
+## `removeChild`
+
+**Syntax**
+
+```matlab
+e.removeChild(tag)
+```
+
+**Description**
+
+Removes **all** children of `e` with prefixed tag `tag` (via `remove_all`) — the
+`ZeroOrOne` `_remove_x`. Faithful to `remove_all`, it removes *every* match, not
+just the first.
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+p.append(mat2doc.oxml.OxmlElement("w:r"));
+p.append(mat2doc.oxml.OxmlElement("w:r"));
+p.removeChild("w:r");                 % removes both
+disp(numel(p.getChildList("w:r")))    % 0
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::ZeroOrOne._add_remover` (lines 572–573)*
+
+---
+
+## `firstChildFoundIn`
+
+**Syntax**
+
+```matlab
+child = e.firstChildFoundIn(tags)
+```
+
+**Description**
+
+Returns the first child of `e` whose tag is among `tags` (a `(1,:)` string array
+of the choice group's member tags), searched in **argument order** (first *name*
+that matches wins, not document order), or `[]` (None, H3) when none is present.
+The `ZeroOrOneChoice` group getter (`get.x`) — `return
+obj.first_child_found_in(*member_nsptagnames)`.
+
+:::{note}
+`ZeroOrOneChoice` is **dead code in docx v1.2.0** (0 production uses); this
+method is an engine-contract parity member with synthetic coverage only.
+:::
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+p.append(mat2doc.oxml.OxmlElement("w:r"));
+found = p.firstChildFoundIn(["w:pPr", "w:r"]);  % the w:r (argument order)
+none  = p.firstChildFoundIn("w:pPr");           % [] (H3)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::ZeroOrOneChoice._choice_getter` (lines 622–623)*
+
+---
+
+## `removeChildren`
+
+**Syntax**
+
+```matlab
+e.removeChildren(tags)
+```
+
+**Description**
+
+Removes whichever of the group-member tags `tags` are present in `e` (one
+variadic `remove_all` over the whole group ≡ the Python per-tag loop) — the
+`ZeroOrOneChoice` `_remove_eg_x`.
+
+:::{note}
+`ZeroOrOneChoice` is **dead code in docx v1.2.0**; engine-contract parity member
+with synthetic coverage only.
+:::
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.BaseOxmlElement("w:p");
+p.append(mat2doc.oxml.OxmlElement("w:gA"));
+p.append(mat2doc.oxml.OxmlElement("w:gB"));
+p.removeChildren(["w:gA", "w:gB", "w:gC"]);   % drop whichever are present
+disp(numel(p.getChildList("w:gA")))            % 0
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::ZeroOrOneChoice._add_group_remover` (lines 610–612)*
+
+---
+
+## `getOrChangeToChild`
+
+**Syntax**
+
+```matlab
+child = e.getOrChangeToChild(tag, groupTags, successors)
+```
+
+**Description**
+
+Returns the choice member with prefixed tag `tag`, **switching the group to it**
+when a *different* member is currently present: if `tag` is already present it is
+returned unchanged (H5 same handle); otherwise every member of `groupTags` is
+removed (`removeChildren`) and `tag` is created and inserted in sequence
+(`addChild` against `successors`). The `Choice` `get_or_change_to_x`.
+
+:::{note}
+`Choice` is **dead code in docx v1.2.0** (0 production uses); engine-contract
+parity member with synthetic coverage only.
+:::
+
+**Example**
+
+```matlab
+rPr = mat2doc.oxml.BaseOxmlElement("w:rPr");
+% choice group {w:b, w:bCs}:
+b   = rPr.getOrChangeToChild("w:b",   ["w:b","w:bCs"], string.empty(1,0)); % add w:b
+bCs = rPr.getOrChangeToChild("w:bCs", ["w:b","w:bCs"], string.empty(1,0)); % swap to w:bCs
+disp(numel(rPr.getChildList("w:b")))   % 0  (w:b was removed)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/xmlchemy.py::Choice._add_get_or_change_to_method` (lines 453–461)*
 
 ---
 
