@@ -36,7 +36,11 @@ syntax, description, example, ported-from).
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC
-  constants, the `default_content_types` spec pair-list, and the shared helpers.
+  constants, the `default_content_types` spec pair-list, and the shared helpers;
+  and the **packaging tier** above it — the `PackURI` partname algebra, the
+  `phys_pkg` physical zip reader/writer factories (with the reproducible
+  `1980-01-01` zip writer), and the `Relationships` collection that regenerates
+  each `.rels` part in insertion order.
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 
