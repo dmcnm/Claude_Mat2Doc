@@ -1,0 +1,33 @@
+{
+  "precedence": {
+    "override_exact": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+    "override_ci": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+    "default_ext": "image/jpeg",
+    "default_ext_ci": "image/jpeg",
+    "xml_default": "application/xml",
+    "missing_kind": "KeyError",
+    "missing_msg": "no content type for partname '/nope/nothing.zzz' in [Content_Types].xml",
+    "nonpackuri_kind": "KeyError"
+  },
+  "v3": {
+    "count": 2,
+    "rId": [
+      "rId1",
+      "rId2"
+    ],
+    "reltype": [
+      "http://x/y",
+      "http://x/z"
+    ],
+    "is_external": [
+      false,
+      true
+    ],
+    "target_partname": "/docProps/core.xml",
+    "cache_stable": true,
+    "target_ref_external": "http://example.com/x",
+    "external_kind": "ValueError",
+    "external_msg": "target_partname attribute on Relationship is undefined where TargetMode == \"External\"",
+    "empty_on_none_count": 0
+  }
+}
