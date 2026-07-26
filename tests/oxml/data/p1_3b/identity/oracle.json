@@ -1,0 +1,18 @@
+{
+  "H5_get_or_add_same_handle": true,
+  "H5_add_x_returns_live_intree": true,
+  "H9_empty_lst_len": 0,
+  "H9_empty_lst_type": "list",
+  "H9_three_lst_len": 3,
+  "H9_after_remove_during_iter_len": 0,
+  "H9_snapshot_len_stable": 3,
+  "H3_getchild_absent_is_none": true,
+  "H3_list_absent_len": 0,
+  "H3_required_absent": {
+    "raised": true,
+    "id_class": "InvalidXmlError",
+    "message": "required ``<w:abstractNumId>`` child element not present"
+  },
+  "_materialize_tabs_sha256": "c931ab03f5824c675f3dcedc0a9b4a05351b702c4c3794a7ba648ddee27a34f2",
+  "_materialize_tabs_size": 151
+}

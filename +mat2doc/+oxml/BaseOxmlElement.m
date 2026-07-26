@@ -8,7 +8,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %   Mat2Ppt engine (Mat2Ppt/+mat2ppt/+oxml/BaseOxmlElement.m), which ports the
 %   BYTE-IDENTICAL xmlchemy engine; docx v1.2.0 is the module source of truth
 %   and CONFIRMS the same surface, with three descriptor DELTAS noted below.
-%   This slice ports ONLY:
+%   The P1-3a slice ported:
 %     * the tree-ops on BaseOxmlElement (xmlchemy.py lines 656-677):
 %       first_child_found_in, insert_element_before, remove_all;
 %     * xpath() (xmlchemy.py lines 687-692), delegating to the mini-XPath
@@ -17,13 +17,22 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %       xmlchemy.py lines 154-261): getAttrTyped / setAttrTyped / getAttrRequired
 %       / setAttrRequired + the type-dispatch helpers.
 %
-%   NOT in this slice -- the CHILD-element descriptor engine (ZeroOrOne,
-%   ZeroOrMore, OneAndOnlyOne, OneOrMore, Choice, ZeroOrOneChoice: getChild /
-%   getOrAddChild / newChild / insertChildInSequence / addChild / removeChild /
-%   firstChildFoundIn / removeChildren / getOrChangeToChild) is P1-3b. It is
-%   NOT ported here even though the Mat2Ppt reference carries it in one class.
+%   P1-3b SLICE (part 2 of 2, THIS extension). The CHILD-element descriptor
+%   engine. xmlchemy's MetaOxmlElement generates, per declared child descriptor
+%   (ZeroOrOne / ZeroOrMore / OneAndOnlyOne / OneOrMore / Choice /
+%   ZeroOrOneChoice), a family of members (get.x / x_lst / _new_x / _insert_x /
+%   _add_x / add_x / get_or_add_x / _remove_x / get_or_change_to_x /
+%   _remove_eg_x) whose BODIES all reduce to a handful of generic operations.
+%   This slice ports those operations as explicit engine methods every ported
+%   CT_* class delegates to (design.md section 2 "BaseOxmlElement engine
+%   contract"): getChild, getRequiredChild, getChildList, newChild,
+%   insertChildInSequence, addChild, getOrAddChild, removeChild,
+%   firstChildFoundIn, removeChildren, getOrChangeToChild. The
+%   metaclass/subsref machinery is replaced by checked-in explicit delegating
+%   members (no runtime metaprogramming).
 %
 %   ENGINE-METHOD -> xmlchemy SOURCE MAP (src/docx/oxml/xmlchemy.py, docx v1.2.0):
+%    -- P1-3a (tree-ops + xpath + attribute engine) --
 %     first_child_found_in  <- BaseOxmlElement.first_child_found_in (656-662)
 %     insert_element_before <- BaseOxmlElement.insert_element_before (664-670)
 %     remove_all            <- BaseOxmlElement.remove_all           (672-677)
@@ -34,9 +43,23 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %     setAttrRequired       <- RequiredAttribute._setter set_attr_value (255-259)
 %     resolveTypeCls_       <- BaseAttribute simple_type object       (117-120)
 %     attrClarkName_        <- BaseAttribute._clark_name              (139-143)
+%    -- P1-3b (child-element descriptor engine) --
+%     getChild             <- _BaseChildElement._getter        (380-382)
+%     getRequiredChild     <- OneAndOnlyOne._getter            (499-505)
+%     getChildList         <- _BaseChildElement._list_getter   (397-398)
+%     newChild             <- _BaseChildElement._creator       (366-367)
+%     insertChildInSequence<- _BaseChildElement._add_inserter  (319-321)
+%     addChild             <- _BaseChildElement._add_adder     (284-291)
+%     getOrAddChild        <- ZeroOrOne._add_get_or_adder      (557-562)
+%     removeChild          <- ZeroOrOne._add_remover           (572-573)
+%     firstChildFoundIn    <- ZeroOrOneChoice._choice_getter   (622-623)
+%     removeChildren       <- ZeroOrOneChoice._add_group_remover(610-612)
+%     getOrChangeToChild   <- Choice._add_get_or_change_to_method(453-461)
 %
 %   DOCX-vs-PPTX DELTAS (docx is source of truth; ported to the docx forms,
-%   NOT the Mat2Ppt/pptx forms -- see audit_P1-3a_xmlchemy_engine.md):
+%   NOT the Mat2Ppt/pptx forms -- see audit_P1-3a_xmlchemy_engine.md and
+%   audit_P1-3b_child_descriptors.md):
+%    -- attribute engine (P1-3a) --
 %     D-delta-1  OptionalAttribute setter guards `value is None OR value ==
 %                default` (docx line 203). pptx guards only `value ==
 %                default`. When an optional attribute has a NON-None default,
@@ -49,9 +72,18 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %                ValueError("cannot assign {value} to this required attribute")
 %                when `str_value is None` (docx lines 257-258). pptx sets
 %                unconditionally.
+%    -- child-descriptor engine (P1-3b) --
+%     D-delta-4  ZeroOrMore.populate_class_members calls _add_public_adder
+%                (docx line 536), so a docx ZeroOrMore ALSO generates a public
+%                `add_x()`; pptx ZeroOrMore does NOT (only OneOrMore does). This
+%                is ENGINE-NEUTRAL: the public add_x() routes through the same
+%                addChild primitive as _add_x (see _add_public_adder, docx
+%                340-352). The delta only decides WHICH per-class delegating
+%                members a future CT_* WP scaffolds, not the engine surface here.
+%                Choice / ZeroOrOneChoice behaviour is otherwise IDENTICAL to
+%                pptx (verified line-by-line, audit_P1-3b).
 %
 %   Deferred, in their owning WPs (NOT ported here):
-%     child-element descriptor engine (getChild ...)  -> P1-3b
 %     xml property (serialize_for_reading, 679-685)    -> the doc-serialize/OPC
 %           WP (pretty-print test helper; design.md section 3 forbids pretty-print
 %           in the PART serializer, so serialize_for_reading is a distinct
@@ -74,9 +106,9 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %           mat2doc.oxml.OxmlElement("w:pPr"), "w:r");   % pPr placed before w:r
 %
 %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::BaseOxmlElement
-%   (tree-ops + xpath slice; metaclass/descriptor machinery replaced by the
-%   explicit delegating-member scheme per design.md section 2; attribute
-%   descriptor engine from OptionalAttribute/RequiredAttribute)
+%   (tree-ops + xpath + attribute engine [P1-3a] + child-element descriptor
+%   engine [P1-3b]; metaclass/descriptor machinery replaced by the explicit
+%   delegating-member scheme per design.md section 2)
 
     methods
         function obj = BaseOxmlElement(varargin)
@@ -366,6 +398,218 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                     mat2doc.oxml.BaseOxmlElement.valueRepr_(value));
             end
             obj.set(obj.attrClarkName_(name), str_value);
+        end
+    end
+
+    % =====================================================================
+    % P1-3b CHILD-ELEMENT descriptor ENGINE
+    %
+    % Generic operations the generated CT_* child-descriptor delegating members
+    % call. Each is the faithful port of one xmlchemy descriptor method body
+    % (see the engine-method -> source map in the class header). `tag` args are
+    % namespace-prefixed tagnames (e.g. "w:pPr"); `successors` / `tags` /
+    % `groupTags` args are string arrays of prefixed tagnames drawn from a
+    % class's Constant SUCCESSORS / group-members table.
+    %
+    % OVERRIDE NOTE (design.md section 2 porter alert; 8 docx override/inherit
+    % flag instances): where a CT_* class defines an explicit `_new_x`/`_insert_x`
+    % (Python `hasattr` guard in _add_to_class makes it WIN over the generated
+    % one), that class's add_x_/get_or_add_x/get_or_change_to_x members must
+    % route through the class's OWN new_x_/insert_x_ rather than the generic
+    % addChild below -- the generic path here always uses the DEFAULT creator
+    % (newChild). Those override spots are hand-ported in the affected classes.
+    %
+    % H11 (child ordering): insertChildInSequence -> insert_element_before ->
+    % first_child_found_in scans the successors in ARGUMENT order and inserts
+    % addprevious the FIRST present successor tag (else append). The successor
+    % slice logic lives in the P1-3a tree-ops (insert_element_before,
+    % first_child_found_in); this engine merely expands the class SUCCESSORS
+    % Constant into their repeating tagname args.
+    % =====================================================================
+    methods
+        function child = getChild(obj, tag)
+            % GETCHILD Child with prefixed tag, or [] (None) if absent (ZeroOrOne / Choice getter).
+            %   Ported from xmlchemy.py _BaseChildElement._getter's
+            %   get_child_element (docx lines 380-382): `return obj.find(qn(nsptag))`.
+            %   Also serves the Choice getter (Choice adds _add_getter, same body).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+            end
+            child = obj.find(mat2doc.oxml.qn(tag));   % [] when absent (H3)
+        end
+
+        function child = getRequiredChild(obj, tag)
+            % GETREQUIREDCHILD Child with prefixed tag; error if absent (OneAndOnlyOne getter).
+            %   Ported from xmlchemy.py OneAndOnlyOne._getter's get_child_element
+            %   (docx lines 499-505): find; if None raise InvalidXmlError. The
+            %   literal RST double-backticks in the message are reproduced
+            %   verbatim; id mat2doc:InvalidXmlError.
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+            end
+            child = obj.find(mat2doc.oxml.qn(tag));
+            if isequal(child, [])   % Python: if child is None (H3)
+                error("mat2doc:InvalidXmlError", ...
+                    "required ``<%s>`` child element not present", tag);
+            end
+        end
+
+        function list = getChildList(obj, tag)
+            % GETCHILDLIST All children with prefixed tag, in document order (ZeroOrMore/OneOrMore x_lst).
+            %   Ported from xmlchemy.py _BaseChildElement._list_getter's
+            %   get_child_element_list (docx lines 397-398):
+            %   `return obj.findall(qn(nsptag))`. Returns a (1,N) (possibly 1x0)
+            %   XmlElement array -- Python returns a LIST, so "none present" is an
+            %   EMPTY ARRAY (materialized, H9), NOT [] (None, H3). (H1: findall is
+            %   already 1-based document order; no index shift.)
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+            end
+            list = obj.findall(mat2doc.oxml.qn(tag));
+        end
+
+        function child = newChild(obj, tag)
+            % NEWCHILD Loose child element of the correct type, no attrs (default creator _new_x).
+            %   Ported from xmlchemy.py _BaseChildElement._creator's
+            %   new_child_element (docx lines 366-367): `return OxmlElement(nsptag)`.
+            %   Applies the registry (registered CT_* class or plain XmlElement
+            %   fallback), exactly as the Python creator does. obj is unused
+            %   (matches Python: the default creator ignores obj) but kept for
+            %   method-call form.
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement %#ok<INUSA>
+                tag (1,1) string
+            end
+            child = mat2doc.oxml.OxmlElement(tag);
+        end
+
+        function child = insertChildInSequence(obj, child, successors)
+            % INSERTCHILDINSEQUENCE Insert child before the first present successor tag; return child.
+            %   Ported from xmlchemy.py _BaseChildElement._add_inserter's
+            %   _insert_child (docx lines 319-321):
+            %     obj.insert_element_before(child, *self._successors); return child
+            %   successors is a class SUCCESSORS Constant (string array); it is
+            %   expanded into the repeating tagname args of insert_element_before
+            %   (the P1-3a tree-op that carries the H11 successor-slice logic).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                child (1,1) mat2doc.oxml.XmlElement
+                successors (1,:) string
+            end
+            sc = num2cell(successors);
+            child = obj.insert_element_before(child, sc{:});
+        end
+
+        function child = addChild(obj, tag, successors, varargin)
+            % ADDCHILD Create a child (default creator), set attrs, insert in sequence (_add_x).
+            %   Ported from xmlchemy.py _BaseChildElement._add_adder's
+            %   _add_child(obj, **attrs) (docx lines 284-291): new_method(); for
+            %   key,value in attrs: setattr(child, key, value); insert; return.
+            %   attrs arrive as trailing name-value pairs (Python **attrs);
+            %   `child.(name) = value` is the setattr analogue (typed-property
+            %   set). This generic path uses the DEFAULT creator -- classes with a
+            %   `_new_x` override do NOT delegate here (see OVERRIDE NOTE). Also
+            %   the primitive the public add_x() adder routes to (both OneOrMore
+            %   and, in docx, ZeroOrMore -- D-delta-4).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+                successors (1,:) string
+            end
+            arguments (Repeating)
+                varargin
+            end
+            child = obj.newChild(tag);                 % default creator
+            for k = 1:2:numel(varargin)                % Python: setattr per attr
+                child.(varargin{k}) = varargin{k + 1};
+            end
+            child = obj.insertChildInSequence(child, successors);
+        end
+
+        function child = getOrAddChild(obj, tag, successors)
+            % GETORADDCHILD Return the child, adding it (in sequence) if absent (get_or_add_x).
+            %   Ported from xmlchemy.py ZeroOrOne._add_get_or_adder's
+            %   get_or_add_child (docx lines 557-562): child = getter; if None:
+            %   child = _add_x(). Generic (default-creator) path. H5: when the
+            %   child is already present, the SAME handle is returned on every
+            %   call (getChild -> find returns the live node, not a copy).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+                successors (1,:) string
+            end
+            child = obj.getChild(tag);
+            if isequal(child, [])   % Python: if child is None (H3)
+                child = obj.addChild(tag, successors);
+            end
+        end
+
+        function removeChild(obj, tag)
+            % REMOVECHILD Remove ALL children with prefixed tag (_remove_x).
+            %   Ported from xmlchemy.py ZeroOrOne._add_remover's _remove_child
+            %   (docx lines 572-573): `obj.remove_all(nsptagname)` -- removes
+            %   EVERY matching child, not just the first (faithful to remove_all).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+            end
+            obj.remove_all(tag);
+        end
+
+        function child = firstChildFoundIn(obj, tags)
+            % FIRSTCHILDFOUNDIN First child whose tag is in tags, else [] (choice-group getter).
+            %   Ported from xmlchemy.py ZeroOrOneChoice._choice_getter's
+            %   get_group_member_element (docx lines 622-623):
+            %   `return obj.first_child_found_in(*member_nsptagnames)`.
+            %   tags is the class's group-members Constant (string array). Search
+            %   is by ARGUMENT order (first NAME that matches), the P1-3a
+            %   first_child_found_in semantics.
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tags (1,:) string
+            end
+            tc = num2cell(tags);
+            child = obj.first_child_found_in(tc{:});
+        end
+
+        function removeChildren(obj, tags)
+            % REMOVECHILDREN Remove whichever of the group-member tags are present (_remove_eg_x).
+            %   Ported from xmlchemy.py ZeroOrOneChoice._add_group_remover's
+            %   _remove_choice_group (docx lines 610-612): for tagname in members:
+            %   obj.remove_all(tagname). remove_all already accepts many tags, so
+            %   one call over the whole group is the faithful equivalent.
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tags (1,:) string
+            end
+            tc = num2cell(tags);
+            obj.remove_all(tc{:});
+        end
+
+        function child = getOrChangeToChild(obj, tag, groupTags, successors)
+            % GETORCHANGETOCHILD Return this group member, replacing any other present member (get_or_change_to_x).
+            %   Ported from xmlchemy.py Choice._add_get_or_change_to_method's
+            %   get_or_change_to_child (docx lines 453-461): child = getter; if
+            %   not None return; remove_group(); child = _add_x(). Generic
+            %   (default-creator) path; override members hand-route (see NOTE).
+            %   groupTags is the choice group's member Constant (the _remove_eg_x
+            %   removal set); tag is THIS choice's tag; successors is the group's
+            %   SUCCESSORS Constant.
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+                tag (1,1) string
+                groupTags (1,:) string
+                successors (1,:) string
+            end
+            child = obj.getChild(tag);
+            if ~isequal(child, [])   % Python: if child is not None (H3)
+                return
+            end
+            obj.removeChildren(groupTags);
+            child = obj.addChild(tag, successors);
         end
     end
 

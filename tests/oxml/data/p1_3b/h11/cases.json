@@ -1,0 +1,146 @@
+[
+  {
+    "id": "s01",
+    "label": "get_or_add outlineLvl",
+    "op": [
+      "get_or_add",
+      "outlineLvl"
+    ]
+  },
+  {
+    "id": "s02",
+    "label": "get_or_add ind",
+    "op": [
+      "get_or_add",
+      "ind"
+    ]
+  },
+  {
+    "id": "s03",
+    "label": "get_or_add keepLines",
+    "op": [
+      "get_or_add",
+      "keepLines"
+    ]
+  },
+  {
+    "id": "s04",
+    "label": "get_or_add tabs",
+    "op": [
+      "get_or_add",
+      "tabs"
+    ]
+  },
+  {
+    "id": "s05",
+    "label": "get_or_add pStyle",
+    "op": [
+      "get_or_add",
+      "pStyle"
+    ]
+  },
+  {
+    "id": "s06",
+    "label": "get_or_add spacing",
+    "op": [
+      "get_or_add",
+      "spacing"
+    ]
+  },
+  {
+    "id": "s07",
+    "label": "get_or_add numPr",
+    "op": [
+      "get_or_add",
+      "numPr"
+    ]
+  },
+  {
+    "id": "s08",
+    "label": "get_or_add widowControl",
+    "op": [
+      "get_or_add",
+      "widowControl"
+    ]
+  },
+  {
+    "id": "s09",
+    "label": "get_or_add jc",
+    "op": [
+      "get_or_add",
+      "jc"
+    ]
+  },
+  {
+    "id": "s10",
+    "label": "get_or_add sectPr",
+    "op": [
+      "get_or_add",
+      "sectPr"
+    ]
+  },
+  {
+    "id": "s11",
+    "label": "get_or_add tabs #2 (H5 identity)",
+    "op": [
+      "get_or_add",
+      "tabs"
+    ]
+  },
+  {
+    "id": "s12",
+    "label": "_remove spacing",
+    "op": [
+      "remove",
+      "spacing"
+    ]
+  },
+  {
+    "id": "s13",
+    "label": "re-add spacing",
+    "op": [
+      "get_or_add",
+      "spacing"
+    ]
+  },
+  {
+    "id": "s14",
+    "label": "append foreignTag",
+    "op": [
+      "append_foreign",
+      "foreignTag"
+    ]
+  },
+  {
+    "id": "s15",
+    "label": "get_or_add keepNext (before keepLines)",
+    "op": [
+      "get_or_add",
+      "keepNext"
+    ]
+  },
+  {
+    "id": "s16",
+    "label": "get_or_add pageBreakBefore (before widowControl)",
+    "op": [
+      "get_or_add",
+      "pageBreakBefore"
+    ]
+  },
+  {
+    "id": "s17",
+    "label": "_remove sectPr",
+    "op": [
+      "remove",
+      "sectPr"
+    ]
+  },
+  {
+    "id": "s18",
+    "label": "re-add sectPr (append path, after foreignTag)",
+    "op": [
+      "get_or_add",
+      "sectPr"
+    ]
+  }
+]

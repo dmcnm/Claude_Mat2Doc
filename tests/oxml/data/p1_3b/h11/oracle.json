@@ -1,0 +1,110 @@
+{
+  "s01": {
+    "label": "get_or_add outlineLvl",
+    "localnames": "[outlineLvl]",
+    "serialized_sha256": "6f5151fa086e84708d5b9e1f644a1e8115556704f637f8c315a58a549d1eda56",
+    "serialized_size": 157
+  },
+  "s02": {
+    "label": "get_or_add ind",
+    "localnames": "[ind, outlineLvl]",
+    "serialized_sha256": "d7649cbfca1f055974129eaa026a2c4243732a387baa4ca666f7a0ea9797a355",
+    "serialized_size": 165
+  },
+  "s03": {
+    "label": "get_or_add keepLines",
+    "localnames": "[keepLines, ind, outlineLvl]",
+    "serialized_sha256": "48e0ea95b9555cf7a04851aceea860c69e340b11cb55d30146a1176c1ebc084b",
+    "serialized_size": 179
+  },
+  "s04": {
+    "label": "get_or_add tabs",
+    "localnames": "[keepLines, tabs, ind, outlineLvl]",
+    "serialized_sha256": "5116a3292ab349397e94bcba89b4e3c69122a6f94c8421484beecd03c4340d60",
+    "serialized_size": 188
+  },
+  "s05": {
+    "label": "get_or_add pStyle",
+    "localnames": "[pStyle, keepLines, tabs, ind, outlineLvl]",
+    "serialized_sha256": "54927bb7276de3d9ea725c4146046fb2ebc0d7f51a68cc3ab0470360277d9788",
+    "serialized_size": 199
+  },
+  "s06": {
+    "label": "get_or_add spacing",
+    "localnames": "[pStyle, keepLines, tabs, spacing, ind, outlineLvl]",
+    "serialized_sha256": "a3f4a7ffc425008e89cfa5e4d131dc9d1d06b91fca6ea32ef5d2933f2a69d778",
+    "serialized_size": 211
+  },
+  "s07": {
+    "label": "get_or_add numPr",
+    "localnames": "[pStyle, keepLines, numPr, tabs, spacing, ind, outlineLvl]",
+    "serialized_sha256": "2e4720fed59f183c03519b6d2662bbedf03949b202df79848e09d780aeb9d8cf",
+    "serialized_size": 221
+  },
+  "s08": {
+    "label": "get_or_add widowControl",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, outlineLvl]",
+    "serialized_sha256": "ebd9c9f8ba1003a0d536b6fc17ce9aa5e532007c446de6a2eef0db1585aa6ebe",
+    "serialized_size": 238
+  },
+  "s09": {
+    "label": "get_or_add jc",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl]",
+    "serialized_sha256": "ef46ec2e894a7edcefea658d1645dd99fbc59289520239d846f1280300490b04",
+    "serialized_size": 245
+  },
+  "s10": {
+    "label": "get_or_add sectPr",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr]",
+    "serialized_sha256": "1b4a0088eb0827a8fe689067a16d58bb0a2eb85c39e51b5944340259ba3153cd",
+    "serialized_size": 256
+  },
+  "s11": {
+    "label": "get_or_add tabs #2 (H5 identity)",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr]",
+    "serialized_sha256": "1b4a0088eb0827a8fe689067a16d58bb0a2eb85c39e51b5944340259ba3153cd",
+    "serialized_size": 256
+  },
+  "s12": {
+    "label": "_remove spacing",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, ind, jc, outlineLvl, sectPr]",
+    "serialized_sha256": "3104c460a9ba694fae8c581821d8273716d68731864e159ce911fec221992797",
+    "serialized_size": 244
+  },
+  "s13": {
+    "label": "re-add spacing",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr]",
+    "serialized_sha256": "1b4a0088eb0827a8fe689067a16d58bb0a2eb85c39e51b5944340259ba3153cd",
+    "serialized_size": 256
+  },
+  "s14": {
+    "label": "append foreignTag",
+    "localnames": "[pStyle, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr, foreignTag]",
+    "serialized_sha256": "65a3d6afd773280cf509f91ae8b22d6252910fb310ef639faa9e95c2587ce548",
+    "serialized_size": 271
+  },
+  "s15": {
+    "label": "get_or_add keepNext (before keepLines)",
+    "localnames": "[pStyle, keepNext, keepLines, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr, foreignTag]",
+    "serialized_sha256": "8fe599d78ac509ea486d741fdf258be0497b0af804bfd125fa08eebb4b49c1a9",
+    "serialized_size": 284
+  },
+  "s16": {
+    "label": "get_or_add pageBreakBefore (before widowControl)",
+    "localnames": "[pStyle, keepNext, keepLines, pageBreakBefore, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, sectPr, foreignTag]",
+    "serialized_sha256": "9d108071315787c23a299e0861aba18d12abd07b30d85a40391094c8db8b3484",
+    "serialized_size": 304
+  },
+  "s17": {
+    "label": "_remove sectPr",
+    "localnames": "[pStyle, keepNext, keepLines, pageBreakBefore, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, foreignTag]",
+    "serialized_sha256": "8d64245697e87f61057488a7ab7bc3ed635abfa6187727815e9c4776fd4f4eee",
+    "serialized_size": 293
+  },
+  "s18": {
+    "label": "re-add sectPr (append path, after foreignTag)",
+    "localnames": "[pStyle, keepNext, keepLines, pageBreakBefore, widowControl, numPr, tabs, spacing, ind, jc, outlineLvl, foreignTag, sectPr]",
+    "serialized_sha256": "3a4ae11c836c68db16f9be8e46bb3199fae0e306c4babcf14eedcb93fd3b90d7",
+    "serialized_size": 304
+  }
+}
