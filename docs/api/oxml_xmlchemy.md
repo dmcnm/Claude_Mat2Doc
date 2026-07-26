@@ -28,6 +28,18 @@ child-descriptor member delegates to; Gate-3 **46/46, 0 new D-numbers**
 byte-identical to a live python-docx 1.2.0 oracle). **P1-3b completes
 xmlchemy.**
 
+**P1-3x** (xpath-engine-extension) later widened the **mini-XPath engine**
+(`evaluate_xpath`) — the last remaining docx-fidelity gap on this page — to the
+full docx `.xpath()` call-site surface: bare top-level unions, `not()` /
+`following-sibling::` / `preceding-sibling::` / `preceding::` axes,
+`position()=n` / `(…)[last()]` / group `(…)[1]` predicates, predicate attribute
+sub-paths, and the `//@attr[n]` terminal form — each byte/value-verified against
+lxml 5.3.0; Gate-3 **61/61, 0 new D-numbers** (`reports\p1_3x_validation.md`).
+This closes the **VERIFY-2** coverage gap (below) and completes the xmlchemy
+XPath surface ahead of the docx `CT_*` consumers. The extension is documented in
+the *"P1-3x — the docx XPath-surface extension"* subsection under
+`evaluate_xpath` below.
+
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.
 Keep this page's structure simple — one section per symbol: syntax,
@@ -91,13 +103,13 @@ Gate-3: `self::w:tbl`→∅, `self::w:p`→`[p]`, `parent::w:body`→`[body]`,
 plain run→∅ — all lxml-identical. This closes design.md §3's
 *"never silently mis-evaluated"* rule for the `self` / `parent` axes.
 
-:::{warning}
-**★ VERIFY-2 — the XPath coverage gap (completed by P1-3x).** The engine was
+:::{note}
+**★ VERIFY-2 — the XPath coverage gap (CLOSED by P1-3x).** The engine was
 re-ported from Mat2Ppt, which was built against **python-pptx's** narrower
-xpath call-site inventory. python-docx uses a **broader** xpath surface. A
-full docx call-site grep (Gate-2) enumerated patterns the engine **does not yet
-support** and which currently **RAISE `mat2doc:XPathError`** (the *safe*
-direction — they raise, they never mis-evaluate):
+xpath call-site inventory. python-docx uses a **broader** xpath surface. A full
+docx call-site grep (P1-3a Gate-2) enumerated the patterns the re-ported engine
+**did not support** and which — in the *safe* direction — **raised
+`mat2doc:XPathError`** rather than mis-evaluating:
 
 - **bare top-level unions** `./w:p | ./w:tbl` — docx's single most common
   pattern (`CT_Body`, `CT_Tc`, block-item containers)
@@ -107,19 +119,24 @@ direction — they raise, they never mis-evaluate):
 - `position()=1`, `(…)[last()]` (tables, sections)
 - predicate attribute-sub-paths, a predicate on a terminal string step (`//@id[2]`)
 
-P1-3a itself is **not blocked** — its scope is the engine as re-ported, and the
-raises are faithful *"not-yet-supported"* guards, not wrong answers. But these
-patterns are consumed by the docx `CT_*` API classes (`CT_Body` / `CT_Tbl` /
-`CT_SectPr`, pagebreak, styles, comments), so a dedicated
-**xpath-engine-extension WP — P1-3x** — is scheduled to extend `evaluate_xpath`
-to cover them, each byte-verified against lxml on the frozen docx call-site
-inventory. Sequencing: **P1-3a (done) → P1-3b (child descriptors) → P1-3x
-(xpath extension) → P1-4 (opc)** — before the first CT_* consumer needs them
-(M1 is unaffected; it only parses/serializes `document.xml`). See
-`validation\summary\decision_2026-07-25_mat2doc_xpath_engine_extension.md`.
-Gate-3 pins these patterns as raises-asserts **R01–R09**, frozen with lxml's
-`would_be` for contrast — they go **deliberately RED when P1-3x lands**, surfacing
-the intended subset-widening.
+P1-3a itself was **not blocked** — its scope was the engine as re-ported, and
+the raises were faithful *"not-yet-supported"* guards, not wrong answers. P1-3a
+Gate-3 pinned these patterns as raises-asserts **R01–R09**, frozen with lxml's
+`would_be` for contrast, so widening the subset would surface as a deliberate
+RED.
+
+**P1-3x has now landed** and extends `evaluate_xpath` to support every one of
+these patterns, each value/byte-verified against **lxml 5.3.0** on the frozen
+docx call-site inventory (Gate-3 **61/61, 0 new D-numbers**). The R01–R09 pins
+flipped from `verifyError` to value/type asserts (recipe:
+`references\p1_3x\flip\flip_types.json`), and the docx `CT_*` API classes
+(`CT_Body` / `CT_Tbl` / `CT_SectPr`, pagebreak, styles, comments) now have their
+full xpath surface available. Realized sequence: **P1-3a → P1-3b (child
+descriptors) → P1-3x (xpath extension) → P1-4 (opc)** — complete before the
+first CT_* consumer needs them (M1 was unaffected; it only parses/serializes
+`document.xml`). See
+`validation\summary\decision_2026-07-25_mat2doc_xpath_engine_extension.md` and
+the *"P1-3x — the docx XPath-surface extension"* subsection below.
 :::
 
 ---
@@ -876,6 +893,12 @@ general XPath engine: anything outside the verified subset raises
 | ancestor axis | `ancestor::w:tbl` |
 | **`self::` / `parent::` named tests (FIX-1)** | `self::w:p`  `./parent::w:r/parent::w:hyperlink` |
 | parent step + union **group** | `(../w:x \| ../w:y)/w:z[@w:val="1"]` |
+| **bare top-level union (P1-3x)** | `./w:p \| ./w:tbl` (doc-ordered + identity-deduped) |
+| **`not(path)` predicate (P1-3x)** | `./*[not(self::w:sectPr)]` |
+| **`following-sibling::` / `preceding-sibling::` / `preceding::` axes (P1-3x)** | `./following-sibling::w:tc`  `preceding-sibling::w:p[1]`  `./preceding::w:sectPr[1]` |
+| **`position()=n` / `(…)[last()]` / group `(…)[1]` (P1-3x)** | `w:p[position()=1]`  `(./w:r)[last()]`  `(./w:comment[@w:id='5'])[1]` |
+| **predicate attribute sub-path (P1-3x)** | `w:style[w:name/@w:val="Heading 1"]` |
+| **positional predicate on a terminal `@attr` / `text()` step (P1-3x)** | `//@r:id[2]` (per-element; → typed-empty) |
 
 **Positional predicates are 1-based (H1).** `w:p[1]` selects the first matching
 child, `w:p[2]` the second — never shift the index when porting a Python
@@ -911,6 +934,60 @@ WP5-C corrective semantics (F1 / F2 / F3 / WPC-F1) are adopted here
 `mat2doc:`-namespaced (**shared deviation, no new D-number**), bringing the engine
 to lxml fidelity so design.md's *"never silently mis-evaluated"* rule holds with
 **zero** silent mis-evaluations even within the subset.
+
+### P1-3x — the docx XPath-surface extension
+
+The pptx-derived engine covered the pptx `.xpath()` inventory; python-docx uses
+a **broader** call-site surface (VERIFY-2, above). **P1-3x** (`evaluate_xpath.m`,
++384/−53) extends the engine to that surface, **each pattern value/byte-verified
+against lxml 5.3.0** on the frozen docx call-site inventory
+(`references\p1_3x\`; Gate-3 **61/61, 0 new D-numbers** — the shared xpath /
+parser deviations already carried `mat2doc:` cover it, so **no new D-number**).
+The now-supported docx patterns:
+
+| Pattern | Example | docx consumer |
+|---|---|---|
+| **bare top-level union** (operands relative / absolute / grouped) | `./w:p \| ./w:tbl` | `CT_Body` / `CT_Tc` block-item iteration — docx's commonest form |
+| **`not(path)` / union-subpath predicate** | `./*[not(self::w:sectPr)]` | block-item iteration |
+| **`following-sibling::` / `preceding-sibling::` axes** | `./following-sibling::w:tc`  `preceding-sibling::w:p[1]` | pagebreak, section iteration |
+| **`preceding::` axis** | `./preceding::w:sectPr[1]` | section block iterator |
+| **`position()=n` / `(…)[last()]`** | `w:p[position()=1]`  `(./w:r)[last()]` | tables, sections |
+| **group predicate `(…)[1]`** | `(./w:comment[@w:id='5'])[1]` | comments |
+| **predicate attribute sub-path** | `w:style[w:name/@w:val="Heading 1"]` | styles |
+| **positional predicate on a terminal `@attr` / `text()` step** | `//@r:id[2]` | relationship-id enumeration |
+
+**Document-order union dedup (H11 — the union trap).** A bare union `A | B | …`
+evaluates each operand to its own node-set, then returns the **merged** result
+in **document order** with **identity duplicates removed** — lxml node-sets are
+*sets*, so `./w:p | ./w:tbl` over a body yields the p/tbl children interleaved in
+their real document positions (e.g. `[p, p, tbl, p, p]`), never operand-grouped
+and never with a node repeated when two operands both select it. The same
+doc-order + identity-dedup rule (`docSortDedupe`) governs every element step, so
+a union nested in a group or a predicate composes correctly.
+
+**Reverse-axis positional counting (H1).** On the **reverse** axes
+(`preceding-sibling::`, `preceding::`, `ancestor::`) `position()` counts in
+**axis order — nearest first** — so `preceding-sibling::w:p[1]` selects the
+*nearest* preceding `w:p`, not the first in document order. The engine returns
+reverse-axis matches nearest-first for the predicate, then `docSortDedupe`
+restores document order for the final (unpredicated) node-set — exactly lxml.
+
+**The attribute-terminal typed-empty-string convention (R09).** A positional
+predicate on a terminal `@attr` / `text()` step — `//@r:id[2]` — is applied
+**per context element** to *that element's own* attribute/text node-set: each
+element owns at most one `r:id`, so position 2 never exists and the result is
+**empty**. Its static type is a **typed-empty `string`** (`string.empty(1,0)`),
+not a typed-empty node array — this mirrors lxml's `_Element.xpath()` **encode()
+convention**, under which an `@attr`-terminal expression always yields the
+*string* node-set kind even when empty (lxml's own `[]` is untyped; the string
+typing is the correct H3 static type). This is the one R01–R09 flip pin whose
+returned kind is asserted as **STRING**, not nodes
+(`references\p1_3x\flip\flip_types.json`, `note_R09`); the `//@attr[n]` terminal
+form is therefore the *only* member removed from the F2 raise-set — every other
+out-of-subset construct still raises `mat2doc:XPathError`.
+
+Full rationale and the VERIFY-2 finding that spawned the WP:
+`validation\summary\decision_2026-07-25_mat2doc_xpath_engine_extension.md`.
 
 **Example**
 

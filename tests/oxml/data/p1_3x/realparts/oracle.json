@@ -1,0 +1,240 @@
+{
+ "manifest": "mso-p1_3x-realparts/1",
+ "oracle": "lxml 5.3.0 / libxml2 2.13.9 under python-docx 1.2.0",
+ "source": "python-docx Document() + injected w:lastRenderedPageBreak",
+ "nsmap": {
+  "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+  "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+ },
+ "cases": [
+  {
+   "id": "RP1",
+   "ctx": "w:body",
+   "expr": "./w:p | ./w:tbl",
+   "note": "bare union body children (doc-ordered)",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+     "path": [
+      0,
+      4
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP2",
+   "ctx": "w:body",
+   "expr": "./*[not(self::w:sectPr)]",
+   "note": "not(self::) body content filter",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+     "path": [
+      0,
+      4
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP3",
+   "ctx": "w:body/w:tbl/w:tr[3]/w:tc[2]",
+   "expr": "./preceding-sibling::w:tc",
+   "note": "preceding-sibling name-test (doc order restored)",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      4,
+      4,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP4",
+   "ctx": "w:body/w:tbl/w:tr[3]",
+   "expr": "./preceding-sibling::w:tr[1]",
+   "note": "preceding-sibling positional [1] = NEAREST",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      4,
+      3
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP5",
+   "ctx": "w:body/w:tbl/w:tr[1]",
+   "expr": "./following-sibling::w:tr",
+   "note": "following-sibling name-test",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      4,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      4,
+      4
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP6",
+   "ctx": "w:body/w:p[2]",
+   "expr": "./w:r[1]/w:lastRenderedPageBreak[not(preceding-sibling::*[self::w:br | self::w:cr | self::w:drawing | self::w:noBreakHyphen | self::w:ptab | self::w:t | self::w:tab])]",
+   "note": "pagebreak.py:91 not(run-inner-union) - lrpb is run's FIRST child -> match",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      1,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP7",
+   "ctx": "w:body/w:p[2]",
+   "expr": "(./w:r)[last()]/w:lastRenderedPageBreak[not(following-sibling::*[self::w:br | self::w:cr | self::w:drawing | self::w:noBreakHyphen | self::w:ptab | self::w:t | self::w:tab])]",
+   "note": "pagebreak.py:67 form - last run has no lrpb -> empty",
+   "kind": "nodes",
+   "value": []
+  },
+  {
+   "id": "RP8",
+   "ctx": "w:body",
+   "expr": "./preceding::w:sectPr[1]",
+   "note": "preceding:: from body root -> empty",
+   "kind": "nodes",
+   "value": []
+  },
+  {
+   "id": "RP9",
+   "ctx": "w:body/w:tbl/w:tr[3]/w:tc[2]",
+   "expr": "./ancestor::w:tr[position()=1]/preceding-sibling::w:tr[1]",
+   "note": "compound reverse-axis positional (table.py:762)",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      4,
+      3
+     ]
+    }
+   ]
+  },
+  {
+   "id": "RP10",
+   "ctx": "w:body",
+   "expr": "w:p[position()=1]",
+   "note": "position()=1 predicate",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    }
+   ]
+  }
+ ]
+}
