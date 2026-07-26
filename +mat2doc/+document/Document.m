@@ -1,4 +1,4 @@
-classdef Document < handle
+classdef Document < mat2doc.shared.ElementProxy
 % DOCUMENT WordprocessingML (WML) document -- the top API proxy object.
 %
 %   Not intended to be constructed directly. Use the package-level factory
@@ -10,15 +10,21 @@ classdef Document < handle
 %   sections / styles / settings / inline_shapes / tables / comments / ...) is a
 %   mat2doc:notYetPorted stub. NONE is on the open->save path.
 %
-%   VERIFY-M1-DOC-BASE: in python-docx Document extends ElementProxy
-%   (document.py 28, `class Document(ElementProxy)`), which supplies element
-%   identity (`eq`/`ne`) and the `element`/`part` accessors. ElementProxy /
-%   Parented are NOT ported at M1. P2-1 supplies them and retrofits this class
-%   onto the real base (the Mat2Ppt VERIFY-M1-C precedent -- WP8 reparented
-%   Presentation onto PartElementProxy with byte-neutral effect). Until then this
-%   class stores `_element`/`_part` directly and derives `handle` only. Recorded
-%   for the Auditor; byte-neutral (the base adds identity/accessor behavior, not
-%   serialized output).
+%   VERIFY-M1-DOC-BASE (RESOLVED in P2-1): in python-docx Document extends
+%   ElementProxy (document.py 28, `class Document(ElementProxy)`), which
+%   supplies element identity (`eq`/`ne`) and the `element` accessor. At M1
+%   this class stored `_element`/`_part` directly and derived `handle` only.
+%   P2-1 ported the shared proxy tier and retrofitted this class onto the real
+%   base (mat2doc.shared.ElementProxy), mirroring the Mat2Ppt VERIFY-M1-C
+%   precedent (WP8 reparented Presentation onto PartElementProxy, byte-neutral).
+%   The wrapped element is now held by the base (protected `element_`), and this
+%   class gains the inherited `element()` accessor and H5 element-identity
+%   `eq`/`ne`. BYTE-NEUTRAL: the base adds hierarchy/identity/accessor behavior,
+%   not serialized output -- re-proven by the 17-part M1 sweep at P2-1 Gate 1
+%   (mat2doc.Document().save == references\s0001, 17/17). `part` is still
+%   OVERRIDDEN below to return this document's own _part (document.py 193-196),
+%   NOT the base ElementProxy.part (whose _parent is None here); the base
+%   None-guard therefore never fires for a Document.
 %
 %   REFERENCE SEMANTICS (design.md section 2): a handle class -- the proxy wraps
 %   a shared element tree and part, exactly like the Python proxy model.
@@ -30,8 +36,9 @@ classdef Document < handle
 %   stream-specific hardening is a P2-3 concern, not a P1-8 stub.
 %
 %   UNDERSCORE ROTATION (design.md section 2): Python `_element`/`_part` ->
-%   element_/part_. (Python's `__body` cache belongs to the feature `_body`
-%   accessor, which is P2-3; it is not carried at M1.)
+%   element_/part_. Post-retrofit, element_ is the base's protected property;
+%   only part_ is declared here. (Python's `__body` cache belongs to the
+%   feature `_body` accessor, which is P2-3; it is not carried at M1.)
 %
 %   Example:
 %       d = mat2doc.Document();     % opens the bundled default template
@@ -42,21 +49,30 @@ classdef Document < handle
 %   save 198-204. Base class ElementProxy is retrofitted in P2-1.)
 
     properties (Access = private)
-        element_        % the w:document CT_Document root (P4 wires CT_Document)
         part_           % the owning mat2doc.parts.DocumentPart
+        % NOTE: the wrapped w:document CT_Document root is now held by the base
+        % mat2doc.shared.ElementProxy (protected `element_`); this class no
+        % longer declares its own element_ (P2-1 VERIFY-M1-DOC-BASE retrofit).
     end
 
     methods
         function obj = Document(element, part)
             % DOCUMENT Construct over the w:document root element and its part
-            %   (document.py 35-39). Python also calls super().__init__(element)
-            %   (ElementProxy) and inits __body; both are P2 concerns
-            %   (VERIFY-M1-DOC-BASE). At M1 only _element/_part are stored.
+            %   (document.py 35-39). Python:
+            %       super(Document, self).__init__(element)  # ElementProxy, parent=None
+            %       self._element = element                  # redundant re-set
+            %       self._part = part
+            %       self.__body = None                       # P2-3 body cache
+            %   The redundant `self._element = element` is a no-op (the base
+            %   already stored it) and is not repeated here. `__body` is the
+            %   P2-3 body-cache concern, not carried at M1.
             %
             %   Inputs:  element - the w:document root element.
             %            part    - the owning mat2doc.parts.DocumentPart.
             %   Outputs: obj     - a scalar Document handle.
-            obj.element_ = element;
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.__init__
+            obj@mat2doc.shared.ElementProxy(element);   % base: element_=element, parent_=[] (None)
             obj.part_ = part;
         end
 
