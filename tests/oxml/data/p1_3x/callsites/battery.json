@@ -1,0 +1,1090 @@
+{
+ "manifest": "mso-p1_3x-callsites/1",
+ "oracle": "lxml 5.3.0 / libxml2 2.13.9 under python-docx 1.2.0",
+ "nsmap": {
+  "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+  "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+  "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+  "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+  "pic": "http://schemas.openxmlformats.org/drawingml/2006/picture"
+ },
+ "fixtures": {
+  "DOC": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><w:body><w:p><w:pPr><w:pStyle w:val=\"Heading1\"/></w:pPr><w:r><w:t>Hello </w:t></w:r><w:hyperlink r:id=\"rId7\"><w:r><w:t xml:space=\"preserve\">link</w:t></w:r></w:hyperlink><w:r><w:t>World</w:t></w:r></w:p><w:p><w:r><w:t>a</w:t></w:r><w:r><w:t>b</w:t></w:r><w:r><w:t>c</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p><w:hyperlink r:id=\"rId9\"><w:r><w:t>d</w:t></w:r></w:hyperlink></w:p><w:p>PT1<w:r>RT</w:r>MID<w:hyperlink>HL</w:hyperlink>END</w:p><w:sectPr/></w:body></w:document>",
+  "TBL": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:tbl><w:tr><w:tc><w:tcPr/><w:p/></w:tc></w:tr><w:tr><w:tc><w:tcPr/><w:p/></w:tc><w:tc><w:tcPr/><w:p/></w:tc><w:tc><w:tcPr/><w:p/></w:tc></w:tr></w:tbl></w:body></w:document>",
+  "PB1": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:p><w:pPr/><w:r><w:lastRenderedPageBreak/><w:t>a</w:t></w:r><w:hyperlink r:id=\"rId3\"><w:r><w:t>h</w:t></w:r></w:hyperlink><w:r><w:t>b</w:t></w:r></w:p></w:body></w:document>",
+  "PB2": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:p><w:r><w:t>a</w:t></w:r><w:r><w:lastRenderedPageBreak/></w:r></w:p></w:body></w:document>",
+  "CMTS": "<w:comments xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:comment w:id=\"1\"><w:p/></w:comment><w:comment w:id=\"5\"><w:p/></w:comment><w:comment w:id=\"8\"><w:p/></w:comment></w:comments>",
+  "STYLES": "<w:styles xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:style w:styleId=\"H1\"><w:name w:val=\"Heading 1\"/></w:style><w:style w:styleId=\"H2\"><w:name w:val=\"Heading 2\"/></w:style></w:styles>",
+  "NUM": "<w:numbering xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:num w:numId=\"1\"><w:abstractNumId w:val=\"0\"/></w:num><w:num w:numId=\"3\"><w:abstractNumId w:val=\"1\"/></w:num></w:numbering>",
+  "SECT": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:p><w:pPr><w:sectPr><w:pgSz/></w:sectPr></w:pPr></w:p><w:p/><w:sectPr><w:headerReference w:type=\"default\" r:id=\"rIdH\"/><w:footerReference w:type=\"default\" r:id=\"rIdF\"/></w:sectPr></w:body></w:document>",
+  "DRAW": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:p><w:r><w:drawing><wp:inline><a:graphic><a:graphicData><pic:pic><pic:blipFill><a:blip r:embed=\"rIdImg\"/></pic:blipFill></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p></w:body></w:document>",
+  "RUN": "<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"><w:body><w:p><w:r><w:rPr/><w:br/><w:cr/><w:drawing/><w:lastRenderedPageBreak/><w:noBreakHyphen/><w:ptab/><w:t>x</w:t><w:tab/></w:r></w:p></w:body></w:document>"
+ },
+ "cases": [
+  {
+   "id": "U1",
+   "note": "comments.py:124 document.py:88 section.py:48 table.py:493",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "./w:p | ./w:tbl",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+     "path": [
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      4
+     ]
+    }
+   ],
+   "sig": "N|p:0.0;p:0.1;tbl:0.2;p:0.3;p:0.4"
+  },
+  {
+   "id": "U2",
+   "note": "document.py:32",
+   "fixture": "SECT",
+   "ctx": "",
+   "expr": "./w:body/w:p/w:pPr/w:sectPr | ./w:body/w:sectPr",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr",
+     "path": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr",
+     "path": [
+      0,
+      2
+     ]
+    }
+   ],
+   "sig": "N|sectPr:0.0.0.0;sectPr:0.2"
+  },
+  {
+   "id": "U3",
+   "note": "document.py:68 (no spaces)",
+   "fixture": "SECT",
+   "ctx": "w:body/w:sectPr",
+   "expr": "w:headerReference|w:footerReference",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}headerReference",
+     "path": [
+      0,
+      2,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}footerReference",
+     "path": [
+      0,
+      2,
+      1
+     ]
+    }
+   ],
+   "sig": "N|headerReference:0.2.0;footerReference:0.2.1"
+  },
+  {
+   "id": "U4",
+   "note": "section.py:535 (absolute operands)",
+   "fixture": "SECT",
+   "ctx": "",
+   "expr": "/w:document/w:body/w:p/w:pPr/w:sectPr | /w:document/w:body/w:sectPr",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr",
+     "path": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}sectPr",
+     "path": [
+      0,
+      2
+     ]
+    }
+   ],
+   "sig": "N|sectPr:0.0.0.0;sectPr:0.2"
+  },
+  {
+   "id": "U5",
+   "note": "paragraph.py:69 pagebreak.py:138",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p",
+   "expr": "./w:r/w:lastRenderedPageBreak | ./w:hyperlink/w:r/w:lastRenderedPageBreak",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "sig": "N|lastRenderedPageBreak:0.0.1.0"
+  },
+  {
+   "id": "U6",
+   "note": "paragraph.py:60",
+   "fixture": "DOC",
+   "ctx": "w:body/w:p[1]",
+   "expr": "./w:r | ./w:hyperlink",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      3
+     ]
+    }
+   ],
+   "sig": "N|r:0.0.1;hyperlink:0.0.2;r:0.0.3"
+  },
+  {
+   "id": "U7",
+   "note": "run.py:70",
+   "fixture": "RUN",
+   "ctx": "w:body/w:p/w:r",
+   "expr": "w:br | w:cr | w:drawing | w:lastRenderedPageBreak | w:noBreakHyphen | w:ptab | w:t | w:tab",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}br",
+     "path": [
+      0,
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}cr",
+     "path": [
+      0,
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing",
+     "path": [
+      0,
+      0,
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      0,
+      0,
+      4
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}noBreakHyphen",
+     "path": [
+      0,
+      0,
+      0,
+      5
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}ptab",
+     "path": [
+      0,
+      0,
+      0,
+      6
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+     "path": [
+      0,
+      0,
+      0,
+      7
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tab",
+     "path": [
+      0,
+      0,
+      0,
+      8
+     ]
+    }
+   ],
+   "sig": "N|br:0.0.0.1;cr:0.0.0.2;drawing:0.0.0.3;lastRenderedPageBreak:0.0.0.4;noBreakHyphen:0.0.0.5;ptab:0.0.0.6;t:0.0.0.7;tab:0.0.0.8"
+  },
+  {
+   "id": "U8",
+   "note": "run.py:137",
+   "fixture": "RUN",
+   "ctx": "w:body/w:p/w:r",
+   "expr": "w:br | w:cr | w:noBreakHyphen | w:ptab | w:t | w:tab",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}br",
+     "path": [
+      0,
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}cr",
+     "path": [
+      0,
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}noBreakHyphen",
+     "path": [
+      0,
+      0,
+      0,
+      5
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}ptab",
+     "path": [
+      0,
+      0,
+      0,
+      6
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+     "path": [
+      0,
+      0,
+      0,
+      7
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tab",
+     "path": [
+      0,
+      0,
+      0,
+      8
+     ]
+    }
+   ],
+   "sig": "N|br:0.0.0.1;cr:0.0.0.2;noBreakHyphen:0.0.0.5;ptab:0.0.0.6;t:0.0.0.7;tab:0.0.0.8"
+  },
+  {
+   "id": "U9",
+   "note": "paragraph.py:102",
+   "fixture": "DOC",
+   "ctx": "w:body/w:p[1]",
+   "expr": "w:r | w:hyperlink",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      3
+     ]
+    }
+   ],
+   "sig": "N|r:0.0.1;hyperlink:0.0.2;r:0.0.3"
+  },
+  {
+   "id": "N1",
+   "note": "document.py:78",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "./*[not(self::w:sectPr)]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+     "path": [
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      4
+     ]
+    }
+   ],
+   "sig": "N|p:0.0;p:0.1;tbl:0.2;p:0.3;p:0.4"
+  },
+  {
+   "id": "N2",
+   "note": "table.py:457",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[1]/w:tc",
+   "expr": "./*[not(self::w:tcPr)]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0,
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "sig": "N|p:0.0.0.0.1"
+  },
+  {
+   "id": "N3",
+   "note": "run.py:59",
+   "fixture": "RUN",
+   "ctx": "w:body/w:p/w:r",
+   "expr": "./*[not(self::w:rPr)]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}br",
+     "path": [
+      0,
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}cr",
+     "path": [
+      0,
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}drawing",
+     "path": [
+      0,
+      0,
+      0,
+      3
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      0,
+      0,
+      4
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}noBreakHyphen",
+     "path": [
+      0,
+      0,
+      0,
+      5
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}ptab",
+     "path": [
+      0,
+      0,
+      0,
+      6
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t",
+     "path": [
+      0,
+      0,
+      0,
+      7
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tab",
+     "path": [
+      0,
+      0,
+      0,
+      8
+     ]
+    }
+   ],
+   "sig": "N|br:0.0.0.1;cr:0.0.0.2;drawing:0.0.0.3;lastRenderedPageBreak:0.0.0.4;noBreakHyphen:0.0.0.5;ptab:0.0.0.6;t:0.0.0.7;tab:0.0.0.8"
+  },
+  {
+   "id": "N4",
+   "note": "paragraph.py:54",
+   "fixture": "DOC",
+   "ctx": "w:body/w:p[1]",
+   "expr": "./*[not(self::w:pPr)]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      3
+     ]
+    }
+   ],
+   "sig": "N|r:0.0.1;hyperlink:0.0.2;r:0.0.3"
+  },
+  {
+   "id": "N5",
+   "note": "pagebreak.py:163,191",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p/w:r[2]",
+   "expr": "./preceding-sibling::*[not(self::w:pPr)]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    }
+   ],
+   "sig": "N|r:0.0.1;hyperlink:0.0.2"
+  },
+  {
+   "id": "N6",
+   "note": "pagebreak.py:196",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p/w:r[1]/w:lastRenderedPageBreak",
+   "expr": "./preceding-sibling::*[not(self::w:rPr)]",
+   "kind": "nodes",
+   "value": [],
+   "sig": "N|"
+  },
+  {
+   "id": "A1",
+   "note": "table.py:468",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[3]",
+   "expr": "./preceding-sibling::w:tc",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      0,
+      1,
+      1
+     ]
+    }
+   ],
+   "sig": "N|tc:0.0.1.0;tc:0.0.1.1"
+  },
+  {
+   "id": "A2",
+   "note": "table.py:641",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[1]",
+   "expr": "./following-sibling::w:tc",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      0,
+      1,
+      1
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "sig": "N|tc:0.0.1.1;tc:0.0.1.2"
+  },
+  {
+   "id": "A3",
+   "note": "pagebreak.py:227,256,261",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p/w:r[1]",
+   "expr": "./following-sibling::*",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}hyperlink",
+     "path": [
+      0,
+      0,
+      2
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r",
+     "path": [
+      0,
+      0,
+      3
+     ]
+    }
+   ],
+   "sig": "N|hyperlink:0.0.2;r:0.0.3"
+  },
+  {
+   "id": "A4",
+   "note": "section.py:339",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "./preceding::w:sectPr[1]",
+   "kind": "nodes",
+   "value": [],
+   "sig": "N|"
+  },
+  {
+   "id": "A4b",
+   "note": "preceding:: non-empty variant",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[2]",
+   "expr": "./preceding::w:tc[1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tc",
+     "path": [
+      0,
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "sig": "N|tc:0.0.1.0"
+  },
+  {
+   "id": "P1",
+   "note": "table.py:736",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[2]",
+   "expr": "./ancestor::w:tbl[position()=1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tbl",
+     "path": [
+      0,
+      0
+     ]
+    }
+   ],
+   "sig": "N|tbl:0.0"
+  },
+  {
+   "id": "P2",
+   "note": "table.py:754",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[2]",
+   "expr": "./ancestor::w:tr[position()=1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "sig": "N|tr:0.0.1"
+  },
+  {
+   "id": "P3",
+   "note": "table.py:762",
+   "fixture": "TBL",
+   "ctx": "w:body/w:tbl/w:tr[2]/w:tc[2]",
+   "expr": "./ancestor::w:tr[position()=1]/preceding-sibling::w:tr[1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}tr",
+     "path": [
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "sig": "N|tr:0.0.0"
+  },
+  {
+   "id": "P4",
+   "note": "pagebreak.py:131",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p/w:r[1]/w:lastRenderedPageBreak",
+   "expr": "./ancestor::w:p[1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    }
+   ],
+   "sig": "N|p:0.0"
+  },
+  {
+   "id": "P5",
+   "note": "comments.py:65 (group [1] + attrEq)",
+   "fixture": "CMTS",
+   "ctx": "",
+   "expr": "(./w:comment[@w:id='5'])[1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}comment",
+     "path": [
+      1
+     ]
+    }
+   ],
+   "sig": "N|comment:1"
+  },
+  {
+   "id": "P6",
+   "note": "pagebreak.py:67",
+   "fixture": "PB2",
+   "ctx": "w:body/w:p",
+   "expr": "(./w:r)[last()]/w:lastRenderedPageBreak[not(following-sibling::*[self::w:br | self::w:cr | self::w:drawing | self::w:noBreakHyphen | self::w:ptab | self::w:t | self::w:tab])]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "sig": "N|lastRenderedPageBreak:0.0.1.0"
+  },
+  {
+   "id": "P7",
+   "note": "pagebreak.py:91",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p",
+   "expr": "./w:r[1]/w:lastRenderedPageBreak[not(preceding-sibling::*[self::w:br | self::w:cr | self::w:drawing | self::w:noBreakHyphen | self::w:ptab | self::w:t | self::w:tab])]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}lastRenderedPageBreak",
+     "path": [
+      0,
+      0,
+      1,
+      0
+     ]
+    }
+   ],
+   "sig": "N|lastRenderedPageBreak:0.0.1.0"
+  },
+  {
+   "id": "P8",
+   "note": "position()=1 (R06 form)",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "w:p[position()=1]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      0
+     ]
+    }
+   ],
+   "sig": "N|p:0.0"
+  },
+  {
+   "id": "P9",
+   "note": "(...)[last()] (R07 form)",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "(./w:p)[last()]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p",
+     "path": [
+      0,
+      4
+     ]
+    }
+   ],
+   "sig": "N|p:0.4"
+  },
+  {
+   "id": "E1",
+   "note": "styles.py:316",
+   "fixture": "STYLES",
+   "ctx": "",
+   "expr": "w:style[w:name/@w:val=\"Heading 1\"]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}style",
+     "path": [
+      0
+     ]
+    }
+   ],
+   "sig": "N|style:0"
+  },
+  {
+   "id": "E2",
+   "note": "R08 form (no match)",
+   "fixture": "DOC",
+   "ctx": "w:body",
+   "expr": "w:p[w:pPr/@w:val=\"x\"]",
+   "kind": "nodes",
+   "value": [],
+   "sig": "N|"
+  },
+  {
+   "id": "E3",
+   "note": "styles.py:308 (attrEq, regression)",
+   "fixture": "STYLES",
+   "ctx": "",
+   "expr": "w:style[@w:styleId=\"H2\"]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}style",
+     "path": [
+      1
+     ]
+    }
+   ],
+   "sig": "N|style:1"
+  },
+  {
+   "id": "S1",
+   "note": "R09 form -> [] (one r:id per element)",
+   "fixture": "DOC",
+   "ctx": "",
+   "expr": "//@r:id[2]",
+   "kind": "nodes",
+   "value": [],
+   "sig": "N|"
+  },
+  {
+   "id": "S2",
+   "note": "opc/part.py:246 (regression)",
+   "fixture": "DOC",
+   "ctx": "",
+   "expr": "//@r:id",
+   "kind": "strings",
+   "value": [
+    "rId7",
+    "rId9"
+   ],
+   "sig": "S|rId7\u001frId9"
+  },
+  {
+   "id": "S3",
+   "note": "numbering.py:104 (regression)",
+   "fixture": "NUM",
+   "ctx": "",
+   "expr": "./w:num/@w:numId",
+   "kind": "strings",
+   "value": [
+    "1",
+    "3"
+   ],
+   "sig": "S|1\u001f3"
+  },
+  {
+   "id": "S4",
+   "note": "drawing/__init__.py:53 (regression)",
+   "fixture": "DRAW",
+   "ctx": "w:body/w:p/w:r/w:drawing",
+   "expr": ".//pic:blipFill/a:blip/@r:embed",
+   "kind": "strings",
+   "value": [
+    "rIdImg"
+   ],
+   "sig": "S|rIdImg"
+  },
+  {
+   "id": "G1",
+   "note": "numbering.py:96 (attrEq)",
+   "fixture": "NUM",
+   "ctx": "",
+   "expr": "./w:num[@w:numId=\"3\"]",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}num",
+     "path": [
+      1
+     ]
+    }
+   ],
+   "sig": "N|num:1"
+  },
+  {
+   "id": "G2",
+   "note": "section.py:217",
+   "fixture": "SECT",
+   "ctx": "w:body/w:sectPr",
+   "expr": "./w:footerReference[@w:type='default']",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}footerReference",
+     "path": [
+      0,
+      2,
+      1
+     ]
+    }
+   ],
+   "sig": "N|footerReference:0.2.1"
+  },
+  {
+   "id": "G3",
+   "note": "comments.py:76 (attr)",
+   "fixture": "CMTS",
+   "ctx": "",
+   "expr": "./w:comment/@w:id",
+   "kind": "strings",
+   "value": [
+    "1",
+    "5",
+    "8"
+   ],
+   "sig": "S|1\u001f5\u001f8"
+  },
+  {
+   "id": "G4",
+   "note": "shape.py:48",
+   "fixture": "DRAW",
+   "ctx": "",
+   "expr": "//w:p/w:r/w:drawing/wp:inline",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}inline",
+     "path": [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "sig": "N|inline:0.0.0.0.0"
+  },
+  {
+   "id": "G5",
+   "note": "pagebreak.py:126 (no hyperlink -> [])",
+   "fixture": "PB1",
+   "ctx": "w:body/w:p/w:r[1]/w:lastRenderedPageBreak",
+   "expr": "./parent::w:r/parent::w:hyperlink",
+   "kind": "nodes",
+   "value": [],
+   "sig": "N|"
+  },
+  {
+   "id": "G6",
+   "note": "styles.py:320",
+   "fixture": "STYLES",
+   "ctx": "",
+   "expr": "w:style",
+   "kind": "nodes",
+   "value": [
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}style",
+     "path": [
+      0
+     ]
+    },
+    {
+     "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}style",
+     "path": [
+      1
+     ]
+    }
+   ],
+   "sig": "N|style:0;style:1"
+  }
+ ]
+}

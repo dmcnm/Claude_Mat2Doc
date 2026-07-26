@@ -46,19 +46,28 @@ classdef Test_p1_3a_xmlchemy < matlab.unittest.TestCase
 %   Any regression that drops the name test (matching self/parent unconditionally)
 %   turns F01/F05 red.
 %
-%   *** VERIFY-2 raise-pins (R01-R09) -- INTENTIONAL guards, READ THIS ***
-%   R01-R09 (inside the xpath battery) are docx call-site XPath patterns that lie
-%   OUTSIDE the ported evaluator subset (bare union `./w:p | ./w:tbl`,
+%   *** VERIFY-2 value-pins (R01-R09) -- P1-3x MERGED, now SUPPORTED ***
+%   R01-R09 (inside the xpath battery) are docx call-site XPath patterns that
+%   were OUTSIDE the P1-3a evaluator subset (bare union `./w:p | ./w:tbl`,
 %   not(self::), preceding/following-sibling::, preceding::, position()=1,
-%   [last()], a predicate attribute-subpath, //@id[2]). They MUST raise
-%   mat2doc:XPathError -- "never silently mis-evaluated" (design.md section
-%   XPath). These pins are asserted GREEN here on purpose. When the scheduled
-%   engine-extension WP P1-3x (xpath-engine-extension,
-%   decision_2026-07-25_mat2doc_xpath_engine_extension.md) lands and IMPLEMENTS
-%   these forms, R01-R09 will begin RETURNING node-sets instead of raising and
-%   THESE TESTS WILL GO DELIBERATELY RED. That red is the signal to FLIP each
-%   R-case from verifyError to a value assertion against the frozen `would_be`
-%   node-set recorded in xpath\oracle.json -- do NOT delete them.
+%   [last()], a predicate attribute-subpath, //@r:id[2]). At P1-3a they raised
+%   mat2doc:XPathError ("never silently mis-evaluated", design.md section XPath).
+%   The engine-extension WP P1-3x (xpath-engine-extension,
+%   decision_2026-07-25_mat2doc_xpath_engine_extension.md) has now LANDED and
+%   IMPLEMENTS every one of these forms, so R01-R09 now RETURN node-sets /
+%   strings instead of raising. The `case "raise"` dispatch has accordingly been
+%   FLIPPED from verifyError to a value/type assertion, per the frozen pin-flip
+%   recipe validation\...\p1_3x\flip\flip_types.json (manifest mso-p1_3x-flip/1)
+%   against the `would_be` node-set frozen in xpath\oracle.json:
+%     R01,R02,R04,R06,R07 -> non-empty NODES == would_be (tag+path value-compare);
+%     R03,R05,R08         -> typed-empty NODES (isa XmlElement && isempty);
+%     R09 (//@r:id[2])    -> typed-empty STRING (isstring && isempty). R09's
+%       would_be labels {kind:nodes,value:[]} only because the oracle generator's
+%       encode() classifies every empty lxml list as "nodes"; the engine's
+%       STRING typed-empty is the CORRECT H3 static type (attr terminal), so R09
+%       asserts emptiness, NOT the would_be "nodes" kind (flip_types.json note_R09).
+%   These are now permanent SUPPORTED-behaviour equivalence pins; the extended
+%   surface is exercised in full by tests\oxml\Test_p1_3x_xpath.m.
 %
 %   VERIFY-3 (from the manifest): the battery runs over the PARSED w:document
 %   tree; the registry is EMPTY at P1-3a so the parsed tree is homogeneous
@@ -122,13 +131,47 @@ classdef Test_p1_3a_xmlchemy < matlab.unittest.TestCase
 
             switch expect
                 case "raise"
-                    % VERIFY-2: outside-subset form MUST raise (never silently
-                    % mis-evaluate). Flip to a `would_be` value-assert at P1-3x.
-                    testCase.verifyError( ...
-                        @() mat2doc.oxml.evaluate_xpath(ctx, expr, ns), ...
-                        'mat2doc:XPathError', ...
-                        sprintf('%s: %s must raise mat2doc:XPathError (VERIFY-2 pin)', ...
+                    % P1-3x MERGED (see class header): the former outside-subset
+                    % forms R01-R09 are now SUPPORTED and return node-sets/strings
+                    % rather than raising. Flipped to a value/type assertion per
+                    % flip_types.json (manifest mso-p1_3x-flip/1) against the frozen
+                    % `would_be` in xpath\oracle.json. `expect` is still "raise" in
+                    % cases.json (the frozen P1-3a spec); the flip lives HERE so the
+                    % frozen oracle stays untouched.
+                    got = mat2doc.oxml.evaluate_xpath(ctx, expr, ns);
+                    switch flipKind(xpathId)
+                        case "string-empty"
+                            % R09 //@r:id[2] -> typed-empty STRING (attr terminal).
+                            % Assert emptiness, NOT the would_be 'nodes' kind
+                            % (flip_types.json note_R09: encode() artifact).
+                            testCase.verifyTrue(isstring(got), sprintf( ...
+                                '%s: %s must return a string array (STRING typed-empty)', ...
                                 xpathId, expr));
+                            testCase.verifyTrue(isempty(got), sprintf( ...
+                                '%s: %s must be the empty string-set', xpathId, expr));
+                        case "nodes-empty"
+                            % R03/R05/R08 -> typed-empty NODES.
+                            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
+                                sprintf('%s: typed-empty node result must be XmlElement', xpathId));
+                            testCase.verifyTrue(isempty(got), sprintf( ...
+                                '%s: %s must be the empty node-set', xpathId, expr));
+                        case "nodes-nonempty"
+                            % R01/R02/R04/R06/R07 -> would_be node-set (tag+path).
+                            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
+                                sprintf('%s: node result must be XmlElement', xpathId));
+                            [expTags, expPaths] = expectedNodes(oracleEntry(xpathId).would_be);
+                            testCase.verifyEqual(numel(got), numel(expTags), ...
+                                sprintf('%s: node count vs would_be', xpathId));
+                            for i = 1:numel(expTags)
+                                testCase.verifyEqual(string(got(i).tag), expTags(i), ...
+                                    sprintf('%s: node %d tag vs would_be', xpathId, i));
+                                testCase.verifyEqual(path0(got(i)), expPaths{i}, ...
+                                    sprintf('%s: node %d document path vs would_be', xpathId, i));
+                            end
+                        otherwise
+                            testCase.assertFail(sprintf( ...
+                                '%s: no P1-3x flip kind for a "raise" case', xpathId));
+                    end
                 case "nodes"
                     got = mat2doc.oxml.evaluate_xpath(ctx, expr, ns);
                     testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
@@ -378,6 +421,20 @@ function [ctxLoc, expr, expect] = caseSpec(cid)
     ctxLoc = string(cases(k).ctx);
     expr   = string(cases(k).expr);
     expect = string(cases(k).expect);
+end
+
+function fk = flipKind(cid)
+    % P1-3x pin-flip recipe: per-pin MEASURED return type of the extended engine
+    % (validation\...\p1_3x\flip\flip_types.json, manifest mso-p1_3x-flip/1).
+    %   R01,R02,R04,R06,R07 -> "nodes-nonempty" (would_be node-set)
+    %   R03,R05,R08         -> "nodes-empty"     (typed-empty XmlElement)
+    %   R09 //@r:id[2]      -> "string-empty"    (STRING typed-empty; attr terminal)
+    switch string(cid)
+        case {"R01","R02","R04","R06","R07"}; fk = "nodes-nonempty";
+        case {"R03","R05","R08"};             fk = "nodes-empty";
+        case "R09";                           fk = "string-empty";
+        otherwise;                            fk = "";
+    end
 end
 
 function e = oracleEntry(cid)
