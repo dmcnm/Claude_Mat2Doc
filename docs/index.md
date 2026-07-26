@@ -43,7 +43,13 @@ syntax, description, example, ported-from).
   Base / 10 Xsd / 21 `ST_*` classes that validate and convert every typed `w:`
   attribute value the P4–P6 element classes read and write; the D-STYPE-2 float
   re-home, the `ST_HexColor`/`ST_HexColorAuto` split, `ST_OnOff`, and the
-  `ST_UniversalMeasure` unit grammar live here).
+  `ST_UniversalMeasure` unit grammar live here); and the **text/font element
+  tier** (`+oxml\+text` + `+oxml\+shared`: the **first real `w:`-content element
+  classes** — `CT_RPr`, the M2 byte-critical `<w:rPr>` run-properties container
+  whose 27 `ZeroOrOne` descriptors ride the non-contiguous H11 successor slices
+  of the 39-entry `_tag_seq`, its 6 child `CT_*` classes, the `_new_color`
+  black-seed override, and the shared `CT_OnOff` (D-delta-1 tri-state) /
+  `CT_String` leaves — registered byte-neutrally with M1 preserved).
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC
