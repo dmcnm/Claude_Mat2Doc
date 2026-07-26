@@ -29,6 +29,13 @@ syntax, description, example, ported-from).
 - **Foundation & utilities** — the shared length-unit value types (the
   `Length` family and its EMU-based conversions), the `RGBColor` value object,
   and `pyStr`, the mandated Python-`str()` numeric→XML formatting helper (H14).
+- **Proxy, exception & protocol tier** — the base tier that **every later API
+  proxy extends** (P3–P6): `ElementProxy` (H5 element-identity equality + the
+  `part` None-guard), the standalone `Parented` / `StoryChild` part-provider
+  bases, `TextAccumulator`, the `lazyproperty` / `write_only_property` idiom
+  guides, the `mat2doc.exc` exception raisers (flat identifiers), and the
+  `mat2doc.types` structural protocols — plus the byte-neutral, Python-faithful
+  `Document → ElementProxy` retrofit.
 - **XML layer (oxml)** — the byte-fidelity OOXML foundation: the namespace
   machinery, the order-preserving parser and `XmlElement` tree, the part-XML
   serializer, and the xmlchemy element-class / attribute-descriptor / XPath

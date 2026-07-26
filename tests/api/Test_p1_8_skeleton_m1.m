@@ -350,8 +350,24 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             testCase.verifyEqual(class(d1), 'mat2doc.document.Document', ...
                 'document_part.document must be a mat2doc.document.Document');
             d2 = dp.document();
-            testCase.verifyFalse(d1 == d2, ...
-                'document must be NON-cached: two accesses are distinct handles');
+            % P2-1 VERIFY-M1-DOC-BASE retrofit: Document now derives
+            % mat2doc.shared.ElementProxy, whose `==` is H5 ELEMENT identity
+            % (document.py 28 `class Document(ElementProxy)`; shared.py 289-299).
+            % `DocumentPart.document` is a plain @property (docx/parts/document.py
+            % 58-59), NOT a lazyproperty -- so each access builds a FRESH proxy,
+            % but both wrap the SAME w:document element, hence they compare EQUAL.
+            % This is the Python-faithful result (`part.document == part.document`
+            % is True in python-docx). The PRE-retrofit assertion here was
+            % verifyFalse(d1==d2) (MATLAB instance identity), which is NOT the
+            % Python contract; it is corrected to verifyTrue below. Non-caching
+            % (distinct instances) is no longer observable through the now-
+            % element-identity `==`/`isequal` -- exactly as in Python, where it is
+            % only visible via `is`; the fresh-instance construction is pinned by
+            % the class contract (DocumentPart.document builds `Document(...)`
+            % each call) rather than by handle inequality.
+            testCase.verifyTrue(d1 == d2, ...
+                ['two document() accesses wrap the SAME element, so they are ' ...
+                 'ElementProxy-equal (H5 element identity, Python-correct)']);
         end
 
         % =============================================================== %

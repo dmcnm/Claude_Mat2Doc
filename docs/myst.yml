@@ -17,6 +17,9 @@ project:
     - title: Foundation & utilities
       children:
         - file: api/shared.md
+    - title: Proxy, exception & protocol tier
+      children:
+        - file: api/proxy.md
     - title: XML layer (oxml)
       children:
         - file: api/oxml_core.md
