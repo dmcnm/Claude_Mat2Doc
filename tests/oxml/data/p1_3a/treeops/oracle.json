@@ -1,0 +1,29 @@
+{
+  "T1_insert_before": {
+    "serialized_sha256": "5fce69854c019f3804e0200ab979b5d0bd54bca17cb30ebf714f92bcb28897c1",
+    "serialized_size": 152
+  },
+  "T2_insert_append_fallback": {
+    "serialized_sha256": "8602907077f27e4262d79954a7df98a0c4edeaa7144ddcec5f6a74bc43e918bc",
+    "serialized_size": 151
+  },
+  "T3_first_child_found_in": {
+    "argorder_pPr_first": {
+      "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}pPr"
+    },
+    "argorder_r_first": {
+      "tag": "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+    },
+    "absent": null
+  },
+  "T4_remove_all": {
+    "serialized_sha256": "ddb35523d701f827163be1b72481a96fe8f3d71a15774855d414359a5fb614be",
+    "serialized_size": 146
+  },
+  "T5_xpath_method_default_nsmap": {
+    "count": 1,
+    "tags": [
+      "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r"
+    ]
+  }
+}

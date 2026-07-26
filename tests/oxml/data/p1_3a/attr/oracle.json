@@ -1,0 +1,56 @@
+{
+  "O1_get_absent_default": {
+    "op": "get",
+    "getter_return": "DEF",
+    "attrib": null
+  },
+  "O2_set_stored": {
+    "op": "set",
+    "value": "Vx",
+    "attrib": "Vx",
+    "getter_return_after": "F:Vx",
+    "serialized_sha256": "0d7934cc4288e0856cf64d62ef478213afb51fd3f929b07b24acf276be8d0e0a",
+    "serialized_size": 146
+  },
+  "O3_from_xml_roundtrip": {
+    "op": "get",
+    "getter_return": "F:Vx"
+  },
+  "O4_setNone_removes": {
+    "op": "set_none",
+    "attrib": null,
+    "getter_return": "DEF"
+  },
+  "O5_setDefault_removes": {
+    "op": "set_default",
+    "attrib": null
+  },
+  "O6_toxmlNone_removes": {
+    "op": "set_sentinel",
+    "attrib": null
+  },
+  "O7_set_emptystring": {
+    "op": "set_empty",
+    "attrib": "",
+    "serialized_sha256": "e46b1b6c183547785ba7f238ae3bf25b9e0182da534d457c7cada8fbb9cc837c",
+    "serialized_size": 144
+  },
+  "R1_get_absent_raises": {
+    "op": "get",
+    "raised": true,
+    "message": "required 'w:req' attribute not present on element {http://schemas.openxmlformats.org/wordprocessingml/2006/main}foo"
+  },
+  "R2_set_stored": {
+    "op": "set",
+    "value": "Q",
+    "attrib": "Q",
+    "getter_return_after": "F:Q",
+    "serialized_sha256": "5da5bbdfe58a67baa60b7a9795a98ad38b4a6433fd92621a621db5599a9bea2d",
+    "serialized_size": 145
+  },
+  "R3_toxmlNone_raises": {
+    "op": "set_sentinel",
+    "raised": true,
+    "message": "cannot assign __TOXML_NONE__ to this required attribute"
+  }
+}

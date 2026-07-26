@@ -1,0 +1,230 @@
+[
+  {
+    "id": "X01",
+    "ctx": "",
+    "expr": "./*[1]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X02",
+    "ctx": "",
+    "expr": "w:body/w:p[1]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X03",
+    "ctx": "",
+    "expr": "w:body/w:p[2]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X04",
+    "ctx": "",
+    "expr": "//w:p",
+    "expect": "nodes"
+  },
+  {
+    "id": "X05",
+    "ctx": "",
+    "expr": "//w:hyperlink",
+    "expect": "nodes"
+  },
+  {
+    "id": "X06",
+    "ctx": "",
+    "expr": "w:body/w:tbl//w:t",
+    "expect": "nodes"
+  },
+  {
+    "id": "X07",
+    "ctx": "",
+    "expr": "//w:t",
+    "expect": "nodes"
+  },
+  {
+    "id": "X08",
+    "ctx": "",
+    "expr": "w:body/w:p[1]/w:r[1]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X09",
+    "ctx": "",
+    "expr": "w:body/w:p[w:pPr]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X10",
+    "ctx": "",
+    "expr": "w:body/w:p[w:hyperlink]",
+    "expect": "nodes"
+  },
+  {
+    "id": "X11",
+    "ctx": "",
+    "expr": "/w:document/w:body/w:sectPr",
+    "expect": "nodes"
+  },
+  {
+    "id": "X12",
+    "ctx": "w:body/w:tbl",
+    "expr": ".//w:p",
+    "expect": "nodes"
+  },
+  {
+    "id": "X13",
+    "ctx": "w:body/w:p[1]",
+    "expr": "..",
+    "expect": "nodes"
+  },
+  {
+    "id": "X14",
+    "ctx": "w:body/w:p[1]",
+    "expr": "(./w:pPr | ./w:r)",
+    "expect": "nodes"
+  },
+  {
+    "id": "X15",
+    "ctx": "w:body/w:p[2]/w:r[1]/w:t",
+    "expr": "ancestor::w:p",
+    "expect": "nodes"
+  },
+  {
+    "id": "X16",
+    "ctx": "",
+    "expr": "w:body/w:zzz",
+    "expect": "nodes"
+  },
+  {
+    "id": "S01",
+    "ctx": "",
+    "expr": "//@r:id",
+    "expect": "strings"
+  },
+  {
+    "id": "S02",
+    "ctx": "",
+    "expr": "//w:pStyle/@w:val",
+    "expect": "strings"
+  },
+  {
+    "id": "S03",
+    "ctx": "",
+    "expr": "//w:t/@xml:space",
+    "expect": "strings"
+  },
+  {
+    "id": "S04",
+    "ctx": "w:body/w:tbl",
+    "expr": ".//w:t/text()",
+    "expect": "strings"
+  },
+  {
+    "id": "S05",
+    "ctx": "w:body/w:p[2]",
+    "expr": ".//w:t/text()",
+    "expect": "strings"
+  },
+  {
+    "id": "S06",
+    "ctx": "w:body/w:p[4]",
+    "expr": "./text()",
+    "expect": "strings"
+  },
+  {
+    "id": "S07",
+    "ctx": "w:body/w:p[4]",
+    "expr": ".//text()",
+    "expect": "strings"
+  },
+  {
+    "id": "S08",
+    "ctx": "",
+    "expr": "//@w:nonexistent",
+    "expect": "strings"
+  },
+  {
+    "id": "F01",
+    "ctx": "w:body/w:p[1]",
+    "expr": "self::w:tbl",
+    "expect": "nodes"
+  },
+  {
+    "id": "F02",
+    "ctx": "w:body/w:p[1]",
+    "expr": "self::w:p",
+    "expect": "nodes"
+  },
+  {
+    "id": "F03",
+    "ctx": "w:body/w:p[1]",
+    "expr": "parent::w:body",
+    "expect": "nodes"
+  },
+  {
+    "id": "F04",
+    "ctx": "w:body/w:p[1]/w:hyperlink/w:r/w:t",
+    "expr": "./parent::w:r/parent::w:hyperlink",
+    "expect": "nodes"
+  },
+  {
+    "id": "F05",
+    "ctx": "w:body/w:p[1]/w:r[1]/w:t",
+    "expr": "./parent::w:r/parent::w:hyperlink",
+    "expect": "nodes"
+  },
+  {
+    "id": "R01",
+    "ctx": "w:body",
+    "expr": "./w:p | ./w:tbl",
+    "expect": "raise"
+  },
+  {
+    "id": "R02",
+    "ctx": "w:body",
+    "expr": "./*[not(self::w:sectPr)]",
+    "expect": "raise"
+  },
+  {
+    "id": "R03",
+    "ctx": "w:body",
+    "expr": "preceding-sibling::w:p",
+    "expect": "raise"
+  },
+  {
+    "id": "R04",
+    "ctx": "w:body/w:p[2]",
+    "expr": "following-sibling::w:p",
+    "expect": "raise"
+  },
+  {
+    "id": "R05",
+    "ctx": "w:body",
+    "expr": "./preceding::w:sectPr[1]",
+    "expect": "raise"
+  },
+  {
+    "id": "R06",
+    "ctx": "w:body",
+    "expr": "w:p[position()=1]",
+    "expect": "raise"
+  },
+  {
+    "id": "R07",
+    "ctx": "w:body",
+    "expr": "(./w:p)[last()]",
+    "expect": "raise"
+  },
+  {
+    "id": "R08",
+    "ctx": "w:body",
+    "expr": "w:p[w:pPr/@w:val=\"x\"]",
+    "expect": "raise"
+  },
+  {
+    "id": "R09",
+    "ctx": "",
+    "expr": "//@r:id[2]",
+    "expect": "raise"
+  }
+]
