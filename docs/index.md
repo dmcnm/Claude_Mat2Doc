@@ -27,8 +27,8 @@ syntax, description, example, ported-from).
 ## Sections
 
 - **Foundation & utilities** — the shared length-unit value types (the
-  `Length` family and its EMU-based conversions) and the `RGBColor` value
-  object.
+  `Length` family and its EMU-based conversions), the `RGBColor` value object,
+  and `pyStr`, the mandated Python-`str()` numeric→XML formatting helper (H14).
 - **XML layer (oxml)** — the byte-fidelity OOXML foundation: the namespace
   machinery, the order-preserving parser and `XmlElement` tree, the part-XML
   serializer, and the xmlchemy element-class / attribute-descriptor / XPath
@@ -47,7 +47,12 @@ syntax, description, example, ported-from).
   the **package/part object model** on top — `OpcPackage` (open / save /
   graph traversal), the `Part` / `XmlPart` base parts, and the `PartFactory`
   content-type→class registry whose XmlPart-vs-Part split decides M1
-  whitespace-collapse (the full 17-part open→save round-trip is byte-proven here).
+  whitespace-collapse (the full 17-part open→save round-trip is byte-proven here);
+  and the **core-properties tier** on top — `CT_CoreProperties` (the 15
+  Dublin-Core descriptors, the W3CDTF date grammar, and the byte-critical `xsi`
+  namespace hoist), the `CoreProperties` API wrapper, and the
+  `CorePropertiesPart` part class (`/docProps/core.xml`; the 721 B re-serialize
+  and 681 B fresh build are byte-proven).
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 

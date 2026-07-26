@@ -8,8 +8,10 @@ Ported from python-docx v1.2.0 module `src/docx/shared.py`
 (package `+mat2doc/+shared/`). The `Length` base class and its six convenience
 constructors (`Emu`, `Inches`, `Cm`, `Mm`, `Pt`, `Twips`) express lengths in
 English Metric Units (EMU); the `RGBColor` value object holds a red/green/blue
-byte triplet. One project-added package-private helper, `pyIntArg`, has no
-python-docx counterpart.
+byte triplet. Two project-added helpers have no python-docx counterpart: the
+package-private `pyIntArg`, and `pyStr` — the mandated numeric→XML formatting
+helper (H14), established here at P1-7 (the first numeric-serialization site in
+the docx port).
 
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.
@@ -409,3 +411,55 @@ mat2doc.shared.Emu("914400")   % 914400  (Python int('914400'))
 
 *Mat2Doc infrastructure (shared package-private helper), no python-docx
 counterpart; replicates CPython 3.13 `int()` construction semantics.*
+
+---
+
+## `pyStr` (H14)
+
+**Syntax**
+
+```matlab
+s = mat2doc.shared.pyStr(value)
+s = mat2doc.shared.pyStr(value, kind)   % kind = "auto" (default) | "int" | "float"
+```
+
+**Description**
+
+Formats a value exactly as Python 3 `str()` would — the **only** permitted
+numeric→text conversion at an XML serialization site (raw `num2str` /
+`sprintf('%g')` there is a defect per H14 / design.md §8). By class of `value`:
+`string`/`char` pass through unchanged; `logical` → `"True"`/`"False"`;
+`mat2doc.shared.Length` and integer types → Python int formatting (digits, no
+decimal point); `double` follows `kind` — `"int"` for integer formatting (value
+must be integral and finite), `"float"` for the Python **float repr** (the
+shortest string of significant digits that round-trips to the same IEEE double —
+positional for decimal exponent −4..15, scientific otherwise, plus
+`"inf"`/`"-inf"`/`"nan"` and `"-0.0"`), and `"auto"` picks int for integral
+finite values and float otherwise.
+
+**Documented limits.** MATLAB cannot distinguish the double `2.0` from the
+integer `2`, so `"auto"` formats integral doubles as Python int str (`"2"`);
+where the source value is a Python float (`str(2.0)`→`'2.0'`), the call site must
+pass `kind = "float"`. Only double-precision is supported; a `single` input is
+an error, not a silent approximation. The shortest-repr search uses
+correctly-rounded `sprintf('%.*e')` / `str2double` round-trips over 1..17
+significant digits — the same shortest-round-trip contract as CPython's
+`float_repr`.
+
+**Provenance.** A faithful re-port of the Mat2Ppt `+util\pyStr.m` (design.md §7:
+shared idioms are re-implemented into each toolbox's home package, no shared
+code), verified code-identical modulo namespaces and 20/20 vs CPython `str()`.
+**First established for Mat2Doc by P1-7** (coreprops), where the `<cp:revision>`
+setter serializes the revision int and reports the offending value in its
+`ValueError` (so `2.5` renders `'2.5'`, not `'2'`).
+
+**Example**
+
+```matlab
+mat2doc.shared.pyStr(mat2doc.shared.Emu(914400))   % "914400"
+mat2doc.shared.pyStr(0.5, "float")                 % "0.5"
+mat2doc.shared.pyStr(2.0, "float")                 % "2.0"
+```
+
+*Mat2Doc infrastructure (no python-docx counterpart); mandated by design.md §8
+and hazard H14; re-ported from Mat2Ppt `+util\pyStr.m`.*
