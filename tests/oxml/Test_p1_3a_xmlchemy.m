@@ -150,15 +150,27 @@ classdef Test_p1_3a_xmlchemy < matlab.unittest.TestCase
                             testCase.verifyTrue(isempty(got), sprintf( ...
                                 '%s: %s must be the empty string-set', xpathId, expr));
                         case "nodes-empty"
-                            % R03/R05/R08 -> typed-empty NODES.
+                            % R03/R05/R08 -> typed-empty NODES. KEPT as verifyClass
+                            % (exact) on purpose: an EMPTY node-set has no element to
+                            % dispatch on, so evaluate_xpath returns the base
+                            % mat2doc.oxml.XmlElement.empty UNCONDITIONALLY -- the
+                            % P2-3 CT_Document/CT_Body registration cannot change it.
+                            % This pins the H3 typed-empty BASE type (never [] / None),
+                            % so exact-class is correct and stable here.
                             testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
                                 sprintf('%s: typed-empty node result must be XmlElement', xpathId));
                             testCase.verifyTrue(isempty(got), sprintf( ...
                                 '%s: %s must be the empty node-set', xpathId, expr));
                         case "nodes-nonempty"
                             % R01/R02/R04/R06/R07 -> would_be node-set (tag+path).
-                            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
-                                sprintf('%s: node result must be XmlElement', xpathId));
+                            % verifyInstanceOf (relaxed from verifyClass per the
+                            % validate_P2-3 routed fix): once tags are registered a
+                            % would_be node may land on a concrete subclass (P2-3
+                            % CT_Body, later CT_P) -- it IS-A XmlElement via
+                            % BaseOxmlElement either way. The tag + document-path
+                            % assertions below remain the real (byte-exact) pins.
+                            testCase.verifyInstanceOf(got, 'mat2doc.oxml.XmlElement', ...
+                                sprintf('%s: node result must be an XmlElement node', xpathId));
                             [expTags, expPaths] = expectedNodes(oracleEntry(xpathId).would_be);
                             testCase.verifyEqual(numel(got), numel(expTags), ...
                                 sprintf('%s: node count vs would_be', xpathId));
@@ -174,8 +186,18 @@ classdef Test_p1_3a_xmlchemy < matlab.unittest.TestCase
                     end
                 case "nodes"
                     got = mat2doc.oxml.evaluate_xpath(ctx, expr, ns);
-                    testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
-                        sprintf('%s: node result must be XmlElement', xpathId));
+                    % verifyInstanceOf (relaxed from verifyClass per the
+                    % validate_P2-3 routed fix): P2-3 registers w:document ->
+                    % CT_Document and w:body -> CT_Body, so the cases that resolve
+                    % ONTO the body (X01 ./*[1], X13 .., F03 parent::w:body) are now
+                    % exact-class mat2doc.oxml.document.CT_Body, while every other
+                    % case is still the generic XmlElement fallback. The engine pin
+                    % this branch enforces is "the result is an ELEMENT node"; CT_Body
+                    % IS-A XmlElement via BaseOxmlElement so IS-A holds for both, and
+                    % the tag + document-path assertions below stay the real
+                    % (byte-exact) equivalence/regression pins for all 38 cases.
+                    testCase.verifyInstanceOf(got, 'mat2doc.oxml.XmlElement', ...
+                        sprintf('%s: node result must be an XmlElement node', xpathId));
                     [expTags, expPaths] = expectedNodes(oracleEntry(xpathId));
                     testCase.verifyEqual(numel(got), numel(expTags), ...
                         sprintf('%s: node count', xpathId));

@@ -60,13 +60,18 @@ syntax, description, example, ported-from).
   namespace hoist), the `CoreProperties` API wrapper, and the
   `CorePropertiesPart` part class (`/docProps/core.xml`; the 721 B re-serialize
   and 681 B fresh build are byte-proven).
-- **WordprocessingML entry (docx) — M1** — the public `mat2doc.Document()`
-  entry function and the thin walking-skeleton object graph beneath it
+- **WordprocessingML document tier (docx) — M1 → P2 complete** — the public
+  `mat2doc.Document()` entry function and the object graph beneath it
   (`package.Package` / `parts.DocumentPart` / `document.Document`) that satisfies
   the **M1 milestone** (`mat2doc.Document().save()` produces `default.docx`
   byte-identical to python-docx — 17/17 L1 three-way — and opens clean in real
-  Word). Documents what is live vs stubbed-until-P2 and the two byte-neutral
-  PartFactory row flips.
+  Word), **completed by P2-3** with the `CT_Document`/`CT_Body` element classes
+  (registered for `w:document`/`w:body` — byte-neutral, the last P2 step to touch
+  the `document.xml` parse path), the `_Body` proxy and the `BlockItemContainer`
+  (`blkcntnr`) base, and the `Document._body`/`_block_width` accessors. Documents
+  the byte-neutral registration, the H11 successor ordering, the
+  object-graph-complete/features-stubbed-at-P4+ state, and the **Phase 2 complete**
+  milestone.
 - **Story-part tier (parts)** — the part classes an opened `.docx` graph is
   built from: `StoryPart` (the real base inserted above `DocumentPart`, with
   `next_id` and the `_document_part` lazyproperty), the reparented

@@ -83,6 +83,10 @@ map = dictionary(string.empty(0, 1), string.empty(0, 1));
 % remaining 119 are appended by their CT_* WPs in docx/oxml/__init__.py order.
 map = registerElementCls_(map, "cp:coreProperties", ...
     "mat2doc.oxml.coreprops.CT_CoreProperties");   % __init__.py:96 (P1-7)
+map = registerElementCls_(map, "w:body", ...
+    "mat2doc.oxml.document.CT_Body");              % __init__.py:100 (P2-3)
+map = registerElementCls_(map, "w:document", ...
+    "mat2doc.oxml.document.CT_Document");          % __init__.py:101 (P2-3)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
