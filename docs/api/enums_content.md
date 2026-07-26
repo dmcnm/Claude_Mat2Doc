@@ -1,20 +1,29 @@
 ---
-title: "mat2doc.enum.{text,section,dml} — the concrete WD_*/MSO_* enums"
+title: "mat2doc.enum.{text,section,dml,style,table,shape} — the concrete WD_*/MSO_* enums"
 ---
 
-# `mat2doc.enum.{text,section,dml}` — the concrete enums
+# `mat2doc.enum.{text,section,dml,style,table,shape}` — the concrete enums
 
-Ported from python-docx v1.2.0 `src/docx/enum/text.py`, `section.py`, and
-`dml.py` — the **12 concrete `WD_*` / `MSO_*` enumerations** built on the P3-1
-`BaseEnum` / `BaseXmlEnum` machinery, plus the `WD_BREAK_TYPE.TEXT_WRAPPING`
-member-alias and the **7 module-level class aliases**. These are the value-layer
-constants the P4 (text/run/paragraph), P5 (section), and P6 (table) element
-classes read and write — alignment, break type, highlight color, underline
-style, line spacing, tab alignment/leader, header-footer index, page
-orientation, section start, color type, and theme color. Like the base tier they
-**emit no serialized output of their own**; each supplies a fixed member set and
-(for the `BaseXmlEnum` subclasses) the `from_xml` / `to_xml` translation its
+Ported from python-docx v1.2.0 `src/docx/enum/text.py`, `section.py`, `dml.py`,
+`style.py`, `table.py`, and `shape.py` — the **19 concrete `WD_*` / `MSO_*`
+enumerations** built on the P3-1 `BaseEnum` / `BaseXmlEnum` machinery, plus the
+`WD_BREAK_TYPE.TEXT_WRAPPING` member-alias and the **11 module-level class
+aliases**. These are the value-layer constants the P4 (text/run/paragraph/style),
+P5 (section), P6 (table), and P7 (inline-shape) element classes read and write —
+alignment, break type, highlight color, underline style, line spacing, tab
+alignment/leader, header-footer index, page orientation, section start, color
+type, theme color, built-in style name, style type, cell vertical alignment, row
+height rule, table alignment/direction, and inline-shape type. Like the base tier
+they **emit no serialized output of their own**; each supplies a fixed member set
+and (for the `BaseXmlEnum` subclasses) the `from_xml` / `to_xml` translation its
 consumers call.
+
+The tier lands across two work packages: **P3-3** ported the `text` / `section` /
+`dml` enums (documented first below), and **P3-4** — the final P3 WP — added the
+`style` / `table` / `shape` enums (documented under
+[The style / table / shape enums](#style-table-shape-enums)). With P3-4
+merged, **Phase 3 is complete** (see the [Phase 3 complete](#phase-3-complete)
+note).
 
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.
@@ -36,11 +45,14 @@ fully-qualified `mat2doc.enum.<module>.<NAME>`:
 | `src/docx/enum/text.py` | `+mat2doc\+enum\+text\` | `mat2doc.enum.text.WD_PARAGRAPH_ALIGNMENT` |
 | `src/docx/enum/section.py` | `+mat2doc\+enum\+section\` | `mat2doc.enum.section.WD_ORIENTATION` |
 | `src/docx/enum/dml.py` | `+mat2doc\+enum\+dml\` | `mat2doc.enum.dml.MSO_THEME_COLOR_INDEX` |
+| `src/docx/enum/style.py` | `+mat2doc\+enum\+style\` | `mat2doc.enum.style.WD_BUILTIN_STYLE` |
+| `src/docx/enum/table.py` | `+mat2doc\+enum\+table\` | `mat2doc.enum.table.WD_TABLE_ALIGNMENT` |
+| `src/docx/enum/shape.py` | `+mat2doc\+enum\+shape\` | `mat2doc.enum.shape.WD_INLINE_SHAPE_TYPE` |
 
 This **differs from Mat2Ppt's flat `+enum\`** — a deliberate per-module layout
 per the P3-3 brief. The P3-1 base stays at `+mat2doc\+enum\+base\`.
 
-## The 12 concrete enums (108 members)
+## The 12 `text` / `section` / `dml` enums (108 members) — P3-3
 
 Each row is a distinct enumeration; the full member set (108 members total) was
 frozen and proven **byte-identical to the python-docx oracle** at Gate-3 (`s0018`
@@ -193,22 +205,132 @@ mat2doc.enum.dml.MSO_THEME_COLOR.to_xml( ...
     mat2doc.enum.dml.MSO_THEME_COLOR.ACCENT_6)           % "accent6"
 ```
 
+(style-table-shape-enums)=
+## The style / table / shape enums (P3-4)
+
+**P3-4** — the final P3 WP — adds the remaining seven concrete enums from
+`style.py`, `table.py`, and `shape.py`, plus **four** module-level class aliases,
+across the new `+enum\{+style,+table,+shape}` subpackages (11 files). It closes
+boundary-audit item **C2** (the previously orphaned `shape.py`) and **completes
+Phase 3**. Every member was frozen and proven **byte-identical to the python-docx
+oracle** at Gate-3 (`s0019` `probe_diff`, **598/598 facts, exit 0**), the crux
+being **`WD_BUILTIN_STYLE`'s 132 members** — the largest single member set in the
+docx enum tier, and the input to the P4-7 styles layer.
+
+| Enum | Subpackage | Base | Members | Notes |
+|---|---|---|---|---|
+| `WD_BUILTIN_STYLE` | style | `BaseEnum` | **132** | built-in `WdBuiltinStyle` names; all values negative, all distinct (no internal alias); alias `WD_STYLE` |
+| `WD_STYLE_TYPE` | style | `BaseXmlEnum` | 4 | `paragraph`/`character`/`numbering`(=LIST)/`table` |
+| `WD_CELL_VERTICAL_ALIGNMENT` | table | `BaseXmlEnum` | 4 | `top`/`center`/`bottom`/`both`; alias `WD_ALIGN_VERTICAL` |
+| `WD_ROW_HEIGHT_RULE` | table | `BaseXmlEnum` | 3 | `auto`/`atLeast`/`exact`(=EXACTLY); alias `WD_ROW_HEIGHT` |
+| `WD_TABLE_ALIGNMENT` | table | `BaseXmlEnum` | 3 | `left`/`center`/`right`; `LEFT` docstring `"Left-aligned"` (no trailing period, faithful) |
+| `WD_TABLE_DIRECTION` | table | `BaseEnum` | 2 | `LTR` 0 / `RTL` 1 (no XML mapping) |
+| `WD_INLINE_SHAPE_TYPE` | shape | *plain value classdef* | 5 | plain `enum.Enum`; `NOT_IMPLEMENTED` = **−6** (negative int32); alias `WD_INLINE_SHAPE` |
+
+**153 members total** across the seven enums (132 + 4 + 4 + 3 + 3 + 2 + 5),
+matched in declaration order — declaration order is behavioural for the
+`BaseXmlEnum` `from_xml` first-match scan. No member of the four `BaseXmlEnum`
+enums carries a `None` / `""` `xml_value`, so the H3 tri-state machinery (P3-1) is
+present but unexercised here; `WD_STYLE_TYPE`, `WD_CELL_VERTICAL_ALIGNMENT`,
+`WD_ROW_HEIGHT_RULE`, and `WD_TABLE_ALIGNMENT` round-trip both directions over
+every member (member arg and int arg — `to_xml(1)→"paragraph"`,
+`to_xml(101)→"both"`, `to_xml(2)→"exact"`, `to_xml(0)→"left"`).
+
+### `WD_BUILTIN_STYLE` — the 132-member `BaseEnum`
+
+`WD_BUILTIN_STYLE` is a `BaseEnum` (no XML mapping, no `from_xml`/`to_xml`): each
+member's integer value is the negative `WdBuiltinStyle` MS-API constant, used to
+select a built-in Word style (e.g. `document.styles(WD_STYLE.BODY_TEXT)`). The
+132 members are **not re-listed here** — spot values pin the set: `NORMAL` −1,
+`HEADING_1`..`HEADING_9` = −2..−10, `BODY_TEXT` −67, `BLOCK_QUOTATION` −85,
+`BOOK_TITLE` −265 (most-negative), `INDEX_HEADING` −34 (whose docstring
+`"Index Heading"` is the one with **no** trailing period), `TOC_9` −28. All 132
+carry **distinct** integer values (the oracle iterates 132 canonical members — a
+Python enum would collapse any duplicate-valued member into an alias, and none
+are collapsed), so — unlike `WD_BREAK_TYPE` — **no internal member-alias
+`Constant` is required**; all 132 are declared as ordinary `enumeration` members.
+`int(member)` ports as `double(member.value)`, and `str(member)` as `str_()` =
+`"NAME (value)"` (e.g. `"BODY_TEXT (-67)"`).
+
+### The `WD_INLINE_SHAPE_TYPE` plain-enum idiom (C2 fold-in)
+
+`WD_INLINE_SHAPE_TYPE` — the boundary-audit **C2** fold-in from `shape.py` — is,
+like `WD_BREAK_TYPE`, **not** a `Base(Xml)Enum`: in python-docx it subclasses a
+plain `enum.Enum` (bare `NAME = <int>`, no `xml_value`, no per-member docstring,
+no `from_xml` / `to_xml`). It ports as a **plain value classdef** with an
+`enumeration` block and a single immutable `value (1,1) int32` property — the same
+PROG_ID plain-enum precedent `WD_BREAK_TYPE` uses. Its five members are `CHART`
+12, `LINKED_PICTURE` 4, `PICTURE` 3, `SMART_ART` 15, and `NOT_IMPLEMENTED` **−6**
+(negative — stored `int32`, fine).
+
+Where `WD_BREAK_TYPE` needed a `TEXT_WRAPPING` `Constant` aliasing
+`LINE_CLEAR_ALL` (both value 11), `WD_INLINE_SHAPE_TYPE` has **no**
+duplicate-valued member — the five values are distinct — so declaring all five as
+ordinary `enumeration` members is exactly faithful, with **no internal alias**.
+Iteration yields 5 members, matching Python.
+
+### The 4 module-level class aliases
+
+`style.py`, `table.py`, and `shape.py` define **four** module-level aliases
+(`ALIAS = Canonical`), realized the same way as the P3-3 aliases: a separate
+classdef whose `properties (Constant)` re-export the canonical members
+(`ALIAS.X = Canonical.X`, the same member object → identity `==` true) and — for
+the `BaseXmlEnum` aliases only — whose `methods (Static)` forward `from_xml` /
+`to_xml` to the canonical class.
+
+| Alias | Canonical | source line | statics forwarded |
+|---|---|---|---|
+| `WD_STYLE` | `WD_BUILTIN_STYLE` | style.py:423 | none (`BaseEnum` — 132 Constant re-exports, no XML) |
+| `WD_ALIGN_VERTICAL` | `WD_CELL_VERTICAL_ALIGNMENT` | table.py:48 | `from_xml` / `to_xml` |
+| `WD_ROW_HEIGHT` | `WD_ROW_HEIGHT_RULE` | table.py:82 | `from_xml` / `to_xml` |
+| `WD_INLINE_SHAPE` | `WD_INLINE_SHAPE_TYPE` | shape.py:19 | none (plain enum — 5 Constant re-exports, no XML) |
+
+`WD_STYLE` and `WD_INLINE_SHAPE` carry **no** static methods because their
+canonical enums (`BaseEnum` and plain-enum respectively) expose no XML mapping —
+the alias faithfully mirrors the kind of the enum it re-exports.
+
+```matlab
+% Every alias member IS the canonical member (identity), so:
+mat2doc.enum.style.WD_STYLE.BODY_TEXT == ...
+    mat2doc.enum.style.WD_BUILTIN_STYLE.BODY_TEXT          % true
+mat2doc.enum.table.WD_ALIGN_VERTICAL.from_xml("top")      % TOP
+mat2doc.enum.table.WD_ROW_HEIGHT.to_xml( ...
+    mat2doc.enum.table.WD_ROW_HEIGHT_RULE.EXACTLY)        % "exact"
+mat2doc.enum.shape.WD_INLINE_SHAPE.NOT_IMPLEMENTED.value  % -6
+```
+
+(phase-3-complete)=
+## Phase 3 complete
+
+With P3-4 merged, **Phase 3 is complete**: the enum base tier (P3-1
+`BaseEnum` / `BaseXmlEnum`), the `ST_*` simple-type validators (P3-2), and **all**
+concrete enum content (P3-3 `text`/`section`/`dml` + P3-4 `style`/`table`/`shape`)
+are ported, audited, and package-equivalence-validated — **19 concrete enums,
+261 members, 11 module aliases, 0 new D-numbers** across the whole of P3. Together
+with P3-2's [simple-type validators](simpletypes.md), the enum + simple-type
+value surface beneath the element tree is **ready for P4's oxml/text layer** (and
+P5/P6/P7), where these constants become the attribute (de)serializers the
+`CT_*` classes read and write. Boundary item **C2** (`shape.py`) is closed.
+
 ## Deviation posture — 0 new D-numbers
 
-P3-3 is pure concrete value/behaviour content on the P3-1 base — **no serialized
-OOXML**, so no L0–L3 ladder leg applies. The only standing convention it
+Both P3-3 and P3-4 are pure concrete value/behaviour content on the P3-1 base —
+**no serialized OOXML**, so no L0–L3 ladder leg applies. The only standing convention it
 exercises is **D-005** (adopt-only) — the `mat2doc:ValueError` identifier on the
 `from_xml` / `to_xml` error paths, with byte-verbatim message strings. Gate-3
-proved **498/498 probe facts byte-identical** (`probe_diff` exit 0) against
-python-docx's own `enum/{text,section,dml}.py`, including all 108 members in
-declaration order, the `from_xml(None)` / `UNMAPPED` / `empty≠None` legs, the
-`WD_BREAK_TYPE` member-alias, and all 7 module aliases. **No new D-number, no new
-ledger row.** The `doc` member (per-member docstrings) is stored for fidelity but
-is non-behavioral (only the unported `DocsPageFormatter` reads it — the P3-1
-`VERIFY-E4` precedent).
+proved every probe fact byte-identical (`probe_diff` exit 0) against python-docx's
+own enum sources — **498/498** for P3-3 (`enum/{text,section,dml}.py`) and
+**598/598** for P3-4 (`enum/{style,table,shape}.py`) — including all members in
+declaration order (108 + 153 = 261), the `from_xml(None)` / `UNMAPPED` /
+`empty≠None` legs, the `WD_BREAK_TYPE` member-alias, the per-member
+`from_xml`/`to_xml` round-trips and byte-exact `mat2doc:ValueError` error paths,
+and all 11 module aliases. **No new D-number, no new ledger row.** The `doc`
+member (per-member docstrings) is stored for fidelity but is non-behavioral (only
+the unported `DocsPageFormatter` reads it — the P3-1 `VERIFY-E4` precedent).
 
 ---
 
 *Ported from python-docx v1.2.0: `src/docx/enum/text.py`, `src/docx/enum/section.py`,
-`src/docx/enum/dml.py` — the concrete `WD_*` / `MSO_*` enumerations and their
+`src/docx/enum/dml.py`, `src/docx/enum/style.py`, `src/docx/enum/table.py`,
+`src/docx/enum/shape.py` — the concrete `WD_*` / `MSO_*` enumerations and their
 module aliases.*
