@@ -1,0 +1,4 @@
+# Byte-exact frozen M1 public-entry acceptance fixture (Mat2Doc P1-8 Gate-4).
+# Copied from validation references/s0012/mat2doc_candidate.docx (37141 B, sha 8ec5f26b...).
+# Keep CRLF/encoding translation OFF so the master checkout stays byte-identical.
+* binary

@@ -53,6 +53,13 @@ syntax, description, example, ported-from).
   namespace hoist), the `CoreProperties` API wrapper, and the
   `CorePropertiesPart` part class (`/docProps/core.xml`; the 721 B re-serialize
   and 681 B fresh build are byte-proven).
+- **WordprocessingML entry (docx) — M1** — the public `mat2doc.Document()`
+  entry function and the thin walking-skeleton object graph beneath it
+  (`package.Package` / `parts.DocumentPart` / `document.Document`) that satisfies
+  the **M1 milestone** (`mat2doc.Document().save()` produces `default.docx`
+  byte-identical to python-docx — 17/17 L1 three-way — and opens clean in real
+  Word). Documents what is live vs stubbed-until-P2 and the two byte-neutral
+  PartFactory row flips.
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 

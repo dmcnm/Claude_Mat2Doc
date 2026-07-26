@@ -28,6 +28,9 @@ project:
         - file: api/opc_pkgrw.md
         - file: api/opc_package.md
         - file: api/coreprops.md
+    - title: WordprocessingML entry (docx) — M1
+      children:
+        - file: api/document.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
