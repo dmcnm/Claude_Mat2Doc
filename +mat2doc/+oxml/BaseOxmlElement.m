@@ -9,12 +9,12 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %   BYTE-IDENTICAL xmlchemy engine; docx v1.2.0 is the module source of truth
 %   and CONFIRMS the same surface, with three descriptor DELTAS noted below.
 %   This slice ports ONLY:
-%     * the tree-ops on BaseOxmlElement (xmlchemy.py lines 677-698):
+%     * the tree-ops on BaseOxmlElement (xmlchemy.py lines 656-677):
 %       first_child_found_in, insert_element_before, remove_all;
-%     * xpath() (xmlchemy.py lines 708-713), delegating to the mini-XPath
+%     * xpath() (xmlchemy.py lines 687-692), delegating to the mini-XPath
 %       engine +oxml/evaluate_xpath.m (re-ported from Mat2Ppt WP5+WP5-C);
 %     * the ATTRIBUTE descriptor engine (OptionalAttribute / RequiredAttribute,
-%       xmlchemy.py lines 177-274): getAttrTyped / setAttrTyped / getAttrRequired
+%       xmlchemy.py lines 154-261): getAttrTyped / setAttrTyped / getAttrRequired
 %       / setAttrRequired + the type-dispatch helpers.
 %
 %   NOT in this slice -- the CHILD-element descriptor engine (ZeroOrOne,
@@ -23,36 +23,36 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %   firstChildFoundIn / removeChildren / getOrChangeToChild) is P1-3b. It is
 %   NOT ported here even though the Mat2Ppt reference carries it in one class.
 %
-%   ENGINE-METHOD -> xmlchemy SOURCE MAP (src/docx/oxml/xmlchemy.py):
-%     first_child_found_in  <- BaseOxmlElement.first_child_found_in (677-683)
-%     insert_element_before <- BaseOxmlElement.insert_element_before (685-691)
-%     remove_all            <- BaseOxmlElement.remove_all           (693-698)
-%     xpath                 <- BaseOxmlElement.xpath                (708-713)
-%     getAttrTyped          <- OptionalAttribute._getter get_attr_value (205-209)
-%     setAttrTyped          <- OptionalAttribute._setter set_attr_value (218-226)
-%     getAttrRequired       <- RequiredAttribute._getter get_attr_value (244-250)
-%     setAttrRequired       <- RequiredAttribute._setter set_attr_value (270-274)
-%     resolveTypeCls_       <- BaseAttribute simple_type object       (137-139)
-%     attrClarkName_        <- BaseAttribute._clark_name              (160-164)
+%   ENGINE-METHOD -> xmlchemy SOURCE MAP (src/docx/oxml/xmlchemy.py, docx v1.2.0):
+%     first_child_found_in  <- BaseOxmlElement.first_child_found_in (656-662)
+%     insert_element_before <- BaseOxmlElement.insert_element_before (664-670)
+%     remove_all            <- BaseOxmlElement.remove_all           (672-677)
+%     xpath                 <- BaseOxmlElement.xpath                (687-692)
+%     getAttrTyped          <- OptionalAttribute._getter get_attr_value (187-193)
+%     setAttrTyped          <- OptionalAttribute._setter set_attr_value (202-212)
+%     getAttrRequired       <- RequiredAttribute._getter get_attr_value (240-246)
+%     setAttrRequired       <- RequiredAttribute._setter set_attr_value (255-259)
+%     resolveTypeCls_       <- BaseAttribute simple_type object       (117-120)
+%     attrClarkName_        <- BaseAttribute._clark_name              (139-143)
 %
 %   DOCX-vs-PPTX DELTAS (docx is source of truth; ported to the docx forms,
 %   NOT the Mat2Ppt/pptx forms -- see audit_P1-3a_xmlchemy_engine.md):
 %     D-delta-1  OptionalAttribute setter guards `value is None OR value ==
-%                default` (docx line 218-224). pptx guards only `value ==
+%                default` (docx line 203). pptx guards only `value ==
 %                default`. When an optional attribute has a NON-None default,
 %                assigning None removes it in docx but would fall through to
 %                to_xml(None) in pptx.
 %     D-delta-2  OptionalAttribute setter, AFTER to_xml, removes the attribute
-%                when `str_value is None` (docx line 221-224). pptx unconditionally
+%                when `str_value is None` (docx lines 208-211). pptx unconditionally
 %                sets. Lets a simple type whose to_xml returns None erase the attr.
 %     D-delta-3  RequiredAttribute setter, AFTER to_xml, RAISES
 %                ValueError("cannot assign {value} to this required attribute")
-%                when `str_value is None` (docx line 271-272). pptx sets
+%                when `str_value is None` (docx lines 257-258). pptx sets
 %                unconditionally.
 %
 %   Deferred, in their owning WPs (NOT ported here):
 %     child-element descriptor engine (getChild ...)  -> P1-3b
-%     xml property (serialize_for_reading, 700-706)    -> the doc-serialize/OPC
+%     xml property (serialize_for_reading, 679-685)    -> the doc-serialize/OPC
 %           WP (pretty-print test helper; design.md section 3 forbids pretty-print
 %           in the PART serializer, so serialize_for_reading is a distinct
 %           helper). No docx PRODUCTION code path reads xmlchemy BaseOxmlElement
@@ -60,7 +60,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %           base class); it is a test-only helper. Provided as a clean
 %           notYetPorted stub so an accidental caller gets a named error, NOT a
 %           missing-method error. Mirrors the Mat2Ppt deferral of xml to WP4.
-%     __repr__ (670-675) and _nsptag (715-717)         -> display-only; used ONLY
+%     __repr__ (649-654) and _nsptag (694-696)         -> display-only; used ONLY
 %           by __repr__ (grep-verified over docx src). Deferred exactly as the
 %           Mat2Ppt reference deferred them. NOTE the rotated name `nsptag_`
 %           would COLLIDE with XmlElement's private `nsptag_` property, so a
@@ -95,7 +95,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         end
 
         % =================================================================
-        % TREE-OPS (xmlchemy.py BaseOxmlElement, lines 677-698)
+        % TREE-OPS (xmlchemy.py BaseOxmlElement, lines 656-677)
         % =================================================================
 
         function child = first_child_found_in(obj, tagnames)
@@ -107,7 +107,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             %   order) -- exactly the Python loop over *tagnames.
             %
             %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::
-            %   BaseOxmlElement.first_child_found_in (lines 677-683)
+            %   BaseOxmlElement.first_child_found_in (lines 656-662)
             arguments
                 obj (1,1) mat2doc.oxml.BaseOxmlElement
             end
@@ -115,7 +115,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                 tagnames (1,1) string
             end
             for k = 1:numel(tagnames)
-                % Python: child = self.find(qn(tagname))  (line 680)
+                % Python: child = self.find(qn(tagname))  (line 659)
                 child = obj.find(mat2doc.oxml.qn(tagnames{k}));
                 if ~isequal(child, [])   % Python: if child is not None (H3)
                     return
@@ -133,7 +133,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             %   found. Returns elm.
             %
             %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::
-            %   BaseOxmlElement.insert_element_before (lines 685-691)
+            %   BaseOxmlElement.insert_element_before (lines 664-670)
             arguments
                 obj (1,1) mat2doc.oxml.BaseOxmlElement
                 elm (1,1) mat2doc.oxml.XmlElement
@@ -153,7 +153,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             % REMOVE_ALL Remove all child elements whose tag (e.g. "w:p") is in tagnames.
             %
             %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::
-            %   BaseOxmlElement.remove_all (lines 693-698)
+            %   BaseOxmlElement.remove_all (lines 672-677)
             arguments
                 obj (1,1) mat2doc.oxml.BaseOxmlElement
             end
@@ -161,7 +161,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                 tagnames (1,1) string
             end
             for k = 1:numel(tagnames)
-                % Python: matching = self.findall(qn(tagname))  (line 696)
+                % Python: matching = self.findall(qn(tagname))  (line 675)
                 % H9: findall is already a materialized list in Python, so
                 % removing while looping over it is safe in both languages.
                 matching = obj.findall(mat2doc.oxml.qn(tagnames{k}));
@@ -172,7 +172,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         end
 
         % =================================================================
-        % XPATH (xmlchemy.py BaseOxmlElement.xpath, lines 708-713)
+        % XPATH (xmlchemy.py BaseOxmlElement.xpath, lines 687-692)
         % =================================================================
 
         function result = xpath(obj, xpath_str, namespaces)
@@ -181,7 +181,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             %   nodes = e.XPATH(expr) evaluates expr (a string) against e using
             %   the fixed WordprocessingML namespace map (mat2doc.oxml.nsmap =
             %   Python `nsmap`), mirroring
-            %   docx.oxml.xmlchemy.BaseOxmlElement.xpath (xmlchemy.py:708-713),
+            %   docx.oxml.xmlchemy.BaseOxmlElement.xpath (xmlchemy.py:687-692),
             %   which centralizes the namespace mapping. NOTE (docx-vs-pptx): docx
             %   injects the PUBLIC `nsmap`; pptx injects the private `_nsmap`.
             %
@@ -207,7 +207,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             %   being silently mis-evaluated (design.md section XPath / 7).
             %
             %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::
-            %   BaseOxmlElement.xpath (lines 708-713)
+            %   BaseOxmlElement.xpath (lines 687-692)
             arguments
                 obj (1,1) mat2doc.oxml.BaseOxmlElement
                 xpath_str (1,1) string
@@ -219,7 +219,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         function s = xml(obj) %#ok<STOUT,INUSD>
             % XML DEFERRED test-only serialize_for_reading (pretty-printed, no decl).
             %
-            %   Python `BaseOxmlElement.xml` (@property, xmlchemy.py 700-706)
+            %   Python `BaseOxmlElement.xml` (@property, xmlchemy.py 679-685)
             %   returns serialize_for_reading(self) -- etree.tostring with
             %   pretty_print=True and no XML declaration, wrapped in XmlString
             %   (a test-comparison helper). No docx PRODUCTION code path reads
@@ -254,7 +254,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         function value = getAttrTyped(obj, name, type, default)
             % GETATTRTYPED Type-converted attribute value, or default when absent (OptionalAttribute getter).
             %   Ported from xmlchemy.py OptionalAttribute._getter's
-            %   `get_attr_value` (lines 205-209): attr = obj.get(clark); if None
+            %   `get_attr_value` (lines 187-193): attr = obj.get(clark); if None
             %   return default; return simple_type.from_xml(attr). Identical in
             %   docx and pptx (no delta). `name` -> Clark key via attrClarkName_;
             %   `type` -> from_xml static via resolveTypeCls_.
@@ -275,7 +275,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         function setAttrTyped(obj, name, type, value, default)
             % SETATTRTYPED Set/remove a typed attribute (OptionalAttribute setter).
             %   Ported from xmlchemy.py OptionalAttribute._setter's
-            %   `set_attr_value` (lines 218-226, DOCX form):
+            %   `set_attr_value` (lines 202-212, DOCX form):
             %       if value is None or value == self._default:
             %           if clark in obj.attrib: del obj.attrib[clark]
             %           return
@@ -297,7 +297,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                 default = []
             end
             clark = obj.attrClarkName_(name);
-            % Python: if value is None or value == self._default   (docx line 218)
+            % Python: if value is None or value == self._default   (docx line 203)
             if isequal(value, []) || isequal(value, default)
                 if obj.has_attrib(clark)    % Python: if clark in obj.attrib
                     obj.remove_attrib(clark);
@@ -305,7 +305,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                 return
             end
             str_value = feval(obj.resolveTypeCls_(type) + ".to_xml", value);
-            % Python: if str_value is None: (del if present) return   (docx line 221)
+            % Python: if str_value is None: (del if present) return   (docx lines 208-211)
             if isequal(str_value, [])
                 if obj.has_attrib(clark)
                     obj.remove_attrib(clark);
@@ -318,7 +318,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         function value = getAttrRequired(obj, name, type)
             % GETATTRREQUIRED Type-converted required attribute value; raises when absent (RequiredAttribute getter).
             %   Ported from xmlchemy.py RequiredAttribute._getter's
-            %   `get_attr_value` (lines 244-250): attr = obj.get(clark); if None
+            %   `get_attr_value` (lines 240-246): attr = obj.get(clark); if None
             %   raise InvalidXmlError("required '%s' attribute not present on
             %   element %s" % (attr_name, obj.tag)); else simple_type.from_xml.
             %   Identical in docx and pptx (no delta). No default -- a missing
@@ -341,7 +341,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         function setAttrRequired(obj, name, type, value)
             % SETATTRREQUIRED Set a required typed attribute; never removes (RequiredAttribute setter).
             %   Ported from xmlchemy.py RequiredAttribute._setter's
-            %   `set_attr_value` (lines 270-274, DOCX form):
+            %   `set_attr_value` (lines 255-259, DOCX form):
             %       str_value = simple_type.to_xml(value)
             %       if str_value is None:
             %           raise ValueError(f"cannot assign {value} to this required attribute")
@@ -360,7 +360,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
                 value
             end
             str_value = feval(obj.resolveTypeCls_(type) + ".to_xml", value);
-            if isequal(str_value, [])   % Python: if str_value is None (docx line 271)
+            if isequal(str_value, [])   % Python: if str_value is None (docx line 257)
                 error("mat2doc:ValueError", ...
                     "cannot assign %s to this required attribute", ...
                     mat2doc.oxml.BaseOxmlElement.valueRepr_(value));
@@ -395,7 +395,7 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         end
 
         function clark = attrClarkName_(~, name)
-            % ATTRCLARKNAME_ Clark key for an attribute name (BaseAttribute._clark_name, xmlchemy.py 160-164).
+            % ATTRCLARKNAME_ Clark key for an attribute name (BaseAttribute._clark_name, xmlchemy.py 139-143).
             %   Prefixed name ("w:val") -> qn(name); plain name ("space") -> name.
             if contains(name, ":")
                 clark = mat2doc.oxml.qn(name);

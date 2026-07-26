@@ -383,11 +383,31 @@ function matched = axisMatchElems(cand, step, ns)
 matched = {};
 switch step.axis
     case "self"
-        matched = {cand};
+        % Apply the name test on the self axis (libxml2/lxml semantics):
+        % self::NAME matches only when the context node's tag == NAME; `.`
+        % (node()) and self::* (wildcard) match the context node unchanged.
+        if strcmp(step.ntKind, "name")
+            clark = resolveElemName(step.ntName, ns);
+            if tagOf(cand) == clark
+                matched = {cand};
+            end
+        else
+            matched = {cand};
+        end
     case "parent"
+        % Apply the name test on the parent axis: parent::NAME matches the
+        % parent only when its tag == NAME; `..` (node()) and parent::*
+        % (wildcard) match the parent unchanged. A missing parent -> no match.
         p = getparentOf(cand);
         if ~isNone(p)
-            matched = {p};
+            if strcmp(step.ntKind, "name")
+                clark = resolveElemName(step.ntName, ns);
+                if tagOf(p) == clark
+                    matched = {p};
+                end
+            else
+                matched = {p};
+            end
         end
     case "ancestor"
         if strcmp(step.ntKind, "wildcard")
