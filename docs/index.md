@@ -29,6 +29,14 @@ syntax, description, example, ported-from).
 - **Foundation & utilities** — the shared length-unit value types (the
   `Length` family and its EMU-based conversions) and the `RGBColor` value
   object.
+- **XML layer (oxml)** — the byte-fidelity OOXML foundation: the namespace
+  machinery, the order-preserving parser and `XmlElement` tree, the part-XML
+  serializer, and the xmlchemy element-class / attribute-descriptor / XPath
+  engine.
+- **OPC layer (opc)** — the two-tier serializer that regenerates
+  `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
+  `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC
+  constants, the `default_content_types` spec pair-list, and the shared helpers.
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 

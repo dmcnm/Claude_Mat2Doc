@@ -83,15 +83,17 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %                Choice / ZeroOrOneChoice behaviour is otherwise IDENTICAL to
 %                pptx (verified line-by-line, audit_P1-3b).
 %
+%   Ported at P1-4 (was deferred by the P1-3a slice):
+%     xml property (serialize_for_reading, 679-685)    -> UN-STUBBED at P1-4 (the
+%           doc-serialize/OPC WP): the `xml` method now routes through the real
+%           pretty-print engine mat2doc.oxml.serialize_for_reading (test-only
+%           helper; design.md section 3 forbids pretty-print in the PART
+%           serializer, so serialize_for_reading is a distinct helper). No docx
+%           PRODUCTION code path reads xmlchemy BaseOxmlElement `.xml` (the
+%           production `.xml`-bytes path is the SEPARATE opc/oxml.py
+%           CT_Relationships, rotated to xml_file_bytes).
+%
 %   Deferred, in their owning WPs (NOT ported here):
-%     xml property (serialize_for_reading, 679-685)    -> the doc-serialize/OPC
-%           WP (pretty-print test helper; design.md section 3 forbids pretty-print
-%           in the PART serializer, so serialize_for_reading is a distinct
-%           helper). No docx PRODUCTION code path reads xmlchemy BaseOxmlElement
-%           `.xml` (the production `.xml` at opc/rel.py is the SEPARATE opc/oxml.py
-%           base class); it is a test-only helper. Provided as a clean
-%           notYetPorted stub so an accidental caller gets a named error, NOT a
-%           missing-method error. Mirrors the Mat2Ppt deferral of xml to WP4.
 %     __repr__ (649-654) and _nsptag (694-696)         -> display-only; used ONLY
 %           by __repr__ (grep-verified over docx src). Deferred exactly as the
 %           Mat2Ppt reference deferred them. NOTE the rotated name `nsptag_`
@@ -248,26 +250,29 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
             result = mat2doc.oxml.evaluate_xpath(obj, xpath_str, namespaces);
         end
 
-        function s = xml(obj) %#ok<STOUT,INUSD>
-            % XML DEFERRED test-only serialize_for_reading (pretty-printed, no decl).
+        function s = xml(obj)
+            % XML Pretty-printed XML for this element, no declaration (test helper).
             %
             %   Python `BaseOxmlElement.xml` (@property, xmlchemy.py 679-685)
             %   returns serialize_for_reading(self) -- etree.tostring with
-            %   pretty_print=True and no XML declaration, wrapped in XmlString
-            %   (a test-comparison helper). No docx PRODUCTION code path reads
-            %   this property on a wordprocessing element (grep-verified; the
-            %   production `.xml` at opc/rel.py is the SEPARATE opc/oxml.py base
-            %   class). It is deferred to the doc-serialize/OPC WP because the
-            %   pretty-printer is a distinct helper from the byte-exact PART
-            %   serializer (design.md section 3 forbids pretty-print there).
+            %   pretty_print=True and no XML declaration. UN-STUBBED at P1-4 (the
+            %   doc-serialize/OPC WP the P1-3a stub deferred to): now routes
+            %   through the real engine mat2doc.oxml.serialize_for_reading.
             %
-            %   Clean stub per design.md ("dependencies not yet ported: clean
-            %   stubs raising mat2doc:notYetPorted naming the target symbol and
-            %   its owning WP").
-            error("mat2doc:notYetPorted", ...
-                "%s", "BaseOxmlElement.xml (serialize_for_reading, " + ...
-                "src/docx/oxml/xmlchemy.py::serialize_for_reading) is deferred " + ...
-                "to the doc-serialize/OPC WP");
+            %   TEST-ONLY surface: no docx PRODUCTION code path reads this
+            %   property on a wordprocessing element (grep-verified; the
+            %   production `.xml`-bytes path is the SEPARATE opc/oxml.py
+            %   CT_Relationships, rotated to xml_file_bytes). Python wraps the
+            %   result in XmlString (a str subclass whose __eq__ relaxes to a
+            %   canonical comparison for tests); that relaxed equality is a
+            %   test-harness concern and is not ported -- this returns a plain
+            %   string. Pretty-print WHITESPACE byte-exactness vs lxml is asserted
+            %   against live Python, not frozen (see serialize_for_reading.m
+            %   VERIFY note).
+            arguments
+                obj (1,1) mat2doc.oxml.BaseOxmlElement
+            end
+            s = mat2doc.oxml.serialize_for_reading(obj);
         end
     end
 
