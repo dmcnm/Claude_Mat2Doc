@@ -330,26 +330,28 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_partfactory_8_registered_to_xmlpart(testCase)
-            % Regression (H10, docx/__init__.py 44-51; P1-8 row flips): the 8
-            % registered content types map to their registered part classes,
-            % row-for-row (count 8=8). P1-8 (validate_P1-8_skeleton_m1.md §7)
-            % INTENTIONALLY flips 2 of the former base-XmlPart stand-in rows to
-            % their now-ported subclasses -- OPC_CORE_PROPERTIES ->
-            % CorePropertiesPart, WML_DOCUMENT_MAIN -> DocumentPart (both IS-A
-            % XmlPart, so byte-neutral: the 17/17 L1 sweep is unchanged). The
-            % other 6 rows remain the base XmlPart stand-in (P2-2 refines them).
-            % Exact-class pin (not isa) -- the flip must land on the exact class.
+            % Regression (H10, docx/__init__.py 44-51; P1-8 + P2-2 row flips): the
+            % 8 registered content types map to their registered part classes,
+            % row-for-row (count 8=8). P1-8 flipped OPC_CORE_PROPERTIES ->
+            % CorePropertiesPart and WML_DOCUMENT_MAIN -> DocumentPart; P2-2 flips
+            % the three thin XmlPart shells now ported -- WML_STYLES -> StylesPart,
+            % WML_SETTINGS -> SettingsPart, WML_NUMBERING -> NumberingPart. All are
+            % IS-A XmlPart, so every flip is byte-neutral: the 17/17 L1 sweep is
+            % unchanged ("row flip moves the pin"). The remaining 3 rows
+            % (WML_COMMENTS -> P8-2, WML_FOOTER/WML_HEADER -> P5-3b) stay the base
+            % XmlPart stand-in. Exact-class pin (not isa) -- the flip must land on
+            % the exact class.
             CT = mat2doc.opc.CONTENT_TYPE;
             XP = "mat2doc.opc.XmlPart";
             expected = { ...
                 CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart"; ...  % P1-8 flip
-                CT.WML_COMMENTS,        XP;                                     ...
+                CT.WML_COMMENTS,        XP;                                     ...  % P8-2 stand-in
                 CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";           ...  % P1-8 flip
-                CT.WML_FOOTER,          XP;                                     ...
-                CT.WML_HEADER,          XP;                                     ...
-                CT.WML_NUMBERING,       XP;                                     ...
-                CT.WML_SETTINGS,        XP;                                     ...
-                CT.WML_STYLES,          XP};
+                CT.WML_FOOTER,          XP;                                     ...  % P5-3b stand-in
+                CT.WML_HEADER,          XP;                                     ...  % P5-3b stand-in
+                CT.WML_NUMBERING,       "mat2doc.parts.NumberingPart";          ...  % P2-2 flip
+                CT.WML_SETTINGS,        "mat2doc.parts.SettingsPart";           ...  % P2-2 flip
+                CT.WML_STYLES,          "mat2doc.parts.StylesPart"};                 % P2-2 flip
             testCase.verifyEqual(size(expected, 1), 8, 'exactly 8 registered content types');
             for k = 1:size(expected, 1)
                 ct   = expected{k, 1};

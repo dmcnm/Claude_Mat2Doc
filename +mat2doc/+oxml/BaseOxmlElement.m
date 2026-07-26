@@ -12,7 +12,9 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %     * the tree-ops on BaseOxmlElement (xmlchemy.py lines 656-677):
 %       first_child_found_in, insert_element_before, remove_all;
 %     * xpath() (xmlchemy.py lines 687-692), delegating to the mini-XPath
-%       engine +oxml/evaluate_xpath.m (re-ported from Mat2Ppt WP5+WP5-C);
+%       engine +oxml/evaluate_xpath.m (re-ported from Mat2Ppt WP5+WP5-C).
+%       HOISTED to mat2doc.oxml.XmlElement at P2-2 (task #60) and inherited
+%       here; the override merely injected the fixed nsmap. See XmlElement.xpath;
 %     * the ATTRIBUTE descriptor engine (OptionalAttribute / RequiredAttribute,
 %       xmlchemy.py lines 154-261): getAttrTyped / setAttrTyped / getAttrRequired
 %       / setAttrRequired + the type-dispatch helpers.
@@ -36,7 +38,8 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
 %     first_child_found_in  <- BaseOxmlElement.first_child_found_in (656-662)
 %     insert_element_before <- BaseOxmlElement.insert_element_before (664-670)
 %     remove_all            <- BaseOxmlElement.remove_all           (672-677)
-%     xpath                 <- BaseOxmlElement.xpath                (687-692)
+%     xpath                 <- BaseOxmlElement.xpath (687-692) [hoisted to
+%                              XmlElement at P2-2, task #60; inherited here]
 %     getAttrTyped          <- OptionalAttribute._getter get_attr_value (187-193)
 %     setAttrTyped          <- OptionalAttribute._setter set_attr_value (202-212)
 %     getAttrRequired       <- RequiredAttribute._getter get_attr_value (240-246)
@@ -206,49 +209,15 @@ classdef BaseOxmlElement < mat2doc.oxml.XmlElement
         end
 
         % =================================================================
-        % XPATH (xmlchemy.py BaseOxmlElement.xpath, lines 687-692)
+        % XPATH -- HOISTED to XmlElement (task #60, P2-2)
         % =================================================================
-
-        function result = xpath(obj, xpath_str, namespaces)
-            % XPATH Evaluate an XPath expression over this element's tree.
-            %
-            %   nodes = e.XPATH(expr) evaluates expr (a string) against e using
-            %   the fixed WordprocessingML namespace map (mat2doc.oxml.nsmap =
-            %   Python `nsmap`), mirroring
-            %   docx.oxml.xmlchemy.BaseOxmlElement.xpath (xmlchemy.py:687-692),
-            %   which centralizes the namespace mapping. NOTE (docx-vs-pptx): docx
-            %   injects the PUBLIC `nsmap`; pptx injects the private `_nsmap`.
-            %
-            %   nodes = e.XPATH(expr, ns) resolves prefixes against the scalar
-            %   struct ns (prefix -> URI) instead. python-docx's own override
-            %   drops lxml's `namespaces` kwarg and always injects `nsmap`, so no
-            %   upstream call site passes a custom map; this parameter defaults to
-            %   that same fixed map, making `e.xpath(expr)` byte-for-byte the
-            %   upstream behavior.
-            %
-            %   Return type mirrors lxml exactly (H3 -- empty match is an EMPTY
-            %   ARRAY of the correct type, decided from the AST terminal step,
-            %   NEVER [] (None); callers use numel/~isempty/arr(1)):
-            %     - expr ending in /@attr  -> (1,N) string  (attribute values),
-            %                                 string.empty(1,0) on no match
-            %     - expr ending in /text() -> (1,N) string  (text nodes),
-            %                                 string.empty(1,0) on no match
-            %     - otherwise              -> (1,N) mat2doc.oxml.XmlElement,
-            %                                 XmlElement.empty(1,0) on no match
-            %
-            %   Supported subset and error contract: see +oxml/evaluate_xpath.m.
-            %   Anything outside the subset raises mat2doc:XPathError rather than
-            %   being silently mis-evaluated (design.md section XPath / 7).
-            %
-            %   Ported from python-docx v1.2.0: src/docx/oxml/xmlchemy.py::
-            %   BaseOxmlElement.xpath (lines 687-692)
-            arguments
-                obj (1,1) mat2doc.oxml.BaseOxmlElement
-                xpath_str (1,1) string
-                namespaces (1,1) struct = mat2doc.oxml.nsmap()
-            end
-            result = mat2doc.oxml.evaluate_xpath(obj, xpath_str, namespaces);
-        end
+        % The fixed-nsmap xpath() (xmlchemy.py 687-692) now lives on
+        % mat2doc.oxml.XmlElement (the lxml _Element analogue -- every _Element
+        % has .xpath) and is INHERITED here verbatim. python-docx's
+        % BaseOxmlElement.xpath override only injects `nsmap`/drops the
+        % `namespaces` kwarg; it does not add the capability. Hoisting lets the
+        % parser-fallback root class (unregistered parsed roots, e.g. w:document
+        % before P2-3) support xpath, as lxml does. See XmlElement.xpath.
 
         function s = xml(obj)
             % XML Pretty-printed XML for this element, no declaration (test helper).

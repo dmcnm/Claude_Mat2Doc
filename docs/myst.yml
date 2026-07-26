@@ -34,6 +34,9 @@ project:
     - title: WordprocessingML entry (docx) — M1
       children:
         - file: api/document.md
+    - title: Story-part tier (parts)
+      children:
+        - file: api/parts.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
