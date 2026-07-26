@@ -40,10 +40,14 @@ syntax, description, example, ported-from).
   and the **packaging tier** above it — the `PackURI` partname algebra, the
   `phys_pkg` physical zip reader/writer factories (with the reproducible
   `1980-01-01` zip writer), and the `Relationships` collection that regenerates
-  each `.rels` part in insertion order; and the **package assembly tier** on top
+  each `.rels` part in insertion order; the **package assembly tier** above it
   — `PackageReader` (the serialized read path) and `PackageWriter` (whose
   zip-entry traversal is the byte-critical M1 order), with the serialized
-  part/relationship value objects and the reader/writer content-type maps.
+  part/relationship value objects and the reader/writer content-type maps; and
+  the **package/part object model** on top — `OpcPackage` (open / save /
+  graph traversal), the `Part` / `XmlPart` base parts, and the `PartFactory`
+  content-type→class registry whose XmlPart-vs-Part split decides M1
+  whitespace-collapse (the full 17-part open→save round-trip is byte-proven here).
 - **Python → MATLAB mapping** — the living module→package and dunder/idiom
   reference tables.
 
