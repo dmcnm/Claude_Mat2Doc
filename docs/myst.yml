@@ -26,6 +26,7 @@ project:
         - file: api/opc_oxml.md
         - file: api/opc_packaging.md
         - file: api/opc_pkgrw.md
+        - file: api/opc_package.md
     - title: Python ↔ MATLAB mapping
       children:
         - file: python_matlab_mapping.md
