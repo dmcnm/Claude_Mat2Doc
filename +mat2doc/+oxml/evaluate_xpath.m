@@ -19,6 +19,25 @@ function result = evaluate_xpath(context, xpath_str, ns)
 %     - ancestor axis                   ancestor::w:tbl
 %     - parent step + union group       (../w:x | ../w:y)/w:z[@w:val="%d"]
 %
+%   P1-3x EXTENSION (docx call-site patterns the pptx-derived engine did not
+%   cover; each byte/value-verified against lxml 5.3.0 -- see the audit record
+%   validation\mat2doc\audit_P1-3x_xpath_extension.md):
+%     - bare top-level union            ./w:p | ./w:tbl   (docx's commonest form;
+%                                       operands may be relative, absolute, or
+%                                       grouped; result is doc-ordered + deduped)
+%     - not() predicate                 ./*[not(self::w:sectPr)]
+%     - following-sibling / preceding-sibling axes   ./following-sibling::w:tc
+%     - preceding axis                  ./preceding::w:sectPr[1]
+%     - position()=n / [last()]         w:p[position()=1]   (./w:r)[last()]
+%     - group predicate                 (./w:comment[@w:id='5'])[1]
+%     - predicate attribute sub-path    w:style[w:name/@w:val="Heading 1"]
+%     - positional predicate on a       //@r:id[2]   ([] -- one attr per element)
+%       terminal @attr / text() step
+%   H1: positional predicates are 1-based and, on the REVERSE axes
+%   (preceding-sibling, preceding, ancestor), position() counts in axis order
+%   (nearest first) -- never shifted. H11: unions are document-ordered and
+%   identity-deduped (the union trap -- lxml node-sets are sets).
+%
 %   RETURN TYPE (matches lxml exactly):
 %     - expression terminating in /@attr   -> (1,N) string array (attr values)
 %     - expression terminating in /text()  -> (1,N) string array (text nodes)
@@ -43,11 +62,13 @@ function result = evaluate_xpath(context, xpath_str, ns)
 %           (the lxml C-level text nodes), never the overridable getText_ shadow
 %           (D10): a shadowing w:r / w:br / w:fld returns [] and mixed content
 %           yields every self-text + child-tail fragment.
-%     - F2  five parseable-but-out-of-subset forms now RAISE mat2doc:XPathError
-%           instead of mis-evaluating -- predicate on a terminal string step
-%           (//@id[2]), an absolute sub-path in a predicate (w:p[//w:a]) or in
-%           a group ((/w:document)/w:body), a nested group ((.//w:p)), and a
-%           wildcard axis (ancestor::*).
+%     - F2  parseable-but-out-of-subset forms still RAISE mat2doc:XPathError
+%           instead of mis-evaluating -- an absolute sub-path in a predicate
+%           (w:p[//w:a]) or in a group ((/w:document)/w:body), a nested group
+%           ((.//w:p)), and a wildcard node test on the ancestor axis
+%           (ancestor::*). NOTE (P1-3x): a POSITIONAL predicate on a terminal
+%           string step (//@id[2]) is no longer in this raise set -- it is now
+%           evaluated positionally per context element (lxml-faithful; -> []).
 %     - F3  string (attr / text) results are identity-deduped by node, matching
 %           lxml node-set semantics (//w:x//@id -> ["X1","X2"], not "X2" twice).
 %     - WPC-F1  a tail text node sorts AFTER its element's whole subtree (sort
@@ -78,7 +99,22 @@ end
 
 ast = parseExpr(char(xpath_str));
 
-% -- decide the terminal result kind from the last step of the AST --
+if strcmp(ast.absolute, "union")
+    % Bare top-level union `A | B | ...` (docx's single most common pattern:
+    % `./w:p | ./w:tbl`). Each operand is a full location path -- relative
+    % (`./w:p`, `w:r`), absolute (`/w:document/.../w:sectPr`), or grouped. lxml
+    % merges the operand node-sets and returns them in DOCUMENT ORDER with
+    % identity duplicates removed (H11 -- the union trap; node-sets are sets).
+    acc = {};
+    for oi = 1:numel(ast.operands)
+        acc = [acc, pathNodeset(ast.operands{oi}, context, ns)]; %#ok<AGROW>
+    end
+    result = cellToElemArray(docSortDedupe(acc));
+    return
+end
+
+% -- single location path (relative / absolute / grouped) --
+% decide the terminal result kind from the last step of the AST
 steps = ast.steps;
 if isempty(steps)
     lastIsString = false;
@@ -87,30 +123,7 @@ else
     lastIsString = strcmp(last.axis, "attribute") || strcmp(last.ntKind, "text");
 end
 
-% -- initial node-set --
-switch ast.absolute
-    case "rel"
-        nodeset = {context};
-    case "root"
-        nodeset = {docNode(rootOf(context))};
-    case "group"
-        nodeset = {};
-        for gi = 1:numel(ast.group)
-            g = ast.group{gi};
-            if ~strcmp(g.absolute, "rel")
-                % F2 (design.md section XPath, "never silently mis-evaluated"):
-                % a group member that is itself absolute (/, //) or a nested
-                % group (..) is parseable but the evaluator only implements
-                % RELATIVE group members. Raise rather than evaluate an
-                % absolute sub-path as relative ((/w:document)/w:body) or collapse
-                % a nested group to the context node (((.//w:p))).
-                error("mat2doc:XPathError", ...
-                    "Unsupported XPath: non-relative sub-path inside a group '(...)'");
-            end
-            nodeset = [nodeset, evalElemSteps({context}, g.steps, ns)]; %#ok<AGROW>
-        end
-        nodeset = docSortDedupe(nodeset);
-end
+nodeset = initialNodeset(ast, context, ns);
 
 if lastIsString
     prefix = evalElemSteps(nodeset, steps(1:end-1), ns);
@@ -122,6 +135,62 @@ end
 end
 
 % ======================================================================
+% LOCATION-PATH DISPATCH (single path / union operand)
+% ======================================================================
+
+function nodeset = initialNodeset(node, context, ns)
+% The initial node-set for a single (non-union) location path: the context node
+% for a relative path, the XPath document node for an absolute path, or the
+% (predicated) grouped node-set for a `(...)` path.
+switch node.absolute
+    case "rel"
+        nodeset = {context};
+    case "root"
+        nodeset = {docNode(rootOf(context))};
+    case "group"
+        nodeset = {};
+        for gi = 1:numel(node.group)
+            g = node.group{gi};
+            if ~strcmp(g.absolute, "rel")
+                % F2 (design.md section XPath, "never silently mis-evaluated"):
+                % a group member that is itself absolute (/, //) or a nested
+                % group is parseable but the evaluator only implements RELATIVE
+                % group members. Raise rather than evaluate an absolute sub-path
+                % as relative ((/w:document)/w:body) or collapse a nested group.
+                error("mat2doc:XPathError", ...
+                    "Unsupported XPath: non-relative sub-path inside a group '(...)'");
+            end
+            nodeset = [nodeset, evalElemSteps({context}, g.steps, ns)]; %#ok<AGROW>
+        end
+        nodeset = docSortDedupe(nodeset);
+        % Predicates on the group itself, e.g. `(./w:r)[last()]` /
+        % `(./w:comment[@w:id='x'])[1]`: applied to the WHOLE grouped node-set in
+        % document order -- a grouped primary expression re-numbers positions by
+        % document order (H1: 1-based, never shifted).
+        nodeset = applyElemPredicates(nodeset, node.predicates, ns);
+    otherwise
+        error("mat2doc:XPathError", "Unsupported location-path kind '%s'", node.absolute);
+end
+end
+
+function outCell = pathNodeset(node, context, ns)
+% Evaluate a single location path (relative / absolute / grouped) to an ELEMENT
+% node-set (cell of handles). Used for union operands, which in the docx surface
+% are always element-producing; a string-terminal (@attr / text()) operand is
+% out of subset and raises rather than being silently mis-evaluated.
+base = initialNodeset(node, context, ns);
+steps = node.steps;
+if ~isempty(steps)
+    last = steps{end};
+    if strcmp(last.axis, "attribute") || strcmp(last.ntKind, "text")
+        error("mat2doc:XPathError", ...
+            "Unsupported XPath: string-terminal (@attr/text()) union operand");
+    end
+end
+outCell = evalElemSteps(base, steps, ns);
+end
+
+% ======================================================================
 % PARSER
 % ======================================================================
 
@@ -129,7 +198,7 @@ function ast = parseExpr(s)
 % Recursive-descent parse of the closed subset into an AST location path.
 toks = tokenize(s);
 pos = 1;
-ast = parsePath();
+ast = parseUnion();
 if pos <= numel(toks)
     error("mat2doc:XPathError", "Unsupported XPath (trailing tokens): '%s'", s);
 end
@@ -137,6 +206,22 @@ end
     function t = peek()
         if pos <= numel(toks)
             t = toks(pos).t;
+        else
+            t = "";
+        end
+    end
+
+    function v = peekVal()
+        if pos <= numel(toks)
+            v = toks(pos).v;
+        else
+            v = "";
+        end
+    end
+
+    function t = peek2()
+        if pos + 1 <= numel(toks)
+            t = toks(pos + 1).t;
         else
             t = "";
         end
@@ -154,18 +239,35 @@ end
         pos = pos + 1;
     end
 
+    function node = parseUnion()
+        % UnionExpr := PathExpr ('|' PathExpr)*  -- a bare top-level union is
+        % returned as an "union" AST node whose operands are full location paths;
+        % a single path is returned unwrapped.
+        subs = {parsePath()};
+        while peek() == "union"
+            advance();
+            subs{end+1} = parsePath(); %#ok<AGROW>
+        end
+        if numel(subs) == 1
+            node = subs{1};
+        else
+            node = struct("absolute", "union", "operands", {subs});
+        end
+    end
+
     function node = parsePath()
-        node = struct("absolute", "rel", "group", {{}}, "steps", {{}});
+        node = struct("absolute", "rel", "group", {{}}, "steps", {{}}, "predicates", {{}});
         if peek() == "lp"
-            advance();                         % '('
-            subs = {parsePath()};
-            while peek() == "union"
-                advance();
-                subs{end+1} = parsePath(); %#ok<AGROW>
-            end
+            advance();                          % '('
+            inner = parseUnion();               % union (or single path) inside ()
             expect("rp");
             node.absolute = "group";
-            node.group = subs;
+            if isfield(inner, "operands")
+                node.group = inner.operands;
+            else
+                node.group = {inner};
+            end
+            node.predicates = parsePredicateList();   % (...)[1] / (...)[last()]
             node.steps = parseTrailingSteps();
             return
         end
@@ -230,8 +332,13 @@ end
             otherwise
                 error("mat2doc:XPathError", "Unexpected token '%s'", t);
         end
+        st.predicates = parsePredicateList();
+    end
+
+    function preds = parsePredicateList()
+        preds = {};
         while peek() == "lb"
-            st.predicates{end+1} = parsePredicate(); %#ok<AGROW>
+            preds{end+1} = parsePredicate(); %#ok<AGROW>
         end
     end
 
@@ -245,8 +352,26 @@ end
     function pr = parsePredicate()
         expect("lb");
         t = peek();
-        if t == "number"                         % positional [1]
+        if t == "number"                         % [n]  positional (1-based, H1)
             pr = struct("kind", "pos", "n", str2double(advance().v));
+        elseif t == "name" && peekVal() == "position" && peek2() == "lp"
+            advance(); expect("lp"); expect("rp");        % position() = n
+            if peek() ~= "eq"
+                error("mat2doc:XPathError", "Unsupported position() predicate (expected '=') in '%s'", s);
+            end
+            advance();
+            if peek() ~= "number"
+                error("mat2doc:XPathError", "Unsupported position()= predicate (expected a number) in '%s'", s);
+            end
+            pr = struct("kind", "pos", "n", str2double(advance().v));
+        elseif t == "name" && peekVal() == "last" && peek2() == "lp"
+            advance(); expect("lp"); expect("rp");        % last()
+            pr = struct("kind", "last");
+        elseif t == "name" && peekVal() == "not" && peek2() == "lp"
+            advance(); expect("lp");                       % not( relative-path )
+            sub = parseUnion();
+            expect("rp");
+            pr = struct("kind", "notExists", "path", sub);
         elseif t == "at"                          % [@attr = value]
             advance();
             nm = expectName();
@@ -262,9 +387,21 @@ end
             else
                 error("mat2doc:XPathError", "Unsupported predicate value in '%s'", s);
             end
-        else                                       % [ relative-path ]  (existence)
-            sub = parsePath();
-            pr = struct("kind", "exists", "path", sub);
+        else                                       % [ path ]  or  [ path = value ]
+            sub = parseUnion();
+            if peek() == "eq"                      % value comparison: path = literal
+                advance();
+                vt = peek();
+                if vt == "string"
+                    pr = struct("kind", "pathEq", "path", sub, "value", advance().v, "isNum", false);
+                elseif vt == "number"
+                    pr = struct("kind", "pathEq", "path", sub, "value", advance().v, "isNum", true);
+                else
+                    error("mat2doc:XPathError", "Unsupported predicate value in '%s'", s);
+                end
+            else                                   % existence: [ path ]
+                pr = struct("kind", "exists", "path", sub);
+            end
         end
         expect("rb");
     end
@@ -440,8 +577,99 @@ switch step.axis
             otherwise
                 error("mat2doc:XPathError", "Non-terminal '%s' node test unsupported", step.ntKind);
         end
+    case "following-sibling"
+        % Siblings that follow cand among its parent's children, in DOCUMENT
+        % order (a forward axis; position order == document order).
+        p = getparentOf(cand);
+        if ~isNone(p)
+            sibs = childElems(p);
+            ci = siblingIndex(sibs, cand);
+            for j = ci + 1 : numel(sibs)
+                if nodeTestMatch(sibs{j}, step, ns)
+                    matched{end+1} = sibs{j}; %#ok<AGROW>
+                end
+            end
+        end
+    case "preceding-sibling"
+        % Siblings that precede cand, returned in REVERSE document order = axis
+        % order (nearest sibling first) so a positional predicate [1] selects the
+        % NEAREST preceding sibling (H1: on a reverse axis, position() counts by
+        % axis direction, not document order). evalElemStep's docSortDedupe then
+        % restores document order for the final (unpredicated) node-set.
+        p = getparentOf(cand);
+        if ~isNone(p)
+            sibs = childElems(p);
+            ci = siblingIndex(sibs, cand);
+            for j = ci - 1 : -1 : 1
+                if nodeTestMatch(sibs{j}, step, ns)
+                    matched{end+1} = sibs{j}; %#ok<AGROW>
+                end
+            end
+        end
+    case "preceding"
+        % All nodes that precede cand in document order EXCLUDING cand's own
+        % ancestors, returned in REVERSE document order = axis order (nearest
+        % first) so a positional predicate [1] selects the nearest preceding node.
+        root = rootOf(cand);
+        pre = descOrSelf(root);              % element nodes in document order
+        ci = siblingIndex(pre, cand);
+        anc = ancestorHandles(cand);
+        for j = ci - 1 : -1 : 1
+            e = pre{j};
+            if anyHandleEq(anc, e)
+                continue                      % an ancestor is never "preceding"
+            end
+            if nodeTestMatch(e, step, ns)
+                matched{end+1} = e; %#ok<AGROW>
+            end
+        end
     otherwise
         error("mat2doc:XPathError", "Unsupported axis '%s'", step.axis);
+end
+end
+
+function tf = nodeTestMatch(e, step, ns)
+% The node-name test shared by the sibling / preceding axes: `*` matches any
+% element; NAME matches only when the element's Clark tag equals NAME.
+switch step.ntKind
+    case "wildcard"
+        tf = true;
+    case "name"
+        tf = (tagOf(e) == resolveElemName(step.ntName, ns));
+    otherwise
+        error("mat2doc:XPathError", ...
+            "Unsupported node test '%s' on axis '%s'", step.ntKind, step.axis);
+end
+end
+
+function idx = siblingIndex(cellHandles, target)
+% 1-based index of the handle identical to target, or 0 if not present.
+idx = 0;
+for i = 1:numel(cellHandles)
+    if cellHandles{i} == target
+        idx = i;
+        return
+    end
+end
+end
+
+function anc = ancestorHandles(cand)
+% Cell of ancestor element handles of cand (parent, grandparent, ...).
+anc = {};
+cur = getparentOf(cand);
+while ~isNone(cur)
+    anc{end+1} = cur; %#ok<AGROW>
+    cur = getparentOf(cur);
+end
+end
+
+function tf = anyHandleEq(cellHandles, e)
+tf = false;
+for i = 1:numel(cellHandles)
+    if cellHandles{i} == e
+        tf = true;
+        return
+    end
 end
 end
 
@@ -462,23 +690,96 @@ for p = 1:numel(preds)
             end
             matched = matched(keep);
         case "exists"
-            if ~strcmp(pr.path.absolute, "rel")
-                % F2 (design.md section XPath): an absolute (/, //) or grouped
-                % sub-path inside an existence predicate (w:p[//w:a]) is
-                % parseable but the evaluator only implements RELATIVE
-                % predicate sub-paths -- raise rather than evaluate the
-                % absolute sub-path as relative (which inverts the predicate).
-                error("mat2doc:XPathError", ...
-                    "Unsupported XPath: non-relative sub-path inside a predicate");
-            end
+            % [ path ] existence: keep candidates for which the relative sub-path
+            % (which may be a union, e.g. [self::w:br | self::w:cr | ...]) is a
+            % non-empty node-set.
             keep = false(1, numel(matched));
             for j = 1:numel(matched)
-                sub = evalElemSteps({matched{j}}, pr.path.steps, ns);
-                keep(j) = ~isempty(sub);
+                keep(j) = ~isempty(subPathNodeset(matched{j}, pr.path, ns));
+            end
+            matched = matched(keep);
+        case "notExists"
+            % [ not( path ) ]: keep candidates for which the relative sub-path is
+            % an EMPTY node-set (e.g. ./*[not(self::w:sectPr)] -> every child
+            % whose tag is not w:sectPr).
+            keep = false(1, numel(matched));
+            for j = 1:numel(matched)
+                keep(j) = isempty(subPathNodeset(matched{j}, pr.path, ns));
+            end
+            matched = matched(keep);
+        case "last"
+            % [last()]: the last node of the current (document-ordered) node-set.
+            if ~isempty(matched)
+                matched = matched(end);
+            else
+                matched = {};
+            end
+        case "pathEq"
+            % [ path = literal ]: keep candidates for which the relative sub-path
+            % (terminating in @attr / text()) has ANY value equal to the literal
+            % (XPath node-set `=` is existential), e.g. [w:name/@w:val="Heading 1"].
+            keep = false(1, numel(matched));
+            for j = 1:numel(matched)
+                vals = subPathStringValues(matched{j}, pr.path, ns);
+                if pr.isNum
+                    keep(j) = any(str2double(vals) == str2double(pr.value));
+                else
+                    keep(j) = any(vals == string(pr.value));
+                end
             end
             matched = matched(keep);
     end
 end
+end
+
+function outCell = subPathNodeset(ctxNode, pathNode, ns)
+% Evaluate a RELATIVE predicate sub-path -- a single path or a union of relative
+% paths -- against ctxNode, returning an element node-set (document-ordered,
+% identity-deduped). Absolute (/, //) sub-paths are out of subset and raise
+% (F2), never silently evaluated as relative.
+if isfield(pathNode, "operands")
+    acc = {};
+    for oi = 1:numel(pathNode.operands)
+        op = pathNode.operands{oi};
+        if ~strcmp(op.absolute, "rel")
+            error("mat2doc:XPathError", ...
+                "Unsupported XPath: non-relative sub-path inside a predicate");
+        end
+        acc = [acc, evalElemSteps({ctxNode}, op.steps, ns)]; %#ok<AGROW>
+    end
+    outCell = docSortDedupe(acc);
+else
+    if ~strcmp(pathNode.absolute, "rel")
+        error("mat2doc:XPathError", ...
+            "Unsupported XPath: non-relative sub-path inside a predicate");
+    end
+    outCell = evalElemSteps({ctxNode}, pathNode.steps, ns);
+end
+end
+
+function vals = subPathStringValues(ctxNode, pathNode, ns)
+% Evaluate a RELATIVE predicate sub-path that terminates in @attr or text()
+% against ctxNode, returning its string node-set -- the left operand of a
+% `path = literal` comparison predicate (e.g. [w:name/@w:val="Heading 1"]).
+if isfield(pathNode, "operands")
+    error("mat2doc:XPathError", ...
+        "Unsupported XPath: union on the left of a '=' comparison predicate");
+end
+if ~strcmp(pathNode.absolute, "rel")
+    error("mat2doc:XPathError", ...
+        "Unsupported XPath: non-relative sub-path inside a predicate");
+end
+steps = pathNode.steps;
+if isempty(steps)
+    error("mat2doc:XPathError", "Unsupported XPath: empty comparison sub-path");
+end
+last = steps{end};
+if ~(strcmp(last.axis, "attribute") || strcmp(last.ntKind, "text"))
+    error("mat2doc:XPathError", ...
+        "Unsupported XPath: '=' comparison on a non-string sub-path");
+end
+prefix = evalElemSteps({ctxNode}, steps(1:end-1), ns);
+vals = evalStringStep(prefix, last, ns);
 end
 
 function tf = attrEqTest(e, pr, ns)
@@ -500,12 +801,18 @@ function result = evalStringStep(nodeset, step, ns)
 % the document position of the selected attribute/text node, then
 % identity-deduped (lxml node-set semantics: a node reached via several
 % prefix matches appears once).
-if ~isempty(step.predicates)
-    % F2 (design.md section XPath): a predicate on a terminal attribute or
-    % text() step (//@id[2]) is parseable but the evaluator does not filter
-    % string-terminal steps -- raise rather than silently drop the predicate.
-    error("mat2doc:XPathError", ...
-        "Unsupported XPath: predicate on a terminal attribute/text() step");
+% A positional predicate ([n], [last()], [position()=n]) on a terminal string
+% step is applied PER context element to THAT element's own attribute/text
+% node-set: lxml numbers predicate positions within each context node's axis, so
+% //@r:id[2] yields [] (each element owns at most one r:id, so position 2 never
+% exists). Non-positional predicates on a string terminal are out of subset and
+% raise (never silently mis-evaluated -- design.md section XPath).
+for pi = 1:numel(step.predicates)
+    k = step.predicates{pi}.kind;
+    if ~(strcmp(k, "pos") || strcmp(k, "last"))
+        error("mat2doc:XPathError", ...
+            "Unsupported XPath: non-positional predicate on a terminal attribute/text() step");
+    end
 end
 vals = strings(1, 0);
 keys = {};                 % document-order sort key (index vector) per node
@@ -536,12 +843,15 @@ for a = 1:numel(nodeset)
         if isDoc(cand)
             continue                           % the doc node has no attrs/text
         end
+        % Build THIS cand's ordered string-node list (document order within the
+        % cand), then apply any positional predicate before emitting.
+        lv = {}; lnode = {}; ltag = strings(1, 0); lkey = {};
         if step.ntKind == "attr"
             key = resolveAttrName(step.ntName, ns);
             v = attrGet(cand, key);
             if ~isNone(v)
                 % attr-node identity: owner element (key is fixed per step)
-                emit(v, cand, "a:", []);
+                lv{end+1} = v; lnode{end+1} = cand; ltag(end+1) = "a:"; lkey{end+1} = []; %#ok<AGROW>
             end
         elseif step.ntKind == "text"
             % lxml text() selects ALL text-node children of cand in document
@@ -552,18 +862,39 @@ for a = 1:numel(nodeset)
             % never the shadowed property value).
             t = cand.text_raw_();
             if ~isNone(t)
-                emit(t, cand, "t:", []);       % self-text: at the element's position
+                lv{end+1} = t; lnode{end+1} = cand; ltag(end+1) = "t:"; lkey{end+1} = []; %#ok<AGROW>
             end
             kids = childElems(cand);
             for c = 1:numel(kids)
                 tl = kids{c}.tail;             % child tail = text node child of cand
                 if ~isNone(tl)
                     % tail sorts AFTER the whole child subtree (WPC-F1): Inf suffix
-                    emit(tl, kids{c}, "l:", Inf);
+                    lv{end+1} = tl; lnode{end+1} = kids{c}; ltag(end+1) = "l:"; lkey{end+1} = Inf; %#ok<AGROW>
                 end
             end
         else
             error("mat2doc:XPathError", "Unsupported terminal step");
+        end
+        sel = 1:numel(lv);
+        for pi = 1:numel(step.predicates)
+            pr = step.predicates{pi};
+            if strcmp(pr.kind, "pos")
+                if pr.n >= 1 && pr.n <= numel(sel)
+                    sel = sel(pr.n);           % H1: 1-based, never shifted
+                else
+                    sel = [];
+                end
+            else                                % last()
+                if ~isempty(sel)
+                    sel = sel(end);
+                else
+                    sel = [];
+                end
+            end
+        end
+        for si = 1:numel(sel)
+            idx = sel(si);
+            emit(lv{idx}, lnode{idx}, ltag(idx), lkey{idx});
         end
     end
 end
