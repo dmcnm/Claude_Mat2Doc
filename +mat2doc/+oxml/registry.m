@@ -118,6 +118,17 @@ map = registerElementCls_(map, "w:u",          "mat2doc.oxml.text.CT_Underline")
 map = registerElementCls_(map, "w:vanish",     "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:223
 map = registerElementCls_(map, "w:vertAlign",  "mat2doc.oxml.text.CT_VerticalAlignRun");   % __init__.py:224
 map = registerElementCls_(map, "w:webHidden",  "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:225
+% -- run block (docx/oxml/__init__.py:72-78), P4-1b. The 6 run + run-content
+% -- element classes from oxml/text/run.py. (w:drawing @__init__.py:58 ->
+% -- CT_Drawing and w:lastRenderedPageBreak @:74 -> CT_LastRenderedPageBreak are
+% -- OUT of scope, owned by the drawing / pagebreak WPs; w:tab @:249 ->
+% -- CT_TabStop is owned by the parfmt WP.) Listed in __init__.py source order.
+map = registerElementCls_(map, "w:br",             "mat2doc.oxml.text.CT_Br");             % __init__.py:72
+map = registerElementCls_(map, "w:cr",             "mat2doc.oxml.text.CT_Cr");             % __init__.py:73
+map = registerElementCls_(map, "w:noBreakHyphen",  "mat2doc.oxml.text.CT_NoBreakHyphen");  % __init__.py:75
+map = registerElementCls_(map, "w:ptab",           "mat2doc.oxml.text.CT_PTab");           % __init__.py:76
+map = registerElementCls_(map, "w:r",              "mat2doc.oxml.text.CT_R");              % __init__.py:77
+map = registerElementCls_(map, "w:t",              "mat2doc.oxml.text.CT_Text");           % __init__.py:78
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
