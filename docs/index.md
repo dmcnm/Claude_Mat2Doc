@@ -49,7 +49,13 @@ syntax, description, example, ported-from).
   whose 27 `ZeroOrOne` descriptors ride the non-contiguous H11 successor slices
   of the 39-entry `_tag_seq`, its 6 child `CT_*` classes, the `_new_color`
   black-seed override, and the shared `CT_OnOff` (D-delta-1 tri-state) /
-  `CT_String` leaves — registered byte-neutrally with M1 preserved).
+  `CT_String` leaves — registered byte-neutrally with M1 preserved); and the
+  **run tier** above it (`run.py` → `CT_R`, the `<w:r>` run element the
+  `document.xml` body is built from, with its H11 rPr-first ordering, the
+  byte-critical `add_t` `xml:space="preserve"` decision replicating CPython's
+  exact `str.strip()` set — the **H16** whitespace hazard — the
+  `_RunContentAppender` text→content FSM, and the `CT_Text`/`CT_Br`/`CT_Cr`/
+  `CT_NoBreakHyphen`/`CT_PTab` inner-content leaves).
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC

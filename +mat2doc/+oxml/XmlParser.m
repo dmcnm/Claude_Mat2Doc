@@ -215,8 +215,18 @@ classdef XmlParser < handle
                 % the parser-resolved URI verbatim.
                 elm = mat2doc.oxml.XmlElement(name, ownDecls, uri);
             else
-                elm = feval(cls, name, ownDecls);
-                elm.setResolvedNsuri_(uri);   % make parser resolution authoritative
+                % Registered CT_* class: forward the parser-resolved URI as the
+                % 3rd (resolvedUri) ctor arg EXACTLY as the generic fallback above
+                % does. The CT_* ctors are transparent pass-throughs
+                % (CT_R(varargin{:}) -> BaseOxmlElement(varargin{:}) ->
+                % XmlElement(name, ownDecls, resolvedUri)), so resolvedUri reaches
+                % XmlElement's early-return (XmlElement.m:171-173) and BYPASSES the
+                % own-decls-then-fixed-map tag resolution. Passing it here (rather
+                % than a post-construction setResolvedNsuri_) is REQUIRED: an
+                % element whose prefix is ancestor-declared and not in the fixed
+                % nsmap (e.g. a03's `q:r`, where `q` binds the w URI on the parent)
+                % would otherwise throw KeyError in the ctor before any setter runs.
+                elm = feval(cls, name, ownDecls, uri);
             end
             % Verbatim ns-decls for the serializer (fixes D-serializer-nsdecl):
             % a PARSED element's stored ns-decls are serialized VERBATIM -- lxml's
