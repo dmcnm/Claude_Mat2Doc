@@ -258,22 +258,26 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         % 6. Forward-dep scope + P2 EXIT stub-safety                      %
         % =============================================================== %
 
-        function test_created_children_are_generic_xmlelement(testCase)
-            % Regression (intentional byte-neutral divergence, s0015 matlab_only):
-            % the w:p/w:tbl/w:sectPr created by add_p/add_tbl/get_or_add_sectPr are
-            % generic mat2doc.oxml.XmlElement (CT_P/CT_Tbl/CT_SectPr are P4/P6/P5,
-            % unregistered). In python these are real CT_* classes; the difference is
-            % byte-neutral (identical serialization + insertion order) and scope-driven.
+        function test_created_children_class_reflects_registration(testCase)
+            % Regression (registration-driven parse class, s0015 matlab_only): the
+            % w:p/w:tbl/w:sectPr created by add_p/add_tbl/get_or_add_sectPr resolve to
+            % whichever class is registered at the time. As of P4-2, w:p->CT_P is now
+            % registered, so add_p() returns a mat2doc.oxml.text.CT_P (this test's own
+            % prior comment predicted the flip when "P4" landed -- P4-2 IS "P4"). w:tbl
+            % (CT_Tbl is P6) and w:sectPr (CT_SectPr is P5) remain UNregistered ->
+            % generic mat2doc.oxml.XmlElement. The class difference is byte-neutral
+            % (identical serialization + insertion order) and scope-driven; the CT_P
+            % pin is now the exact-correct class (registry-flip lesson; not a defect).
             body = testCase.parseBody();
             cSect = body.get_or_add_sectPr();
             cP    = body.add_p();
             cTbl  = body.add_tbl();
-            testCase.verifyEqual(class(cP), 'mat2doc.oxml.XmlElement', ...
-                'created w:p resolves to generic XmlElement (CT_P is P4)');
+            testCase.verifyEqual(class(cP), 'mat2doc.oxml.text.CT_P', ...
+                'created w:p now resolves to CT_P (registered in P4-2)');
             testCase.verifyEqual(class(cTbl), 'mat2doc.oxml.XmlElement', ...
-                'created w:tbl resolves to generic XmlElement (CT_Tbl is P6)');
+                'created w:tbl resolves to generic XmlElement (CT_Tbl is P6, unregistered)');
             testCase.verifyEqual(class(cSect), 'mat2doc.oxml.XmlElement', ...
-                'created w:sectPr resolves to generic XmlElement (CT_SectPr is P5)');
+                'created w:sectPr resolves to generic XmlElement (CT_SectPr is P5, unregistered)');
         end
 
         function test_content_stubs_raise_notYetPorted(testCase)

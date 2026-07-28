@@ -129,6 +129,29 @@ map = registerElementCls_(map, "w:noBreakHyphen",  "mat2doc.oxml.text.CT_NoBreak
 map = registerElementCls_(map, "w:ptab",           "mat2doc.oxml.text.CT_PTab");           % __init__.py:76
 map = registerElementCls_(map, "w:r",              "mat2doc.oxml.text.CT_R");              % __init__.py:77
 map = registerElementCls_(map, "w:t",              "mat2doc.oxml.text.CT_Text");           % __init__.py:78
+% -- paragraph block (docx/oxml/__init__.py:227-229), P4-2. The one CT_* from
+% -- oxml/text/paragraph.py.
+map = registerElementCls_(map, "w:p",   "mat2doc.oxml.text.CT_P");   % __init__.py:229
+% -- parfmt block (docx/oxml/__init__.py:231-251), P4-2. The 6 parfmt CT_* classes
+% -- + the shared CT_OnOff/CT_String rows this block registers, in __init__.py
+% -- source order. NOTE w:outlineLvl @:244 -> CT_DecimalNumber is DEFERRED: that
+% -- shared class (oxml/shared.py) is not yet ported (its first registration is in
+% -- the numbering block @:105, owned by a later shared/numbering WP), so
+% -- w:outlineLvl resolves to a generic XmlElement until then -- BYTE-NEUTRAL and
+% -- behavior-neutral (CT_PPr.outlineLvl is never read for .val). Same deferral
+% -- pattern as w:tab was deferred from the run block to here.
+map = registerElementCls_(map, "w:ind",             "mat2doc.oxml.text.CT_Ind");        % __init__.py:240
+map = registerElementCls_(map, "w:jc",              "mat2doc.oxml.text.CT_Jc");         % __init__.py:241
+map = registerElementCls_(map, "w:keepLines",       "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:242
+map = registerElementCls_(map, "w:keepNext",        "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:243
+% w:outlineLvl -> CT_DecimalNumber DEFERRED (shared.py, later WP)              % __init__.py:244
+map = registerElementCls_(map, "w:pageBreakBefore", "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:245
+map = registerElementCls_(map, "w:pPr",             "mat2doc.oxml.text.CT_PPr");        % __init__.py:246
+map = registerElementCls_(map, "w:pStyle",          "mat2doc.oxml.shared.CT_String");   % __init__.py:247
+map = registerElementCls_(map, "w:spacing",         "mat2doc.oxml.text.CT_Spacing");    % __init__.py:248
+map = registerElementCls_(map, "w:tab",             "mat2doc.oxml.text.CT_TabStop");    % __init__.py:249
+map = registerElementCls_(map, "w:tabs",            "mat2doc.oxml.text.CT_TabStops");   % __init__.py:250
+map = registerElementCls_(map, "w:widowControl",    "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:251
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE

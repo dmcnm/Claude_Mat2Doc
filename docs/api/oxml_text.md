@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.oxml.text — the run (`CT_R`) + run-properties (`CT_RPr`) element tier"
+title: "mat2doc.oxml.text — the paragraph / run / run-properties element tier (CT_P · CT_R · CT_RPr + children)"
 ---
 
-# `mat2doc.oxml.text` — the run / run-properties element tier (`CT_R` + `CT_RPr` + children)
+# `mat2doc.oxml.text` — the paragraph / run / run-properties element tier (`CT_P` + `CT_R` + `CT_PPr`/`CT_RPr` + children)
 
 Ported from python-docx v1.2.0 `src/docx/oxml/text/font.py` (7 element classes,
 the `<w:rPr>` run-properties tier) **and** `src/docx/oxml/text/run.py` (the
@@ -13,13 +13,19 @@ from `src/docx/oxml/shared.py` (package `+mat2doc/+oxml/+shared/`), and the
 (`src/docx/oxml/__init__.py:198-225` font block + `:72-78` run block).
 
 :::{note}
-This page is built in two passes. **P4-1a** ported the run-**properties** tier
-(`font.py` → `CT_RPr` + rPr children); **P4-1b** adds the **run** tier
+This page is built in three passes. **P4-1a** ported the run-**properties** tier
+(`font.py` → `CT_RPr` + rPr children); **P4-1b** added the **run** tier
 (`run.py` → `CT_R` + run inner-content + `CT_Text`), which sits one level up:
 `<w:r>` is the run element the `document.xml` body is built from
-(`w:p`/`w:r`/`w:t`), and `CT_RPr` is its first child. Both are on the **M2
-byte-critical path**. The run-tier material begins at
-[The run tier — `CT_R`](#the-run-tier-ct_r) below.
+(`w:p`/`w:r`/`w:t`), and `CT_RPr` is its first child. **P4-2** adds the
+**paragraph-properties + paragraph** tier (`parfmt.py` → `CT_PPr` + its
+para-property children `CT_Ind`/`CT_Jc`/`CT_Spacing`/`CT_TabStop`/`CT_TabStops`,
+and `paragraph.py` → `CT_P`), which sits one level up again: `<w:p>` is the
+paragraph the body is a sequence of, and `<w:pPr>` is its first child and the
+`add_heading` write target. All three tiers are on the **M2 byte-critical path**.
+The run-tier material begins at [The run tier — `CT_R`](#the-run-tier-ct_r); the
+paragraph-tier material begins at
+[The paragraph tier — `CT_PPr` and `CT_P`](#the-paragraph-tier-ct_ppr-and-ct_p).
 :::
 
 This is the **first real `w:`-content element tier** in the port. Everything
@@ -639,6 +645,334 @@ disp(names);                                         % "w:t"  "w:br"  "w:t"
 
 ---
 
+(the-paragraph-tier-ct_ppr-and-ct_p)=
+## The paragraph tier — `CT_PPr` and `CT_P`
+
+`parfmt.py` ports the **paragraph-properties element** `<w:pPr>` (`CT_PPr`) plus
+its five para-property children, and `paragraph.py` ports the **paragraph
+element** `<w:p>` (`CT_P`). `<w:p>` is the block the `document.xml` body is a
+sequence of; `<w:pPr>` is its **first** child and carries the `<w:pStyle>` that
+`add_heading` writes. This is the **third and highest** slice of the M2
+byte-critical path: `add_paragraph`/`add_heading` write `w:p` → `w:pPr` →
+`w:pStyle` into `document.xml`. Registering the 12 parfmt/paragraph tags is
+**byte-neutral** — the M1 17/17 sweep holds and the **204 `<w:pPr>` blocks** in
+the shipped `styles.xml` (349 458 B) now parse to `CT_PPr` with identical bytes
+(Gate-3 `pkgcompare` L0 PASS + 16 XML L1 + 1 bin; `document.xml` 1 548 B &
+`styles.xml` 349 458 B L1; the 204-`w:pPr` `styles.xml` round-trips
+parse→serialize L1).
+
+(id-ct_ppr-h11)=
+### `CT_PPr` — the 36-tag `_tag_seq`, pStyle-first (the `add_heading` crux)
+
+`CT_PPr` is the paragraph analogue of `CT_RPr`: **12 `ZeroOrOne` descriptors**
+over a single **36-entry `_tag_seq`** (`parfmt.py:64-101`, ported verbatim as the
+Constant `TAG_SEQ`). OOXML mandates that a `<w:pPr>`'s children appear in schema
+order — `w:pStyle`, `w:keepNext`, …, `w:spacing`, `w:ind`, `w:jc`, …, `w:sectPr` —
+regardless of the order the API creates them; get it wrong and Word shows a
+**repair prompt = FAIL**. The re-sort mechanism is exactly the
+[H11 successor-ordering mechanism](#id-h11-successor-ordering) documented for
+`CT_RPr`: each descriptor carries the schema slice `_tag_seq[N:]` (0-based
+Python) → `TAG_SEQ(N+1:end)` (1-based MATLAB, the H1 base shift applied once at
+the slice declaration), and `insertChildInSequence` lands a new child *before the
+first schema-later sibling already present*, else appends.
+
+The **12 descriptor slices** (own 1-based index → successor slice):
+
+| prop | own idx | Python (parfmt.py) | MATLAB slice |
+|---|---|---|---|
+| `pStyle` | 1 | `_tag_seq[1:]` | `TAG_SEQ(2:end)` |
+| `keepNext` | 2 | `_tag_seq[2:]` | `TAG_SEQ(3:end)` |
+| `keepLines` | 3 | `_tag_seq[3:]` | `TAG_SEQ(4:end)` |
+| `pageBreakBefore` | 4 | `_tag_seq[4:]` | `TAG_SEQ(5:end)` |
+| `widowControl` | 6 | `_tag_seq[6:]` | `TAG_SEQ(7:end)` (framePr@5 skipped) |
+| `numPr` | 7 | `_tag_seq[7:]` | `TAG_SEQ(8:end)` |
+| `tabs` | 11 | `_tag_seq[11:]` | `TAG_SEQ(12:end)` |
+| `spacing` | 22 | `_tag_seq[22:]` | `TAG_SEQ(23:end)` |
+| `ind` | 23 | `_tag_seq[23:]` | `TAG_SEQ(24:end)` |
+| `jc` | 27 | `_tag_seq[27:]` | `TAG_SEQ(28:end)` |
+| `outlineLvl` | 31 | `_tag_seq[31:]` | `TAG_SEQ(32:end)` |
+| `sectPr` | 35 | `_tag_seq[35:]` | `TAG_SEQ(36:end)` |
+
+Like `CT_RPr`, the slices are **non-contiguous** — `w:framePr`@5,
+`w:suppressLineNumbers`@8, `w:pBdr`@9, `w:shd`@10 and a dozen more intervening
+`_tag_seq` tags have **no descriptor on `CT_PPr`**, so the slices jump across
+them; the intervening tags are **kept in the successor lists, not collapsed**, so
+a newly-added child still lands correctly relative to a parsed non-descriptor
+sibling. **`pStyle` (`successors=_tag_seq[1:]`) sorts before *everything*** — this
+is the `add_heading` case: whatever order the API builds a `<w:pPr>`, the
+`<w:pStyle>` re-sorts to the front. Gate-2/Gate-3 built four scrambled
+`get_or_add_*` orderings (incl. `pStyle`-**last** and a full 12-child scramble) in
+both python-docx 1.2.0 and Mat2Doc; every ordering converged to the canonical
+`w:pStyle, …, w:spacing, w:ind, w:jc, …, w:sectPr` and the serialized bytes were
+**byte-identical PY==ML**.
+
+All 12 descriptors use the **generic** `BaseOxmlElement` engine (no `_new_x` /
+`_insert_x` override on `CT_PPr`, unlike `CT_RPr._new_color` or `CT_R._insert_rPr`).
+Each generates the docx family `get.x` / `get_or_add_x` / `new_x_` / `insert_x_` /
+`add_x_` / `remove_x_`. The **13 `@property` helpers** (`parfmt.py:122-339`) are
+all ported live: `first_line_indent`, `ind_left`, `ind_right`, `jc_val`,
+`keepLines_val`, `keepNext_val`, `pageBreakBefore_val`, `spacing_after`,
+`spacing_before`, `spacing_line`, `spacing_lineRule`, `style`, `widowControl_val`.
+Note `spacing_lineRule` maps a **present `@w:line` with absent `@w:lineRule`** to
+`WD_LINE_SPACING.MULTIPLE` (`parfmt.py:296-298`), and `first_line_indent` uses the
+signed/unsigned split of `CT_Ind` (a negative value → `w:hanging`, positive →
+`w:firstLine`, `[]` clears both).
+
+:::{note}
+Three `_tag_seq` tags have descriptors on `CT_PPr` whose **child class is owned by
+a later WP** and is therefore left generic here (byte-neutral): `w:numPr`→
+`CT_NumPr` (P8), `w:sectPr`→`CT_SectPr` (P5), and `w:outlineLvl`→`CT_DecimalNumber`
+(`oxml/shared.py`, a numbering/shared WP). The `w:outlineLvl` **registry row is
+deferred** with them — `CT_DecimalNumber` is not yet ported, so its tag resolves
+to a generic `XmlElement`. This is byte-neutral (round-trip is class-independent —
+proven by the 204-`w:pPr` `styles.xml`, which contains `outlineLvl`-bearing `pPr`,
+round-tripping L1) and behavior-neutral (no ported `CT_PPr` accessor reads `.val`
+on `numPr`/`outlineLvl`/`sectPr`). The future `CT_DecimalNumber` WP must add the
+`w:outlineLvl` row.
+:::
+
+### The para-property children — `CT_Ind` / `CT_Jc` / `CT_Spacing`
+
+The three plain attribute-holder children of `CT_PPr`, each delegating to a P3-2
+simple type or a P3-3 enum:
+
+- **`CT_Ind`** (`w:ind`) — four `OptionalAttribute`s, **all default `None`** (`[]`
+  when absent): `left` / `right` = `ST_SignedTwipsMeasure` (**signed**),
+  `firstLine` / `hanging` = `ST_TwipsMeasure` (**unsigned**). The signed-vs-unsigned
+  split is per-attribute and verified against `parfmt.py:32-43` — `left`/`right`
+  serialize a leading `-` for negative twips, `firstLine`/`hanging` never do. Each
+  reads back a `Length`; setting `[]` removes the attribute (H3).
+- **`CT_Jc`** (`w:jc`) — `val` = `RequiredAttribute("w:val", WD_ALIGN_PARAGRAPH)`
+  (a.k.a. `WD_PARAGRAPH_ALIGNMENT`), the enum named by its fully-qualified class so
+  `resolveTypeCls_` dispatches to `+enum`. A missing `@w:val` raises
+  `mat2doc:InvalidXmlError`. `CENTER` ↔ `w:val="center"`.
+- **`CT_Spacing`** (`w:spacing`) — four `OptionalAttribute`s, all default `None`:
+  `after` / `before` = `ST_TwipsMeasure` (unsigned), `line` = `ST_SignedTwipsMeasure`
+  (signed), `lineRule` = `WD_LINE_SPACING`. `EXACTLY` ↔ `w:lineRule="exact"`; a
+  present `@w:line` with an absent `@w:lineRule` reads back as `MULTIPLE` (the
+  `CT_PPr.spacing_lineRule` mapping above).
+
+### `CT_TabStop` / `CT_TabStops` — and the `str_`→`"\t"` carry-forward (P4-1b gap CLOSED)
+
+**`CT_TabStop`** (`<w:tab>`) is **overloaded**: the same `w:tab` tag serves both a
+real **tab stop** (inside `<w:tabs>`) and a **tab character** within a run. Its
+tab-stop usage uses three attributes — `val` = `RequiredAttribute` of
+`WD_TAB_ALIGNMENT`, `pos` = `RequiredAttribute` of `ST_SignedTwipsMeasure`, and
+`leader` = `OptionalAttribute` of `WD_TAB_LEADER` with a **non-None default**
+`WD_TAB_LEADER.SPACES`. That non-None default drives the D-delta-1 tri-state
+(`LEADER_DEFAULT` holds the actual `SPACES` member, not `[]`): assigning `[]`
+(None) **or** the `SPACES` member removes `@w:leader`, and reading `@w:leader` when
+absent returns `SPACES`; `leader = DOTS` writes `w:leader="dot"`.
+
+Its **run usage** needs only `str_()` → `"\t"` (`char(9)`, H2 — never the literal
+two-char `"\t"`). This **closes the P4-1b carry-forward gap**: `CT_R.text` (and
+`CT_P.text`) joins `str_()` over `w:br|w:cr|w:noBreakHyphen|w:ptab|w:t|w:tab`; at
+P4-1b `w:tab` was unregistered (generic `XmlElement`, no `str_`), so a `.text` read
+over a run *containing* a `<w:tab>` **errored**. Registering `w:tab`→`CT_TabStop`
+(with this `str_`) means a run with children `[t, tab, t]` now reads back
+`"a\tb"` — the exact behaviour the P4-1b page's note flagged as pending.
+
+**`CT_TabStops`** (`<w:tabs>`) is the sorted container: `tab` =
+`OneOrMore("w:tab", successors=())` → `tab_lst` / `new_tab_` / `insert_tab_` /
+`add_tab_` / `add_tab` (public), `successors=()` → append.
+`insert_tab_in_order(pos, align, leader)` (`parfmt.py:383-392`) creates a `w:tab`,
+sets `pos`/`val`/`leader`, then inserts it **before the first existing tab whose
+`pos` is greater** (keeping the sequence sorted by position), else appends — so
+inserting 720, 240, 480 yields serialized positions 240, 480, 720.
+
+### `CT_P` — the paragraph, pPr-first
+
+`CT_P` (`<w:p>`) declares one `ZeroOrOne` `pPr` plus two `ZeroOrMore` content
+descriptors (`hyperlink`, `r`), all with `successors=()` (`paragraph.py:29-31`).
+OOXML requires `<w:pPr>` to be the **first** child of a paragraph. Like
+`CT_R._insert_rPr`, `paragraph.py` expresses this **not** with a successor list but
+by overriding the inserter (`paragraph.py:104-106`: `self.insert(0, pPr)`); the
+port carries this as the `insert_pPr_` override — `obj.insert(1, pPr)` (the
+[H1 base shift](#id-h11-successor-ordering) applied once) — so `get_or_add_pPr`
+always forces `pPr` to index 0, while `r`/`hyperlink` (`successors=()`) simply
+**append** in insertion order. Appending a `<w:r>` and *then* setting `p.style`
+(which adds `pPr`) still yields child order `[pPr, r]`.
+
+`CT_P.text` (`paragraph.py:95-102`) **shadows** the lxml `.text` attribute — it is
+the paragraph's concatenated inner-content text (`"".join(e.text for e in
+w:r|w:hyperlink)`), not element char data — ported by overriding the protected
+`getText_` (D10, the same shape as `CT_R.text`); it is **read-only** in Python, so
+`setText_` is overridden to raise `mat2doc:AttributeError`. `CT_P` also ports
+`add_p_before`, `alignment` (via `pPr.jc_val`), `clear_content`
+(`./*[not(self::w:pPr)]`, keeps only `pPr`), `inner_content_elements`
+(`./w:r | ./w:hyperlink`), `lastRenderedPageBreaks`, `set_sectPr`, and `style`
+(via `pPr.style`).
+
+:::{note}
+`CT_P.text` over a paragraph **containing a `<w:hyperlink>`** does not yet
+reproduce python-docx: `w:hyperlink`→`CT_Hyperlink` is owned by the **P4-3**
+hyperlink WP and resolves to a generic `XmlElement` until then (its `.text` is the
+element's own char data, not `CT_Hyperlink`'s concatenated run text). This is the
+same dependency-order shape as the `w:tab` gap this WP closed, and it is **off the
+M2 write path** — the default body is one empty `w:p`, and
+`add_paragraph`/`add_heading` write `w:pPr` + `w:r` only. `inner_content_elements`
+/ `lastRenderedPageBreaks` likewise return generic elements for `w:hyperlink` until
+P4-3 (byte/structure identical; only the element class differs). P4-3 must register
+`w:hyperlink` and re-probe `CT_P.text` over a hyperlink-bearing paragraph.
+:::
+
+---
+
+## `CT_PPr`
+
+**Syntax**
+
+```matlab
+pPr = mat2doc.oxml.OxmlElement("w:pPr");            % a CT_PPr (registered)
+pPr.style = "Heading1";                             % <w:pStyle w:val="Heading1"/>
+pPr.get_or_add_jc().val = mat2doc.enum.text.WD_ALIGN_PARAGRAPH.CENTER;
+val = pPr.spacing_after;                            % @property helpers (parfmt.py 122-339)
+```
+
+**Description**
+
+The `<w:pPr>` paragraph-properties container — the M2 `add_heading` write target.
+Its 12 `ZeroOrOne` child descriptors ride the non-contiguous H11 successor slices
+of the 36-entry `TAG_SEQ` (see [the H11 table above](#id-ct_ppr-h11)), so scrambled
+`get_or_add_*` adds always reserialize in schema order and `pStyle` sorts first.
+Each descriptor generates the docx family; all 12 use the generic engine (no
+creator/inserter override). The 13 `@property` helpers are ported live, incl.
+`spacing_lineRule`'s line-present/lineRule-absent → `MULTIPLE` mapping and
+`first_line_indent`'s signed `w:hanging`/`w:firstLine` split. `w:numPr`/`w:sectPr`/
+`w:outlineLvl` children are left generic (owned by P8/P5/a shared WP) — byte-neutral.
+
+**Example**
+
+```matlab
+pPr = mat2doc.oxml.OxmlElement("w:pPr");
+pPr.get_or_add_jc().val = mat2doc.enum.text.WD_ALIGN_PARAGRAPH.CENTER; % jc added FIRST
+pPr.style = "Heading1";                          % pStyle added AFTER jc
+order = arrayfun(@(e) string(e.nsptag_str), pPr.xpath("./*"));
+disp(order);   % "w:pStyle"  "w:jc"  -- pStyle re-sorted BEFORE jc (H11 schema order)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/parfmt.py::CT_PPr`*
+
+---
+
+## `CT_Ind` / `CT_Jc` / `CT_Spacing`
+
+**Syntax**
+
+```matlab
+ind = mat2doc.oxml.OxmlElement("w:ind");   ind.left = mat2doc.shared.Twips(720);
+jc  = mat2doc.oxml.OxmlElement("w:jc");     jc.val   = mat2doc.enum.text.WD_ALIGN_PARAGRAPH.CENTER;
+sp  = mat2doc.oxml.OxmlElement("w:spacing"); sp.after = mat2doc.shared.Twips(120);
+```
+
+**Description**
+
+The three plain attribute-holder children of `CT_PPr`:
+
+- **`CT_Ind`** (`w:ind`) — `left` / `right` = `OptionalAttribute` of
+  `ST_SignedTwipsMeasure` (**signed**); `firstLine` / `hanging` = `OptionalAttribute`
+  of `ST_TwipsMeasure` (**unsigned**); all default `None` (`[]`). Reads back a
+  `Length`; setting `[]` removes the attribute (H3).
+- **`CT_Jc`** (`w:jc`) — `val` = `RequiredAttribute` of `WD_ALIGN_PARAGRAPH`
+  (`CENTER` ↔ `"center"`); absent `@w:val` → `mat2doc:InvalidXmlError`.
+- **`CT_Spacing`** (`w:spacing`) — `after` / `before` = `ST_TwipsMeasure`, `line`
+  = `ST_SignedTwipsMeasure`, `lineRule` = `WD_LINE_SPACING`; all default `None`.
+  `EXACTLY` ↔ `"exact"`; a present `@w:line` with absent `@w:lineRule` reads
+  `MULTIPLE`.
+
+**Example**
+
+```matlab
+ind = mat2doc.oxml.OxmlElement("w:ind");
+ind.left  = mat2doc.shared.Twips(720);        % <w:ind w:left="720" ...
+ind.right = mat2doc.shared.Twips(-60);         % ... w:right="-60"/>  (signed)
+disp(double(ind.left));                         % 457200  (a Length/Emu)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/parfmt.py::CT_Ind` / `CT_Jc` /
+`CT_Spacing`*
+
+---
+
+## `CT_TabStop` / `CT_TabStops`
+
+**Syntax**
+
+```matlab
+tab = mat2doc.oxml.OxmlElement("w:tab");
+tab.val = mat2doc.enum.text.WD_TAB_ALIGNMENT.LEFT;
+tab.pos = mat2doc.shared.Twips(720);           % <w:tab w:val="left" w:pos="720"/>
+s = tab.str_();                                 % "\t"  (run tab-character usage)
+
+tabs = mat2doc.oxml.OxmlElement("w:tabs");
+tabs.insert_tab_in_order(mat2doc.shared.Twips(720), ...
+    mat2doc.enum.text.WD_TAB_ALIGNMENT.LEFT, mat2doc.enum.text.WD_TAB_LEADER.SPACES);
+```
+
+**Description**
+
+**`CT_TabStop`** (`<w:tab>`) is overloaded — a tab stop (in `<w:tabs>`) *and* a
+run tab-character. Tab-stop attrs: `val` (`RequiredAttribute` of
+`WD_TAB_ALIGNMENT`), `pos` (`RequiredAttribute` of `ST_SignedTwipsMeasure`),
+`leader` (`OptionalAttribute` of `WD_TAB_LEADER`, **non-None default `SPACES`** —
+assigning `[]` or `SPACES` removes `@w:leader`, absent reads back `SPACES`,
+`DOTS`→`"dot"`). Run usage: `str_()` → `"\t"` (`char(9)`), which **closes the
+P4-1b carry-forward gap** so `CT_R.text`/`CT_P.text` over a run holding a `<w:tab>`
+returns the tab character. **`CT_TabStops`** (`<w:tabs>`) holds `tab` =
+`OneOrMore(successors=())`; `insert_tab_in_order(pos, align, leader)` keeps the
+sequence sorted by `pos`.
+
+**Example**
+
+```matlab
+r = mat2doc.oxml.OxmlElement("w:r");
+r.text = "a" + char(9) + "b";                   % <w:t>a</w:t><w:tab/><w:t>b</w:t>
+disp(r.text);                                    % "a	b"  (tab char reproduced -- P4-1b gap closed)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/parfmt.py::CT_TabStop` /
+`CT_TabStops`*
+
+---
+
+## `CT_P`
+
+**Syntax**
+
+```matlab
+p = mat2doc.oxml.OxmlElement("w:p");            % a CT_P (registered)
+p.add_r();                                       % append a <w:r/>
+p.style = "Heading1";                            % adds <w:pPr><w:pStyle .../></w:pPr>, FORCED to front
+txt = p.text;                                    % concatenated inner-content text (shadow, D10)
+```
+
+**Description**
+
+The `<w:p>` **paragraph** element — the block the `document.xml` body is a
+sequence of, and the `add_paragraph`/`add_heading` target. One `ZeroOrOne` `pPr`
+descriptor (forced to the **front** by the `insert_pPr_` override, H11) plus two
+`ZeroOrMore` content descriptors (`r`, `hyperlink`, `successors=()` → append).
+`CT_P.text` shadows the lxml `.text` (a computed inner-content string over
+`w:r|w:hyperlink`, ported via a `getText_` override, D10); it is **read-only** —
+`setText_` raises `mat2doc:AttributeError`. Also ports `add_p_before`,
+`alignment` (via `pPr.jc_val`), `clear_content` (keeps only `pPr`),
+`inner_content_elements`, `lastRenderedPageBreaks`, `set_sectPr`, and `style`.
+`w:hyperlink` children stay generic until the **P4-3** hyperlink WP.
+
+**Example**
+
+```matlab
+p = mat2doc.oxml.OxmlElement("w:p");
+p.add_r();                                        % content added FIRST
+p.style = "Heading1";                             % pPr added AFTER, forced to index 0
+order = arrayfun(@(e) string(e.nsptag_str), p.xpath("./*"));
+disp(order);                                       % "w:pPr"  "w:r"   (pPr-first, H11)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/paragraph.py::CT_P`*
+
+---
+
 ## Deviation posture — 0 new D-numbers
 
 P4-1a opened **no new deviation**. Every divergence maps to a ruling already
@@ -665,3 +999,31 @@ gate held (`document.xml` 1548 B & `styles.xml` 349458 B L1), and the full
 regression is back to 550/550. The standing adopt-only umbrella (D-001 /
 D-serializer-nsdecl / D-delta-1 / D-STYPE-\* / D-zip-time) covers everything; no
 ledger row was added.
+
+**P4-2 (the paragraph tier) also opened 0 new D-numbers.** Every P4-2-surface
+fact is L1 byte-identical or value-exact (Gate-3 `s0022` `probe_diff` **MATCH
+exit 0** — the `CT_PPr` H11 scrambled-add-order crux 4/4 byte-identical, the
+`CT_TabStop` `str_`→`"\t"` carry-forward, `CT_Ind`/`CT_Jc`/`CT_Spacing` + all 13
+`CT_PPr` accessors, `CT_P` pPr-first, and the 204-`w:pPr` `styles.xml` round-trip);
+the M1 17/17 byte-neutrality gate held (`document.xml` 1548 B & `styles.xml`
+349458 B L1); no L2 canonical-only result surfaced. The standing adopt-only
+umbrella (**D-001** / **D-serializer-nsdecl** / **D-delta-1/-2** — exercised by
+`CT_TabStop.leader` default `SPACES` and every default-`None` attr — / **D-delta-4**
+— public `add_tab`/`add_r`/`add_hyperlink` — / **D-STYPE-\*** — the signed/unsigned
+twips types — / **D10** — the `CT_P.text` shadow — / **D-zip-time**) covers
+everything; no ledger row was added.
+
+:::{note}
+**Gate-3 verdict was FAIL on regression neutrality (558/566), then routed to a
+Gate-4 test-pin update — not a P4-2 source change.** Registering the 12 tags
+correctly flipped 8 pre-existing class-specificity pins
+(`verifyClass(...,'XmlElement')` on xpath-result arrays and created children) RED,
+because those node-sets now resolve to their proper registered `CT_*` subclasses
+instead of a generic `XmlElement` — the *intended, byte-neutral* effect of
+registration. Every node **value** assertion (tag/path/count/dedup) stayed green,
+and one test's own comment (*"created w:p resolves to generic XmlElement (CT_P is
+P4)"*) had explicitly predicted the flip. Gate-4 re-pinned the 8 (relaxed the 7
+`Test_p1_3x_xpath` umbrella pins to `IsInstanceOf`, re-pinned `cP`→`CT_P` in
+`Test_p2_3_document_shell`) and added 9 new permanent P4-2 tests — **cold total
+566 → 575**. The equivalence surface was byte-correct throughout.
+:::

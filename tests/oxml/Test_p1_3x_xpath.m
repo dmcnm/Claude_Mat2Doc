@@ -104,8 +104,19 @@ classdef Test_p1_3x_xpath < matlab.unittest.TestCase
 
             switch string(c.kind)
                 case "nodes"
-                    testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
-                        sprintf('%s: node result must be XmlElement', callsiteId));
+                    % P4-2 registration relaxation: registering w:p/w:pPr/w:ind/...
+                    % flips xpath node-set results from the generic XmlElement to
+                    % their real CT_* classes (all XmlElement subclasses via
+                    % BaseOxmlElement), so an EXACT-class pin (verifyClass) goes RED
+                    % on the now-homogeneous result-sets (U8/N2/P4/P8/P9). The pin's
+                    % INTENT is "the result is an element node" -> assert IS-A
+                    % XmlElement (subclasses included). The node VALUE assertions
+                    % (tag/path/count) below are the real equivalence+regression pins
+                    % and are UNCHANGED. Empty node-sets stay base XmlElement and
+                    % also satisfy IsInstanceOf (registration cannot change them).
+                    testCase.verifyThat(got, ...
+                        matlab.unittest.constraints.IsInstanceOf('mat2doc.oxml.XmlElement'), ...
+                        sprintf('%s: node result must be an XmlElement instance', callsiteId));
                     assertNodes(testCase, got, c.value, callsiteId);
                 case "strings"
                     testCase.verifyTrue(isstring(got), ...
@@ -128,8 +139,14 @@ classdef Test_p1_3x_xpath < matlab.unittest.TestCase
             ctx = resolveCtx(testCase, root, string(c.ctx), ns, realpartId);
 
             got = mat2doc.oxml.evaluate_xpath(ctx, string(c.expr), ns);
-            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', ...
-                sprintf('%s: node result must be XmlElement', realpartId));
+            % P4-2 registration relaxation (see test_callsite_case): registered CT_*
+            % subclasses now populate the node-set (RP10), so pin IS-A XmlElement,
+            % not the exact umbrella class. The node VALUE assertions below are the
+            % real pins and are unchanged; empty results (RP7/RP8) stay base
+            % XmlElement and also satisfy IsInstanceOf.
+            testCase.verifyThat(got, ...
+                matlab.unittest.constraints.IsInstanceOf('mat2doc.oxml.XmlElement'), ...
+                sprintf('%s: node result must be an XmlElement instance', realpartId));
             assertNodes(testCase, got, c.value, realpartId);
         end
 
@@ -144,7 +161,11 @@ classdef Test_p1_3x_xpath < matlab.unittest.TestCase
             root = mat2doc.oxml.parse_xml(string(bat.fixtures.DOC));
             body = mat2doc.oxml.evaluate_xpath(root, "w:body", ns);
             got  = mat2doc.oxml.evaluate_xpath(body(1), "./w:tbl | ./w:p", ns);
-            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', 'interleave: XmlElement');
+            % P4-2 registration relaxation (see test_callsite_case): w:p now parses
+            % to CT_P (w:tbl stays generic until P6), so pin IS-A XmlElement.
+            testCase.verifyThat(got, ...
+                matlab.unittest.constraints.IsInstanceOf('mat2doc.oxml.XmlElement'), ...
+                'interleave: node result must be an XmlElement instance');
             expTags  = ["p","p","tbl","p","p"];
             expPaths = {[0 0],[0 1],[0 2],[0 3],[0 4]};
             testCase.verifyEqual(numel(got), numel(expTags), 'interleave: node count');
@@ -165,7 +186,13 @@ classdef Test_p1_3x_xpath < matlab.unittest.TestCase
             root = mat2doc.oxml.parse_xml(string(bat.fixtures.DOC));
             body = mat2doc.oxml.evaluate_xpath(root, "w:body", ns);
             got  = mat2doc.oxml.evaluate_xpath(body(1), "./w:p | ./w:p", ns);
-            testCase.verifyClass(got, 'mat2doc.oxml.XmlElement', 'dedup: XmlElement');
+            % P4-2 registration relaxation (see test_callsite_case): the 4 w:p now
+            % parse to CT_P (a homogeneous CT_P result-set), so the exact-class pin
+            % went RED -> pin IS-A XmlElement. The dedup COUNT/path assertions below
+            % are the real regression pins and are unchanged.
+            testCase.verifyThat(got, ...
+                matlab.unittest.constraints.IsInstanceOf('mat2doc.oxml.XmlElement'), ...
+                'dedup: node result must be an XmlElement instance');
             expPaths = {[0 0],[0 1],[0 3],[0 4]};    % the 4 w:p (0,2 is w:tbl)
             testCase.verifyEqual(numel(got), 4, ...
                 'dedup: overlapping union must yield 4 distinct paragraphs, not 8');
