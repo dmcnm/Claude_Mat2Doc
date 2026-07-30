@@ -1,0 +1,10 @@
+# Byte-exact fixture pin (Gate-4 byte-fixture .gitattributes lesson).
+# s0027_document.xml is the frozen python-docx 1.2.0 word/document.xml (1998 B,
+# LF newline after the prolog). It MUST be checked out byte-for-byte -- a CRLF
+# translation on the master checkout would grow it to 1999 B and break the
+# G-scenario byte/SHA pin in Test_p4_5a_parfmt_api. Pin it binary.
+s0027_document.xml binary
+
+# (The s0024/s0025/s0026 *.json oracles are value/serhex and read in binary mode;
+#  jsondecode is line-ending agnostic, so they need no pin -- s0020/s0023/s0024
+#  precedent. Only the byte-exact XML fixture is pinned here.)
