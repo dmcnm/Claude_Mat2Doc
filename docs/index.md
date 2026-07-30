@@ -106,6 +106,18 @@ syntax, description, example, ported-from).
   real-phase owner), the three byte-neutral PartFactory flips, and **task #60**
   (the `xpath` hoist onto `XmlElement`, `Relationships.delitem`, and the live
   `Part.drop_rel` with its `< 2` refcount threshold).
+- **Text/font API tier (P4 API tier)** — the **first two user-facing API
+  proxies**, which **open the P4 API tier** now that the text-oxml element layer
+  is complete: `mat2doc.text.Font` (character properties over a `w:r` — the 20
+  boolean toggles mapped to their `w:rPr` child tags, plus size half-points,
+  name ascii/hAnsi, the `WD_UNDERLINE` tri-state, highlight, sub/superscript,
+  and color) and `mat2doc.dml.ColorFormat` (rgb / theme_color / the read-only
+  `type` with its THEME > AUTO > RGB detection precedence and the
+  `InvalidXmlError`-on-`themeColor`-without-`@w:val` required-attribute edge).
+  Documents the **API-tier framing** — `ElementProxy` proxies that delegate to
+  the P4-1a `CT_RPr` / `CT_Color` helpers, adding no registry row and no
+  serialization code, so equivalence is **behavioral** and the WP is
+  **byte-neutral** (M1 17/17 unchanged, 0 new D-numbers).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
