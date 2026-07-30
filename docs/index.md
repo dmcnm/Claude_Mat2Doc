@@ -116,7 +116,7 @@ syntax, description, example, ported-from).
   `InvalidXmlError`-on-`themeColor`-without-`@w:val` required-attribute edge).
   The **text/run** page: `mat2doc.text.Run` (the `<w:r>` proxy — `text` get/set,
   the font-delegated `bold`/`italic`/`underline`, `font`, `add_break` with its
-  `WD_BREAK` → `(type_, clear)` map [the `LINE_CLEAR_*` `@w:type`-removal],
+  `WD_BREAK` → `(type_, clear)` map (the `LINE_CLEAR_*` `@w:type`-removal),
   `add_text`/`add_tab`/`clear`, `contains_page_break`, `mark_comment_range`, and
   the live-vs-stub split — `add_picture`→P7, `iter_inner_content`→P4-5b,
   `style`→P4-7) and the inert `mat2doc.text.Text_` (`<w:t>` wrapper, no public
@@ -138,7 +138,23 @@ syntax, description, example, ported-from).
   **behavioral** and each WP is **byte-neutral** (M1 17/17 unchanged, 0 new
   D-numbers) — and the P4-5a G-scenario document byte pin (4 formatted paragraphs
   → `document.xml` byte-identical), the closest guard yet to M2's `add_paragraph`
-  formatting path.
+  formatting path. The **text/paragraph** page — the tier's **last API-tier WP** —
+  completes the user-facing text object model: `mat2doc.text.Paragraph` (the
+  `<w:p>` proxy — `add_run`, `alignment`, `clear`, `contains_page_break`,
+  `hyperlinks`, `insert_paragraph_before` with its distinct `if text:` /
+  `if style is not None` guards, the heterogeneous `iter_inner_content` cell,
+  `paragraph_format`, `rendered_page_breaks`, `runs`, the P4-7 `style` stub, and
+  `text` get/set), `mat2doc.text.Hyperlink` (the read proxy — `address`
+  internal-jump-vs-external-`target_ref`, `fragment`/`url`, `runs`, `text`,
+  `contains_page_break`) and `mat2doc.text.RenderedPageBreak` (the
+  `precedes_all_content` guard + the preceding/following loose-`Paragraph`
+  fragment split incl. the atomic break-inside-hyperlink case). Documents the
+  standing surface shape (homogeneous `1×N` object arrays vs the
+  `iter_inner_content` `1×N` cell, both ACCEPTED at Gate 2), the H5
+  instance-identity regime of the `StoryChild`/`Parented` bases (distinct from the
+  `ElementProxy` element-identity of the earlier proxies), and the s7 ns-decl
+  reopen-check (still unreachable, re-booked at P7). **API tier COMPLETE — the
+  styles chain (P4-6/P4-7) is next → M2.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

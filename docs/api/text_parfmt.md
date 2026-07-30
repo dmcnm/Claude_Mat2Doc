@@ -179,6 +179,7 @@ disp(string(pf.line_spacing_rule));                           % EXACTLY
 
 ---
 
+(tabstops)=
 ## `TabStops`
 
 **Syntax**
@@ -270,6 +271,7 @@ ts.delitem_(1);                                                  % remove the mi
 
 ---
 
+(tabstop)=
 ## `TabStop`
 
 **Syntax**
