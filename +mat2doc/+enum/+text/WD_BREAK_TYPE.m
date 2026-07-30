@@ -30,7 +30,7 @@ classdef WD_BREAK_TYPE
 %   LINE_CLEAR_ALL`` is true, its value is 11, and ``enumeration('...')`` lists
 %   only the 10 canonical members - matching Python exactly.
 %
-%   Consumer: Run.add_break (docx/text/run.py), ported at P4-3; it maps a member
+%   Consumer: Run.add_break (docx/text/run.py), ported at P4-4b; it maps a member
 %   to (w:br type, clear) attribute values via an identity lookup, so member
 %   identity (not the int) is what matters at the call site.
 %
