@@ -5,6 +5,12 @@
 # G-scenario byte/SHA pin in Test_p4_5a_parfmt_api. Pin it binary.
 s0027_document.xml binary
 
-# (The s0024/s0025/s0026 *.json oracles are value/serhex and read in binary mode;
-#  jsondecode is line-ending agnostic, so they need no pin -- s0020/s0023/s0024
-#  precedent. Only the byte-exact XML fixture is pinned here.)
+# s0029_document.xml is the frozen python-docx 1.2.0 word/document.xml (1814 B,
+# LF newline after the prolog) built through the NEW Paragraph API. Same reason:
+# a CRLF translation on the master checkout would grow it to 1815 B and break the
+# G-scenario byte/SHA pin in Test_p4_5b_paragraph_api. Pin it binary.
+s0029_document.xml binary
+
+# (The s0024/s0025/s0026/s0028 *.json oracles are value/serhex and read in binary
+#  mode; jsondecode is line-ending agnostic, so they need no pin -- s0020/s0023/
+#  s0024 precedent. Only the byte-exact XML fixtures are pinned here.)
