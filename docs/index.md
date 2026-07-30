@@ -120,11 +120,25 @@ syntax, description, example, ported-from).
   `add_text`/`add_tab`/`clear`, `contains_page_break`, `mark_comment_range`, and
   the live-vs-stub split — `add_picture`→P7, `iter_inner_content`→P4-5b,
   `style`→P4-7) and the inert `mat2doc.text.Text_` (`<w:t>` wrapper, no public
-  members — the faithful v1.2.0 no-`text`-property port). Documents the
-  **API-tier framing** — proxies that delegate to the P4-1a/P4-1b `CT_RPr` /
-  `CT_Color` / `CT_R` helpers, adding no registry row and no serialization code,
-  so equivalence is **behavioral** and each WP is **byte-neutral** (M1 17/17
-  unchanged, 0 new D-numbers).
+  members — the faithful v1.2.0 no-`text`-property port). The **text/parfmt**
+  page: `mat2doc.text.ParagraphFormat` (paragraph formatting over a pPr owner —
+  alignment, the four bool tri-states [keep_together/keep_with_next/
+  page_break_before/widow_control], signed first-line/left/right indents, space
+  before/after, the polymorphic `line_spacing` with its float-multiple-vs-`Length`
+  detection and the `line_spacing_rule` SINGLE/ONE_POINT_FIVE/DOUBLE special-member
+  map, and the lazy read-only `tab_stops`) and the **first proxy *sequence***
+  `mat2doc.text.TabStops` / `mat2doc.text.TabStop` (the interim explicit sequence
+  surface — `getitem_`/`delitem_`/`len_`/`to_array` with the H1 0-based argument,
+  `add_tab_stop` position-ordering, and `TabStop` position/alignment/leader incl.
+  the SPACES-default absence and the faithful position-setter identity quirk;
+  `RedefinesParen` native `()` indexing deferred to a future collection WP).
+  Documents the **API-tier framing** — proxies that delegate to the
+  P4-1a/P4-1b/P4-2 `CT_RPr` / `CT_Color` / `CT_R` / `CT_PPr` / `CT_TabStops`
+  helpers, adding no registry row and no serialization code, so equivalence is
+  **behavioral** and each WP is **byte-neutral** (M1 17/17 unchanged, 0 new
+  D-numbers) — and the P4-5a G-scenario document byte pin (4 formatted paragraphs
+  → `document.xml` byte-identical), the closest guard yet to M2's `add_paragraph`
+  formatting path.
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
