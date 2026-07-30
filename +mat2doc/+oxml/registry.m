@@ -120,9 +120,10 @@ map = registerElementCls_(map, "w:vertAlign",  "mat2doc.oxml.text.CT_VerticalAli
 map = registerElementCls_(map, "w:webHidden",  "mat2doc.oxml.shared.CT_OnOff");            % __init__.py:225
 % -- run block (docx/oxml/__init__.py:72-78), P4-1b. The 6 run + run-content
 % -- element classes from oxml/text/run.py. (w:drawing @__init__.py:58 ->
-% -- CT_Drawing and w:lastRenderedPageBreak @:74 -> CT_LastRenderedPageBreak are
-% -- OUT of scope, owned by the drawing / pagebreak WPs; w:tab @:249 ->
-% -- CT_TabStop is owned by the parfmt WP.) Listed in __init__.py source order.
+% -- CT_Drawing is OUT of scope, owned by the drawing WP; w:lastRenderedPageBreak
+% -- @:74 -> CT_LastRenderedPageBreak is now registered in the P4-3 block below;
+% -- w:tab @:249 -> CT_TabStop is owned by the parfmt WP.) Listed in __init__.py
+% -- source order.
 map = registerElementCls_(map, "w:br",             "mat2doc.oxml.text.CT_Br");             % __init__.py:72
 map = registerElementCls_(map, "w:cr",             "mat2doc.oxml.text.CT_Cr");             % __init__.py:73
 map = registerElementCls_(map, "w:noBreakHyphen",  "mat2doc.oxml.text.CT_NoBreakHyphen");  % __init__.py:75
@@ -152,6 +153,17 @@ map = registerElementCls_(map, "w:spacing",         "mat2doc.oxml.text.CT_Spacin
 map = registerElementCls_(map, "w:tab",             "mat2doc.oxml.text.CT_TabStop");    % __init__.py:249
 map = registerElementCls_(map, "w:tabs",            "mat2doc.oxml.text.CT_TabStops");   % __init__.py:250
 map = registerElementCls_(map, "w:widowControl",    "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:251
+% -- hyperlink + pagebreak block (docx/oxml/__init__.py:67, :74), P4-3 -- the LAST
+% -- oxml WP of P4. Closes the two P4 carry-forwards: w:hyperlink (CT_P.text over a
+% -- hyperlink now returns the hyperlink's concatenated run text) and
+% -- w:lastRenderedPageBreak (the rendered-page-break element + its split
+% -- machinery; also un-stubs the CLASS resolution in CT_R/CT_P.lastRenderedPageBreaks).
+% -- Listed in __init__.py source order (hyperlink block @:67 precedes the
+% -- text-related block @:74).
+map = registerElementCls_(map, "w:hyperlink", ...
+    "mat2doc.oxml.text.CT_Hyperlink");             % __init__.py:67 (P4-3)
+map = registerElementCls_(map, "w:lastRenderedPageBreak", ...
+    "mat2doc.oxml.text.CT_LastRenderedPageBreak"); % __init__.py:74 (P4-3)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
