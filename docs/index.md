@@ -55,7 +55,15 @@ syntax, description, example, ported-from).
   byte-critical `add_t` `xml:space="preserve"` decision replicating CPython's
   exact `str.strip()` set — the **H16** whitespace hazard — the
   `_RunContentAppender` text→content FSM, and the `CT_Text`/`CT_Br`/`CT_Cr`/
-  `CT_NoBreakHyphen`/`CT_PTab` inner-content leaves).
+  `CT_NoBreakHyphen`/`CT_PTab` inner-content leaves); the **paragraph tier**
+  (`parfmt.py` → `CT_PPr`, the `<w:pPr>` paragraph-properties container whose 12
+  descriptors ride the 36-entry `_tag_seq` with `pStyle` sorting first — the
+  `add_heading` crux — plus `CT_Ind`/`CT_Jc`/`CT_Spacing`/`CT_TabStop`/
+  `CT_TabStops`, and `paragraph.py` → `CT_P`, the `<w:p>` paragraph element); and
+  finally the **hyperlink + rendered-page-break tier** (`hyperlink.py` →
+  `CT_Hyperlink`, and `pagebreak.py` → `CT_LastRenderedPageBreak` with its
+  precedes/follows detection and paragraph fragment-split algorithm) — a
+  byte-neutral pure lookup addition that **completes the text-oxml element layer**.
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC

@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.oxml.text — the paragraph / run / run-properties element tier (CT_P · CT_R · CT_RPr + children)"
+title: "mat2doc.oxml.text — the complete text-oxml element layer (CT_P · CT_R · CT_RPr · CT_PPr · CT_Hyperlink · CT_LastRenderedPageBreak + children)"
 ---
 
-# `mat2doc.oxml.text` — the paragraph / run / run-properties element tier (`CT_P` + `CT_R` + `CT_PPr`/`CT_RPr` + children)
+# `mat2doc.oxml.text` — the complete text-oxml element layer (`CT_P` + `CT_R` + `CT_PPr`/`CT_RPr` + `CT_Hyperlink` + `CT_LastRenderedPageBreak` + children)
 
 Ported from python-docx v1.2.0 `src/docx/oxml/text/font.py` (7 element classes,
 the `<w:rPr>` run-properties tier) **and** `src/docx/oxml/text/run.py` (the
@@ -13,7 +13,7 @@ from `src/docx/oxml/shared.py` (package `+mat2doc/+oxml/+shared/`), and the
 (`src/docx/oxml/__init__.py:198-225` font block + `:72-78` run block).
 
 :::{note}
-This page is built in three passes. **P4-1a** ported the run-**properties** tier
+This page is built in four passes. **P4-1a** ported the run-**properties** tier
 (`font.py` → `CT_RPr` + rPr children); **P4-1b** added the **run** tier
 (`run.py` → `CT_R` + run inner-content + `CT_Text`), which sits one level up:
 `<w:r>` is the run element the `document.xml` body is built from
@@ -22,10 +22,20 @@ This page is built in three passes. **P4-1a** ported the run-**properties** tier
 para-property children `CT_Ind`/`CT_Jc`/`CT_Spacing`/`CT_TabStop`/`CT_TabStops`,
 and `paragraph.py` → `CT_P`), which sits one level up again: `<w:p>` is the
 paragraph the body is a sequence of, and `<w:pPr>` is its first child and the
-`add_heading` write target. All three tiers are on the **M2 byte-critical path**.
-The run-tier material begins at [The run tier — `CT_R`](#the-run-tier-ct_r); the
-paragraph-tier material begins at
-[The paragraph tier — `CT_PPr` and `CT_P`](#the-paragraph-tier-ct_ppr-and-ct_p).
+`add_heading` write target. **P4-3** adds the **hyperlink + rendered-page-break**
+tier (`hyperlink.py` → `CT_Hyperlink`, and `pagebreak.py` →
+`CT_LastRenderedPageBreak`) — the two remaining run-level inner-content classes:
+`<w:hyperlink>` is the second thing (besides `<w:r>`) a paragraph can hold, and
+`<w:lastRenderedPageBreak>` is the renderer-inserted break inside a run that
+`Paragraph.rendered_page_breaks` splits paragraphs on. **P4-3 completes the
+text-oxml layer** (font · run · run-properties · paragraph · paragraph-properties
+· hyperlink · page-break). The first three tiers are on the **M2 byte-critical
+path**; the hyperlink/page-break tier is a **pure lookup addition** (the shipped
+template carries zero of either). The run-tier material begins at
+[The run tier — `CT_R`](#the-run-tier-ct_r); the paragraph-tier material begins at
+[The paragraph tier — `CT_PPr` and `CT_P`](#the-paragraph-tier-ct_ppr-and-ct_p);
+the hyperlink/page-break material begins at
+[The hyperlink + page-break tier](#the-hyperlink-and-pagebreak-tier).
 :::
 
 This is the **first real `w:`-content element tier** in the port. Everything
@@ -693,8 +703,8 @@ The **12 descriptor slices** (own 1-based index → successor slice):
 | `outlineLvl` | 31 | `_tag_seq[31:]` | `TAG_SEQ(32:end)` |
 | `sectPr` | 35 | `_tag_seq[35:]` | `TAG_SEQ(36:end)` |
 
-Like `CT_RPr`, the slices are **non-contiguous** — `w:framePr`@5,
-`w:suppressLineNumbers`@8, `w:pBdr`@9, `w:shd`@10 and a dozen more intervening
+Like `CT_RPr`, the slices are **non-contiguous** — `w:framePr` (idx 5),
+`w:suppressLineNumbers` (8), `w:pBdr` (9), `w:shd` (10) and a dozen more intervening
 `_tag_seq` tags have **no descriptor on `CT_PPr`**, so the slices jump across
 them; the intervening tags are **kept in the successor lists, not collapsed**, so
 a newly-added child still lands correctly relative to a parsed non-descriptor
@@ -973,6 +983,263 @@ disp(order);                                       % "w:pPr"  "w:r"   (pPr-first
 
 ---
 
+(the-hyperlink-and-pagebreak-tier)=
+## The hyperlink + page-break tier — `CT_Hyperlink` and `CT_LastRenderedPageBreak`
+
+`hyperlink.py` ports the **hyperlink element** `<w:hyperlink>` (`CT_Hyperlink`) and
+`pagebreak.py` ports the **rendered page-break element**
+`<w:lastRenderedPageBreak>` (`CT_LastRenderedPageBreak`) — the two remaining
+run-level inner-content classes and the **last oxml work package of P4**. A
+paragraph's inner content is `w:r | w:hyperlink` (a hyperlink is a run container
+that carries its own display text and address); a rendered page-break is the
+empty element a Word *renderer* drops inside a run when it runs out of page, and
+`Paragraph.rendered_page_breaks` splits a paragraph on it.
+
+Unlike the font/run/paragraph tiers, this tier is **not on the M2 byte-critical
+write path**: the shipped `default.docx` carries **zero** `<w:hyperlink>` and
+**zero** `<w:lastRenderedPageBreak>` in `document.xml`, `styles.xml`,
+`stylesWithEffects.xml`, and `numbering.xml`, so registering the two tags is a
+**pure element-lookup addition** — neither class is instantiated during the M1
+sweep, and **M1 stays 17/17 byte-identical** (Gate-3 `pkgcompare` L0 PASS + 16 XML
+L1 + 1 bin; `document.xml` 1548 B & `styles.xml` 349458 B L1). Registering
+`w:hyperlink` also **closes the P4-2 `CT_P.text`-over-hyperlink VERIFY** (below)
+with the registry row alone — no `CT_P` edit.
+
+**This completes the text-oxml element layer** — `font` (P4-1a) · `run` (P4-1b) ·
+`parfmt`/`paragraph` (P4-2) · `hyperlink`/`pagebreak` (P4-3). The text API proxies
+(Font / Run / Paragraph) that consume these elements begin at P4-4.
+
+### `CT_Hyperlink` — attributes, run text, and the `history` non-None default
+
+`CT_Hyperlink` is a run container: it declares `r = ZeroOrMore("w:r")`
+(`r_lst` / `new_r_` / `insert_r_` / `add_r_` / `add_r`, `successors=()` → append)
+plus three `OptionalAttribute`s:
+
+- **`rId`** (`r:id`, `XsdString`, default `None` → `[]`) — the relationship id of
+  an **external** hyperlink target.
+- **`anchor`** (`w:anchor`, `ST_String`, default `None` → `[]`) — the bookmark name
+  of an **internal** hyperlink target.
+- **`history`** (`w:history`, `ST_OnOff`, **`default=True`**) — a **non-None
+  default**, so the D-delta-1 tri-state applies exactly as for `CT_OnOff`: an absent
+  `@w:history` reads back **`true`**; setting `history = false` writes
+  `w:history="0"`; setting `history = true` (== the default) **or** `[]` (None)
+  **removes** `@w:history`. `ST_OnOff.from_xml` maps `1`/`true`/`on` → `true` and
+  `0`/`false`/`off` → `false`.
+
+**`.text`** shadows the lxml `.text` attribute (D10, the same mechanism as
+`CT_R.text` / `CT_P.text`): it is the hyperlink's concatenated **run** text,
+`"".join(r.text for r in self.xpath("w:r"))` over the **direct** `w:r` children,
+ported by overriding the protected `getText_`. It is **read-only** — `setText_`
+raises `mat2doc:AttributeError`. The serializer reads `text_raw_` (bypassing the
+shadow), so the hyperlink's own char data (normally none) serializes unchanged.
+
+**`lastRenderedPageBreaks`** returns every `<w:lastRenderedPageBreak>` descendant
+via `self.xpath("./w:r/w:lastRenderedPageBreak")` (ported as a no-arg method so
+display never evaluates it); now that `CT_LastRenderedPageBreak` is registered in
+the same WP, these resolve to `CT_LastRenderedPageBreak` instances.
+
+### `CT_LastRenderedPageBreak` — the precedes/follows detection algorithm
+
+`CT_LastRenderedPageBreak` (`<w:lastRenderedPageBreak>`) is an **empty** element
+(no attributes, no children) that carries **behaviour**, not data. The schema maps
+`w:lastRenderedPageBreak` to `CT_Empty`; python-docx gives it a distinguished
+complex-type name purely to attach the page-break split machinery. The whole class
+is xpath-driven sibling/descendant traversal, ported faithfully over the `+oxml`
+XPath engine (which already supports the `parent::`, `ancestor::`,
+`following-sibling::`, `preceding-sibling::` axes, `last()`, and `self::` unions in
+predicates — the engine battery was built ahead of this WP).
+
+Four **public** accessors (ported as no-arg **methods** so display never evaluates
+them and the `ValueError` guards fire only on an explicit call):
+
+- **`precedes_all_content`** (common — a break on an even paragraph boundary):
+  `false` if the break is inside a hyperlink (a hyperlink is *atomic*, there is
+  always hyperlink text before it); else non-empty
+  `./w:r[1]/w:lastRenderedPageBreak[not(preceding-sibling::*[<run-inner-content>])]`
+  — i.e. the break is in the **first** run of the paragraph and nothing
+  content-bearing precedes it in that run.
+- **`follows_all_content`** (rare, hand-edited XML): `false` inside a hyperlink;
+  else non-empty
+  `(./w:r)[last()]/w:lastRenderedPageBreak[not(following-sibling::*[<run-inner-content>])]`
+  — the break is in the **last** run and nothing content-bearing follows.
+- **`preceding_fragment_p`** / **`following_fragment_p`**: a loose `CT_P` clone
+  with, respectively, everything **from the break onward** or everything **up to and
+  including the break** removed — the two halves `rendered_page_breaks` yields. Each
+  guards with `self == _first_lrpb_in_p(_enclosing_p)` (H5 handle identity) and
+  raises `mat2doc:ValueError` *"only defined on first rendered page-break in
+  paragraph"* if this is not the paragraph's first break.
+
+The `<run-inner-content>` predicate is the Constant `RUN_INNER_CONTENT_XPATH`,
+ported verbatim (7-term `self::` union, exact `" | "` separators):
+`self::w:br | self::w:cr | self::w:drawing | self::w:noBreakHyphen | self::w:ptab | self::w:t | self::w:tab`.
+
+**Detection truth table** (Gate-3 `s0023`, 8 sample trees, MATLAB == python-docx on
+all — the first break of each is probed):
+
+| tree | shape | `precedes` | `follows` | note |
+|---|---|---|---|---|
+| t1 | `<r><lrpb/><t>text</t></r>` | **true** | false | break precedes all content (common even-boundary case) |
+| t2 | `<r><t>text</t><lrpb/></r>` | false | **true** | break follows all content |
+| t3 | `<r><t>a</t><lrpb/><t>b</t></r>` | false | false | mid-run |
+| t4 | hyperlink-enclosed lrpb | false | false | in a hyperlink → both false (atomic) |
+| t5 | `<r/><r><lrpb/><t>x</t></r>` | false | false | **the `w:r[1]`-only subtlety** — empty run-1, break at start of run-2 |
+| t6 | two breaks in one run | false | false | first break; second → the `ValueError` guard |
+| t7 | `<r><lrpb/></r>` | **true** | **true** | sole-content break (contrived T/T, not precluded by spec) |
+| t8 | `<pPr>…</pPr><r><lrpb/><t>text</t></r>` | **true** | false | break-precedes with a `w:pPr` present |
+
+### Fragment splits — atomic hyperlink vs bare run, byte-identical
+
+`preceding_fragment_p` / `following_fragment_p` build the two halves on a
+**`deepcopy` clone** of the enclosing `w:p` (mutations never touch the live tree).
+The split differs by whether the break is inside a hyperlink:
+
+- **Bare run** (`_preceding_frag_in_run` / `_following_frag_in_run`): remove all
+  `w:p` inner-content on the far side of the break's **run** (keeping `w:pPr`), then
+  remove all run inner-content on the far side of the break **within** its run
+  (keeping `w:rPr`), then remove the break itself.
+- **Atomic hyperlink** (`_preceding_frag_in_hlink` / `_following_frag_in_hlink`): a
+  page-break inside a hyperlink is not "split" — the **whole hyperlink** goes into
+  the *preceding* fragment (only the break is removed from inside it), and the
+  *following* fragment drops the hyperlink and everything before it.
+
+Gate-3 froze six split trees and compared **both** the fragment `.text` **and** the
+raw-UTF-8 `serialize_part_xml` bytes (`serhex`, a byte pin) — all MATLAB ==
+python-docx: t1 `""`/`"text"`, t2 `"text"`/`""`, t3 `"a"`/`"b"`, **t4 (atomic
+hyperlink) `"prexy"`/`"post"`**, t7 `""`/`""`, and **t8 (`w:pPr` retained in both
+fragments** — the `not(self::w:pPr)` filter proven at the byte level). The atomic
+t4 case also serializes the parsed `xmlns:w`/`xmlns:r` declarations
+**byte-identically** — confirming the D-serializer-nsdecl verbatim-until-moved fix
+holds for these clone-and-mutate splits.
+
+The six `@lazyproperty` members (`_is_in_hyperlink`, the four frag builders, and
+`_run_inner_content_xpath` — a lazyproperty over a fixed literal → a `Constant`)
+are cached with a **value + logical computed-flag** pair (design.md §2 — never
+`isempty` as the sentinel). Caching is **faithful**, not merely an optimization:
+each public Python `@property` re-reads the cached fragment, so after a hypothetical
+tree mutation both Python and this port return the **stale** first fragment (Gate-2
+proved this live on both sides).
+
+### The P4-2 `CT_P.text`-over-hyperlink closure
+
+At P4-2, `w:hyperlink` was unregistered, so `CT_P.text` over a paragraph
+*containing* a hyperlink returned the generic element's own char data. Registering
+`w:hyperlink` → `CT_Hyperlink` this WP flips it to the hyperlink's concatenated run
+text — **with no `CT_P` edit**. Gate-3 `s0023`:
+`<w:p><w:r>Before </w:r><w:hyperlink r:id="rId1"><w:r>link</w:r></w:hyperlink><w:r> after</w:r></w:p>`
+→ `p.text == "Before link after"` (MATLAB == python-docx). This is the same
+dependency-order shape as the `w:tab` gap P4-2 closed.
+
+:::{note}
+**Accepted deviation — the s7 created-element nsdecl residual (no new D-number).**
+On a **loose created** `<w:hyperlink>` serialized standalone, setting `rId` mints an
+`xmlns:ns0` for the relationships URI; **clearing `rId`** then leaves it orphaned —
+lxml keeps the now-unused `xmlns:ns0` while the Mat2Doc serializer recomputes the
+used namespaces and drops it. The two forms have **identical elements, attributes,
+text, and expanded names** (exclusive-C14N-equal); the difference is
+namespace-declaration-only. It is a **created-element manifestation of the signed
+`D-serializer-nsdecl`** (whose declaration-emission fix covered *parsed* verbatim
+nodes only), carried as an **accepted, deferred residual — no new D-number**. It is
+**unreachable on every real path**: real hyperlinks keep their `rId`, and a
+hyperlink inside `document.xml` is rooted under `w:document` (which already declares
+`xmlns:r`) so `r:id` uses the existing prefix and no namespace is ever minted — M1
+stays 17/17 byte-neutral. Reopen-check booked at **P4-5b** (`add_hyperlink`) and
+**P7** (`add_picture`). See
+`validation\summary\decision_2026-07-28_nsdecl_created_element_orphan.md` and the
+`D-serializer-nsdecl` proof.
+:::
+
+---
+
+## `CT_Hyperlink`
+
+**Syntax**
+
+```matlab
+h = mat2doc.oxml.OxmlElement("w:hyperlink");   % a CT_Hyperlink (registered)
+h.rId    = "rId7";                              % external target relationship id
+h.anchor = "section1";                          % OR an internal bookmark name
+tf       = h.history;                           % true when @w:history absent (default)
+r = h.add_r();                                   % append a <w:r/>
+txt = h.text;                                    % concatenated run text (shadow, D10)
+```
+
+**Description**
+
+The `<w:hyperlink>` element — a run container carrying a hyperlink's display text
+and address. `r = ZeroOrMore("w:r")` (`r_lst` / `new_r_` / `insert_r_` / `add_r_` /
+`add_r`, `successors=()` → append). Three `OptionalAttribute`s: `rId` (`r:id`,
+`XsdString`, default `None` → `[]`), `anchor` (`w:anchor`, `ST_String`, default
+`None` → `[]`), and `history` (`w:history`, `ST_OnOff`, **`default=True`**) — a
+non-None default driving the D-delta-1 tri-state (absent → `true`; `false` →
+`w:history="0"`; `true` (== default) or `[]` → `@w:history` removed). `.text`
+shadows the lxml `.text` (a computed join of the direct `w:r` children's live
+`CT_R.text`, ported via `getText_`, D10) and is **read-only** — `setText_` raises
+`mat2doc:AttributeError`. `lastRenderedPageBreaks` returns the
+`./w:r/w:lastRenderedPageBreak` descendants. Registering this class closes the P4-2
+`CT_P.text`-over-hyperlink VERIFY.
+
+**Example**
+
+```matlab
+h = mat2doc.oxml.OxmlElement("w:hyperlink");
+disp(h.history);                 % 1  (true — @w:history absent; default True)
+h.rId = "rId7";                  % <w:hyperlink r:id="rId7">
+r = h.add_r();  r.add_t("here");
+disp(h.text);                    % "here"  (concatenated run text)
+h.history = false;               % serializes @w:history="0"
+disp(h.history);                 % 0  (false)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/hyperlink.py::CT_Hyperlink`*
+
+---
+
+## `CT_LastRenderedPageBreak`
+
+**Syntax**
+
+```matlab
+% a break at the start of a paragraph's first run
+brks = p.xpath("./w:r/w:lastRenderedPageBreak");  % index in two steps —
+lrpb = brks(1);                                    % MATLAB has no f(...)(1) chained index
+tf   = lrpb.precedes_all_content();    % often true (even paragraph boundary)
+frag = lrpb.preceding_fragment_p();    % loose CT_P: the break and all that follows removed
+```
+
+**Description**
+
+The `<w:lastRenderedPageBreak>` element — a renderer-inserted page break, an empty
+element that is a child of `CT_R` (peer to `CT_Text`). It carries the
+precedes/follows **detection** and the paragraph fragment-**split** algorithm that
+`Paragraph.rendered_page_breaks` (a later WP) is built on. `precedes_all_content`
+is `false` inside a hyperlink, else true iff the break is in the paragraph's first
+run with no content-bearing sibling before it; `follows_all_content` is the
+last-run mirror. `preceding_fragment_p` / `following_fragment_p` return loose `CT_P`
+clones split at the break (atomic when the break is inside a hyperlink — the whole
+hyperlink stays with the preceding page), each raising `mat2doc:ValueError` unless
+this is the paragraph's first break. `RUN_INNER_CONTENT_XPATH` (the 7-term `self::`
+union) is a verbatim `Constant`; the six `@lazyproperty` members use the design.md
+§2 value + logical-flag cache.
+
+**Example**
+
+```matlab
+% <w:p><w:r><w:lastRenderedPageBreak/><w:t>text</w:t></w:r></w:p>
+xml = "<w:p xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">" + ...
+      "<w:r><w:lastRenderedPageBreak/><w:t>text</w:t></w:r></w:p>";
+p = mat2doc.oxml.parse_xml(xml);
+brks = p.xpath("./w:r/w:lastRenderedPageBreak");
+lrpb = brks(1);                            % MATLAB has no f(...)(1) chained index
+disp(lrpb.precedes_all_content());         % 1  (true — break precedes all content)
+disp(lrpb.follows_all_content());          % 0  (false)
+fp = lrpb.following_fragment_p();
+disp(fp.text);                             % "text"  (content after the break)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/text/pagebreak.py::CT_LastRenderedPageBreak`*
+
+---
+
 ## Deviation posture — 0 new D-numbers
 
 P4-1a opened **no new deviation**. Every divergence maps to a ruling already
@@ -1027,3 +1294,23 @@ P4)"*) had explicitly predicted the flip. Gate-4 re-pinned the 8 (relaxed the 7
 `Test_p2_3_document_shell`) and added 9 new permanent P4-2 tests — **cold total
 566 → 575**. The equivalence surface was byte-correct throughout.
 :::
+
+**P4-3 (the hyperlink + page-break tier) completes the text-oxml layer with 0 new
+D-numbers.** The entire behavioural + byte surface is equivalent to python-docx
+1.2.0 — M1 17/17 L1, the `CT_LastRenderedPageBreak` detection over 8 trees, the
+fragment-split byte pins (incl. the atomic-hyperlink and `w:pPr`-retention cases),
+the second-break `ValueError` guard, the `CT_Hyperlink` `history` H3 tri-state
+(7/8 mutation steps byte-identical), `CT_Hyperlink.text`, and the `CT_P.text`-over-
+hyperlink closure — with **regression 575/575 GREEN** and **zero stale-pin flips**
+(the `w:hyperlink` / `w:lastRenderedPageBreak` xpath results are not exact-class-
+pinned anywhere). The **one** divergence is the accepted **s7 created-element
+`ns0` residual** documented in the tier note above — a **manifestation of the
+signed `D-serializer-nsdecl`** (created-element minted-then-orphaned sub-case,
+which its parsed-verbatim fix did not cover), **no new D-number**. It is
+namespace-declaration-only (exclusive-C14N-equal), reads **L3 only** under
+`pkgcompare`'s full-in-scope-nsmap canonicalizer, and is **unreachable on every
+real path** (real hyperlinks keep their `rId`; document-tree hyperlinks use the
+root's `xmlns:r` and never mint `ns0`). Recorded **PASS-DEVIATION(D-serializer-
+nsdecl)**, ACCEPTED/deferred with a P4-5b/P7 reopen-check
+(`decision_2026-07-28_nsdecl_created_element_orphan.md`); Gate-4 pins the port's
+actual s7 output with a known-deviation guard. No ledger row was added.
