@@ -39,9 +39,10 @@ project:
     - title: Story-part tier (parts)
       children:
         - file: api/parts.md
-    - title: Text/font API tier (P4 API tier)
+    - title: Text API tier (P4 API tier)
       children:
         - file: api/text_font.md
+        - file: api/text_run.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
