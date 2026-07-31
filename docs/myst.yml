@@ -55,6 +55,7 @@ project:
     - title: Sections & settings tier (Phase 5)
       children:
         - file: api/settings.md
+        - file: api/oxml_section.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

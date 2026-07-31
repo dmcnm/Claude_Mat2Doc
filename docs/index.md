@@ -222,8 +222,21 @@ syntax, description, example, ported-from).
   neutrally** — `word/settings.xml` now transits `CT_Settings`, M1 17/17 preserved — and
   un-stubs the settings delegation across `SettingsPart`/`DocumentPart`/`Document`. The
   novel write path (insert `<w:evenAndOddHeaders/>`) and remove path are **byte-identical
-  to python-docx** (`s0037`/`s0038`), **0 new D-numbers**. **Settings done — sections
-  (P5-2a CT_SectPr / page geometry) and headers/footers (P5-2b/P5-3b) next.**
+  to python-docx** (`s0037`/`s0038`), **0 new D-numbers**. The **section oxml core** page
+  (**P5-2a**) opens the sections tier: `mat2doc.oxml.section.CT_SectPr` (the `<w:sectPr>`
+  section-properties root — its 20-tag `TAG_SEQ` and the H11 successor slices, the page
+  geometry `page_width`/`page_height`/margins accessors over `w:pgSz`/`w:pgMar`, the
+  orientation setter with the **NO-w/h-swap** semantics, the `start_type` identity setter,
+  the `titlePg_val` `[None, False]` `==`-membership breadth, and the header/footer reference
+  surface) and the four child classes `CT_PageSz` / `CT_PageMar` (the signed-vs-unsigned
+  twips split) / `CT_SectType` / `CT_HdrFtrRef`. Registers **7 tags** (`w:sectPr`/`pgMar`/
+  `pgSz`/`type`→CTs, `w:headerReference`/`w:footerReference`→`CT_HdrFtrRef`,
+  `w:titlePg`→`CT_OnOff` [the P5-1 deferral closed]) **byte-neutrally** on the **M1-central**
+  `word/document.xml` (17/17 preserved, SHA `0e4dd503…` unchanged); the geometry-write /
+  LANDSCAPE novel paths are byte-identical to python-docx (`s0040`/`s0041`), the loose-element
+  `r:` auto-prefix is the pre-existing SIGNED **D-nsprefix-rewrite** (dead-on-generation),
+  **0 new D-numbers**. **Settings + section oxml core done — CT_HdrFtr + the section iterator
+  (P5-2b), then the Section/Sections API (P5-3a) and headers/footers (P5-3b) next.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
