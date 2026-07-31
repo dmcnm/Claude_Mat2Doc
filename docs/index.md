@@ -274,6 +274,26 @@ syntax, description, example, ported-from).
   **COM-verified in real Word** (all four packages open clean; `DifferentFirstPage` rendered).
   **★ PHASE 5 COMPLETE — sections, settings and headers/footers all done + COM-verified; the cross-part
   hazard (risk-register #4) cleared.** See the [headers & footers page](api/headers_footers.md).
+- **Tables tier (Phase 6)** — **Phase 6 begins** (the table object model). The
+  **table oxml LEAF** page opens it: the seven attribute-only / single-list leaf
+  classes of `oxml/table.py` — `mat2doc.oxml.table.CT_TblWidth` (the width union:
+  `dxa`→`Length`, `pct`/`auto`/`nil`→None, the setter that forces `type="dxa"`),
+  `CT_Height` (`val` + `hRule` `WD_ROW_HEIGHT_RULE`), the column grid `CT_TblGrid`
+  / `CT_TblGridCol` (the D-delta-4 public `add_gridCol`, the 0-based `gridCol_idx`),
+  `CT_TblLayoutType` (fixed vs autofit), `CT_VerticalJc`
+  (`WD_CELL_VERTICAL_ALIGNMENT`, required `@w:val`), and `CT_VMerge`
+  (restart/continue, the sole `"continue"` non-None default). Registers the
+  **7 leaf tags** (`w:gridCol`/`w:tblGrid`/`w:tblLayout`/`w:tcW`/`w:trHeight`/
+  `w:vAlign`/`w:vMerge`) **M1-NEUTRALLY** — `default.docx` has no table, so nothing
+  transits the new classes (M1 17/17 preserved, **zero re-pins**) — with the C4
+  brief-correction that `w:tblW` is **not** registered upstream (only `w:tcW`). The
+  table-leaf subtrees of a real python-docx table round-trip **byte-identical**
+  (10/10, `references\s0060`) and the width union is byte-proven both ways,
+  **0 new D-numbers**. The container classes (`CT_TblPr`/`CT_TblPrEx`/`CT_TrPr`/
+  `CT_Row` → P6-2; the **CT_Tc merge engine** at **P6-3a**, the hardest WP, with its
+  own pre-launch plan-audit; `CT_TcPr`/`CT_Tbl` → P6-3b; the `Table`/`_Cell` API →
+  P6-4a/b + the table Word-COM sweep) follow. See the
+  [table oxml page](api/oxml_table.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

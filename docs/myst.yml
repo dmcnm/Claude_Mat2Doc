@@ -58,6 +58,9 @@ project:
         - file: api/oxml_section.md
         - file: api/section_api.md
         - file: api/headers_footers.md
+    - title: Tables tier (Phase 6)
+      children:
+        - file: api/oxml_table.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
