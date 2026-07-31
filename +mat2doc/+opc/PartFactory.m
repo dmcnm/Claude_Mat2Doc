@@ -39,9 +39,9 @@ classdef PartFactory
 %   the base-XmlPart stand-in to the real class; because every one inherits
 %   XmlPart.blob unchanged (parse+re-serialize), the emitted bytes are identical
 %   -- only the reloaded part's TYPE changes. Ported so far: CorePropertiesPart
-%   (P1-7), DocumentPart (P1-8), StylesPart/SettingsPart/NumberingPart (P2-2).
-%   Still base-XmlPart stand-ins: WML_COMMENTS (P8-2), WML_FOOTER/WML_HEADER
-%   (P5-3b). The IMAGE selector still maps to the base mat2doc.opc.Part (ImagePart
+%   (P1-7), DocumentPart (P1-8), StylesPart/SettingsPart/NumberingPart (P2-2),
+%   HeaderPart/FooterPart (P5-3b). Still base-XmlPart stand-in: WML_COMMENTS
+%   (P8-2). The IMAGE selector still maps to the base mat2doc.opc.Part (ImagePart
 %   is P7). This preserves the M1 collapse/passthrough BYTE behavior throughout.
 %
 %   ARG ORDER (docx): create(partname, content_type, reltype, blob, package) and
@@ -126,16 +126,17 @@ classdef PartFactory
             %   (M1-required). P2-2 flips the three thin XmlPart shells now ported:
             %   WML_STYLES -> StylesPart, WML_SETTINGS -> SettingsPart,
             %   WML_NUMBERING -> NumberingPart (mirrors docx/__init__.py 49-51).
-            %   Re-proven byte-neutral by the 17/17 M1 sweep. Still base-XmlPart
-            %   stand-ins: WML_COMMENTS (P8-2), WML_FOOTER/WML_HEADER (P5-3b).
+            %   Re-proven byte-neutral by the 17/17 M1 sweep. P5-3b flips
+            %   WML_FOOTER -> FooterPart, WML_HEADER -> HeaderPart (StoryPart<XmlPart
+            %   shells). Still base-XmlPart stand-in: WML_COMMENTS (P8-2).
             CT  = mat2doc.opc.CONTENT_TYPE;
             XP  = "mat2doc.opc.XmlPart";   % base XmlPart -> parse + re-serialize
             reg = [ ...
                 CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart";  ...  % P1-8 flip (P1-7 class)
                 CT.WML_COMMENTS,        XP;                             ...  % P8-2: CommentsPart (StoryPart<XmlPart)
                 CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";   ...  % P1-8 flip (M1-required)
-                CT.WML_FOOTER,          XP;                             ...  % P5-3b: FooterPart (StoryPart<XmlPart)
-                CT.WML_HEADER,          XP;                             ...  % P5-3b: HeaderPart (StoryPart<XmlPart)
+                CT.WML_FOOTER,          "mat2doc.parts.FooterPart";     ...  % P5-3b flip (StoryPart<XmlPart shell)
+                CT.WML_HEADER,          "mat2doc.parts.HeaderPart";     ...  % P5-3b flip (StoryPart<XmlPart shell)
                 CT.WML_NUMBERING,       "mat2doc.parts.NumberingPart";  ...  % P2-2 flip (thin XmlPart shell)
                 CT.WML_SETTINGS,        "mat2doc.parts.SettingsPart";   ...  % P2-2 flip (thin XmlPart shell)
                 CT.WML_STYLES,          "mat2doc.parts.StylesPart"];         % P2-2 flip (thin XmlPart shell)

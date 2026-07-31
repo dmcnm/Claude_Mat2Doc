@@ -30,6 +30,24 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
 %   UNDERSCORE ROTATION (design.md section 2): _element -> element_,
 %   _add_paragraph -> add_paragraph_.
 %
+%   ============================ C3 ELEMENT-ACCESSOR SEAM (P5-3b) ================
+%   python-docx's `_BaseHeaderFooter` (section.py 289-354) NEVER stores
+%   `self._element`; it overrides `_element` as a LAZY @property returning
+%   `self._get_or_add_definition().element` -- the header/footer part is created
+%   on first content access. MATLAB CANNOT redefine a stored property in a
+%   subclass, so a naive port (element_ as a plain stored property) would give the
+%   header the wrong element. Resolution: `element_` is a zero-arg PROTECTED
+%   METHOD (the house property-as-method convention) backed by the concrete store
+%   `element_store_`. The base seam returns the stored handle; every internal
+%   BlockItemContainer element use routes through `obj.element_()`. Because a
+%   zero-arg method is read with the SAME `obj.element_` dot-syntax a property
+%   would use, this refactor is BYTE-NEUTRAL for every existing subclass (Body_
+%   passes a concrete element to the constructor; Document is NOT a
+%   BlockItemContainer -- it extends ElementProxy). mat2doc.section.BaseHeaderFooter_
+%   OVERRIDES element_() to return get_or_add_definition_().element() (lazy
+%   part-creation), reproducing the python-docx semantics exactly. Proven
+%   byte-neutral by the M1 17/17 + M2 s0033 sweeps (audit_P5-3b).
+%
 %   Example:
 %       % A container wraps a block element (e.g. a CT_Body) and a story parent.
 %       body_elm = d.element.body;                 % a CT_Body
@@ -39,7 +57,7 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
 %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer
 
     properties (Access = protected)
-        element_        % _element: the wrapped block element (a CT_Body / CT_Tc / ...)
+        element_store_  % _element backing store (READ via the element_() seam, C3)
     end
 
     methods
@@ -55,7 +73,7 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::
             %   BlockItemContainer.__init__
             obj@mat2doc.shared.StoryChild(parent);
-            obj.element_ = element;
+            obj.element_store_ = element;   % C3: concrete store, read via element_()
         end
 
         function paragraph = add_paragraph(obj, text, style)
@@ -124,7 +142,7 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             %   CT_Body.p_lst is LIVE (P2-3); empty -> a 1x0 Paragraph array.
             %
             %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.paragraphs
-            plst = obj.element_.p_lst;
+            plst = obj.element_().p_lst;   % C3 seam (lazy for header/footer)
             ps = mat2doc.text.Paragraph.empty(1, 0);
             for k = 1:numel(plst)   % Python: for p in self._element.p_lst
                 ps(k) = mat2doc.text.Paragraph(plst(k), obj);   % Paragraph(p, self)
@@ -150,7 +168,19 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             %   _add_paragraph -> add_paragraph_.
             %
             %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer._add_paragraph
-            p = mat2doc.text.Paragraph(obj.element_.add_p(), obj);
+            p = mat2doc.text.Paragraph(obj.element_().add_p(), obj);   % C3 seam
+        end
+
+        function e = element_(obj)
+            % ELEMENT_ C3 SEAM (P5-3b): the block element this container operates
+            %   on. Base behavior returns the concrete store set at construction
+            %   (element_store_). mat2doc.section.BaseHeaderFooter_ OVERRIDES this
+            %   to return get_or_add_definition_().element() -- python-docx's lazy
+            %   `_element` @property (section.py 351-354). Every internal
+            %   BlockItemContainer element use (add_paragraph_/paragraphs) reads
+            %   through this seam; `obj.element_` dot-syntax still works because a
+            %   zero-arg method reads like a property (byte-neutral for Body_).
+            e = obj.element_store_;
         end
     end
 end

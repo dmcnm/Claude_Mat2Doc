@@ -342,11 +342,15 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % DocumentPart.get_style_id / StylesPart.styles.
             % REGISTRY-FLIP RE-PIN (P5-1 Gate-4): P5-1 un-stubbed the settings
             % delegation, so TWO MORE now RESOLVE and moved to the positive block
-            % below -- DocumentPart.settings / SettingsPart.settings (8 -> 6). The
-            % remaining SIX are genuine stubs (numbering/images/header/footer tiers)
-            % and stay pinned notYetPorted. (Only the "settings"-related paths
-            % flipped this WP; everything else is intact -- the registry-flip
-            % stale-pins lesson.)
+            % below -- DocumentPart.settings / SettingsPart.settings (8 -> 6).
+            % REGISTRY-FLIP RE-PIN (P5-3b Gate-4): P5-3b un-stubbed the hdr/ftr part
+            % factories, so add_header_part / add_footer_part now RESOLVE (return
+            % [part, rId]) and moved to the positive block below (6 -> 4). The
+            % remaining FOUR are genuine stubs (numbering / images tiers) and stay
+            % pinned notYetPorted. (Only the hdr/ftr-related paths flipped this WP;
+            % everything else is intact -- the registry-flip stale-pins lesson. The
+            % full add/get/drop hdr/ftr surface is pinned in
+            % tests\section\Test_p5_3b_hdrftr_api.m.)
             pkg = testCase.openPkg();
             dp = pkg.main_document_part();
             sp = dp.styles_part_();      % real StylesPart
@@ -355,11 +359,9 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             calls = { ...
                 @() dp.numbering_part(),         'DocumentPart.numbering_part'; ...
                 @() dp.inline_shapes(),          'DocumentPart.inline_shapes'; ...
-                @() dp.add_header_part(),         'DocumentPart.add_header_part'; ...
-                @() dp.add_footer_part(),         'DocumentPart.add_footer_part'; ...
                 @() dp.get_or_add_image("x.png"), 'StoryPart.get_or_add_image'; ...
                 @() np.numbering_definitions(),   'NumberingPart.numbering_definitions'};
-            testCase.verifyEqual(size(calls, 1), 6, 'exactly 6 genuine feature stubs remain after the P4-7a styles + P5-1 settings un-stubs');
+            testCase.verifyEqual(size(calls, 1), 4, 'exactly 4 genuine feature stubs remain after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr un-stubs');
             for k = 1:size(calls, 1)
                 caught = testCase.catchCall(calls{k, 1});
                 testCase.assertNotEmpty(caught, ...
@@ -388,6 +390,21 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % over the SAME CT_Settings element, so they compare == True.
             testCase.verifyTrue(dp.settings() == st.settings(), ...
                 'H5: DocumentPart.settings == SettingsPart.settings (same element)');
+
+            % --- the two hdr/ftr part factories P5-3b un-stubbed now RESOLVE ---
+            % add_header_part / add_footer_part return [part, rId]: a
+            % HeaderPart/FooterPart (HeaderPart/FooterPart.new via next_partname)
+            % plus the string rId from relate_to (RT.HEADER / RT.FOOTER). The full
+            % add/get/drop surface + the header/footer byte packages are pinned in
+            % tests\section\Test_p5_3b_hdrftr_api.m; here it is only the un-stub.
+            [hdrPart, hRid] = dp.add_header_part();
+            testCase.verifyClass(hdrPart, 'mat2doc.parts.HeaderPart', ...
+                'DocumentPart.add_header_part RESOLVES to a HeaderPart (un-stubbed at P5-3b)');
+            testCase.verifyClass(hRid, 'string', 'add_header_part returns a string rId');
+            [ftrPart, fRid] = dp.add_footer_part();
+            testCase.verifyClass(ftrPart, 'mat2doc.parts.FooterPart', ...
+                'DocumentPart.add_footer_part RESOLVES to a FooterPart (un-stubbed at P5-3b)');
+            testCase.verifyClass(fRid, 'string', 'add_footer_part returns a string rId');
         end
 
         function test_numberingpart_new_raises_notimplemented(testCase)

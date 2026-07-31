@@ -1,0 +1,8 @@
+# Byte-exact frozen fixtures for the Mat2Doc P5-3b hdr/ftr Gate-4 suite.
+# s0058_source.docx is the python-docx-generated header+footer package opened by
+# the reload round-trip test (validation references/s0058/_source.docx). Keep
+# CRLF/encoding translation OFF so the master checkout stays byte-identical, or
+# Mat2Doc reads different header/footer bytes and the 19/19 reload pin fails.
+# (The *.json value oracles are jsondecode line-ending agnostic; only the .docx
+# needs the binary pin -- byte-fixture .gitattributes lesson.)
+*.docx binary

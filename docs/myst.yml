@@ -52,11 +52,12 @@ project:
     - title: Styles API tier (styles)
       children:
         - file: api/styles_api.md
-    - title: Sections & settings tier (Phase 5)
+    - title: Sections, settings & headers/footers tier (Phase 5 — COMPLETE)
       children:
         - file: api/settings.md
         - file: api/oxml_section.md
         - file: api/section_api.md
+        - file: api/headers_footers.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

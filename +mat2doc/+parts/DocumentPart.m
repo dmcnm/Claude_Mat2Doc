@@ -25,8 +25,10 @@ classdef DocumentPart < mat2doc.parts.StoryPart
 %       numbering_part      -> P8-1 (NumberingPart.new / numbering definitions)
 %       comments / _comments_part -> P8-2 (CommentsPart + Comments)
 %       inline_shapes       -> P7   (InlineShapes)
-%       add/drop/footer/header_part -> P5-3b (Header/FooterPart)
 %       get_style / get_style_id -> P4-7 (styles resolution)
+%     LIVE at P5-3b (header/footer separate-part wiring):
+%       add_header_part / add_footer_part -> Header/FooterPart.new + relate_to
+%       drop_header_part -> drop_rel; header_part / footer_part -> related_parts[rId]
 %
 %   IDENTITY (H5/H9): _styles_part/_settings_part are PLAIN @property (docx
 %   document.py 156-169), NOT lazyproperty -- each call runs part_related_by; on
@@ -136,18 +138,32 @@ classdef DocumentPart < mat2doc.parts.StoryPart
         % owner (FLAG-B corrected: NOT "P2 <x> tier"). NONE is on open->save.
         % ------------------------------------------------------------------
 
-        function [footer_part, rId] = add_footer_part(obj) %#ok<MANU,STOUT>
-            % ADD_FOOTER_PART STUB (parts/document.py 35-39). Owner: P5-3b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.FooterPart (owning WP: P5-3b header/footer tier) " + ...
-                "required by mat2doc.parts.DocumentPart.add_footer_part");
+        function [footer_part, rId] = add_footer_part(obj)
+            % ADD_FOOTER_PART (parts/document.py 35-39): the (footer_part, rId)
+            %   pair for a newly-created footer part. Python:
+            %     footer_part = FooterPart.new(self.package)
+            %     rId = self.relate_to(footer_part, RT.FOOTER)
+            %     return footer_part, rId
+            %   UN-STUBBED at P5-3b. relate_to is LIVE (P2-2); FooterPart.new
+            %   creates word/footerN.xml (next_partname) with the default template.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.add_footer_part
+            footer_part = mat2doc.parts.FooterPart.new(obj.package());
+            rId = obj.relate_to(footer_part, mat2doc.opc.RELATIONSHIP_TYPE.FOOTER);
         end
 
-        function [header_part, rId] = add_header_part(obj) %#ok<MANU,STOUT>
-            % ADD_HEADER_PART STUB (parts/document.py 41-45). Owner: P5-3b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.HeaderPart (owning WP: P5-3b header/footer tier) " + ...
-                "required by mat2doc.parts.DocumentPart.add_header_part");
+        function [header_part, rId] = add_header_part(obj)
+            % ADD_HEADER_PART (parts/document.py 41-45): the (header_part, rId)
+            %   pair for a newly-created header part. Python:
+            %     header_part = HeaderPart.new(self.package)
+            %     rId = self.relate_to(header_part, RT.HEADER)
+            %     return header_part, rId
+            %   UN-STUBBED at P5-3b. relate_to is LIVE (P2-2); HeaderPart.new
+            %   creates word/headerN.xml (next_partname) with the default template.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.add_header_part
+            header_part = mat2doc.parts.HeaderPart.new(obj.package());
+            rId = obj.relate_to(header_part, mat2doc.opc.RELATIONSHIP_TYPE.HEADER);
         end
 
         function c = comments(obj) %#ok<MANU,STOUT>
@@ -157,21 +173,33 @@ classdef DocumentPart < mat2doc.parts.StoryPart
                 "WP: P8-2 comments tier) required by mat2doc.parts.DocumentPart.comments");
         end
 
-        function drop_header_part(obj, rId) %#ok<INUSD,MANU>
-            % DROP_HEADER_PART STUB (parts/document.py 63-65). Owner: P5-3b.
-            %   Faithful body is `self.drop_rel(rId)` (drop_rel is LIVE at P2-2);
-            %   the accessor stays stubbed until the P5-3b header/footer tier
-            %   wires the caller (Section header/footer handling).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.DocumentPart.drop_header_part (owning WP: P5-3b " + ...
-                "header/footer tier) is not yet ported");
+        function drop_header_part(obj, rId)
+            % DROP_HEADER_PART (parts/document.py 63-65): remove the related header
+            %   part identified by `rId`. Python: self.drop_rel(rId). UN-STUBBED at
+            %   P5-3b. drop_rel is LIVE (P2-2, ref-count < 2 threshold).
+            %
+            %   ASYMMETRY (preserved verbatim, cross-part audit C): only the HEADER
+            %   drop path goes through this DocumentPart method (section.py 460-463,
+            %   _Header._drop_definition -> drop_header_part). The FOOTER drop path
+            %   (section.py 414-417, _Footer._drop_definition) calls
+            %   self._document_part.drop_rel(rId) DIRECTLY -- there is NO
+            %   drop_footer_part in python-docx. Do not "tidy" this into symmetry.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.drop_header_part
+            obj.drop_rel(rId);
         end
 
-        function fp = footer_part(obj, rId) %#ok<INUSD,MANU,STOUT>
-            % FOOTER_PART STUB (parts/document.py 67-69). Owner: P5-3b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.FooterPart (owning WP: P5-3b header/footer tier) " + ...
-                "required by mat2doc.parts.DocumentPart.footer_part");
+        function fp = footer_part(obj, rId)
+            % FOOTER_PART (parts/document.py 67-69): the FooterPart related by
+            %   `rId`. Python: return self.related_parts[rId]. UN-STUBBED at P5-3b.
+            %   related_parts is the {rId -> target Part} dictionary (values stored
+            %   as 1x1 cells, P1-5 currency); [rId] -> unwrap the cell (H5: the
+            %   live related part handle).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.footer_part
+            rp = obj.related_parts();       % dictionary(string -> cell)
+            cellval = rp(rId);              % Python: related_parts[rId]
+            fp = cellval{1};
         end
 
         function style = get_style(obj, style_id, style_type)
@@ -198,11 +226,17 @@ classdef DocumentPart < mat2doc.parts.StoryPart
             style_id = obj.styles().get_style_id(style_or_name, style_type);
         end
 
-        function hp = header_part(obj, rId) %#ok<INUSD,MANU,STOUT>
-            % HEADER_PART STUB (parts/document.py 89-91). Owner: P5-3b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.HeaderPart (owning WP: P5-3b header/footer tier) " + ...
-                "required by mat2doc.parts.DocumentPart.header_part");
+        function hp = header_part(obj, rId)
+            % HEADER_PART (parts/document.py 89-91): the HeaderPart related by
+            %   `rId`. Python: return self.related_parts[rId]. UN-STUBBED at P5-3b.
+            %   related_parts is the {rId -> target Part} dictionary (values stored
+            %   as 1x1 cells, P1-5 currency); [rId] -> unwrap the cell (H5: the
+            %   live related part handle).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.header_part
+            rp = obj.related_parts();       % dictionary(string -> cell)
+            cellval = rp(rId);              % Python: related_parts[rId]
+            hp = cellval{1};
         end
 
         function s = inline_shapes(obj) %#ok<MANU,STOUT>

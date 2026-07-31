@@ -1,0 +1,48 @@
+{
+  "kinds": {
+    "header": "header",
+    "footer": "footer",
+    "even_page_header": "header",
+    "even_page_footer": "footer",
+    "first_page_header": "header",
+    "first_page_footer": "footer"
+  },
+  "default_linked": {
+    "header": true,
+    "footer": true,
+    "even_page_header": true,
+    "first_page_header": true
+  },
+  "roundtrip": {
+    "before": true,
+    "after": false,
+    "footer_independent": true,
+    "even_independent": true
+  },
+  "paragraphs": {
+    "count0": 1,
+    "count1": 2
+  },
+  "header_partname": "/word/header1.xml",
+  "inherit": {
+    "linked0": [
+      true,
+      true,
+      true
+    ],
+    "linked1": [
+      true,
+      false,
+      true
+    ],
+    "sec2_partname": "/word/header1.xml",
+    "sec1_partname": "/word/header1.xml",
+    "sec2_eq_sec1": true,
+    "sec0_partname": "/word/header2.xml",
+    "linked2": [
+      false,
+      false,
+      true
+    ]
+  }
+}
