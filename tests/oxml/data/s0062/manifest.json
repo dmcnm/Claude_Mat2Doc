@@ -1,0 +1,37 @@
+{
+  "schema": "p6-2-roundtrip/1",
+  "wp": "Mat2Doc P6-2",
+  "source": "python-docx v1.2.0 (e454546) / lxml 5.3.0",
+  "fixtures": [
+    {
+      "name": "tblPr",
+      "size": 233,
+      "sha256": "b5de419fd6fe69ee35eebda6cae2b808d9366a01c9815f300cf24db4c2d42dc6"
+    },
+    {
+      "name": "tblPr_both",
+      "size": 166,
+      "sha256": "620dea7a2cafb72478572b8da770bda450fc5e170d53c7b739195743a9b74490"
+    },
+    {
+      "name": "trPr",
+      "size": 236,
+      "sha256": "c1a760cc58e92660a8fec10f19d3d4616cd655e3ea574b32955e603990f90997"
+    },
+    {
+      "name": "tr",
+      "size": 261,
+      "sha256": "6bcc2d38cb1716b16f44cc15686579e4ccaf396ff0e82f92f51df16ae4282531"
+    },
+    {
+      "name": "realtblPr",
+      "size": 1451,
+      "sha256": "de2f695c9549d58826bb9dae181af5c950a85bda68b03425a2d4728cf9fc5a42"
+    },
+    {
+      "name": "realtrPr",
+      "size": 1260,
+      "sha256": "8e0b1fc36ba356b5f489b716734a6c6965a2dba58f40612ecdea2bc57c640022"
+    }
+  ]
+}

@@ -278,11 +278,43 @@ map = registerElementCls_(map, "w:type",            "mat2doc.oxml.section.CT_Sec
 % -- (CT_SectPr only NAMES w:vAlign in its _tag_seq with no descriptor; the many
 % -- @w:vAlign hits elsewhere are ATTRIBUTES, a disjoint namespace from
 % -- element-tag registration). No conflict.
+% -- table PROPERTIES container classes, P6-2 -- the 2nd WP of Phase 6. Ports 7
+% -- rows of the table block (interleaved with the P6-1 rows below to keep
+% -- docx/oxml/__init__.py source order): CT_TblPr(176), CT_TblPrEx(177), CT_Row
+% -- (tr,182), CT_TrPr(184), and CLOSES three P6-1 deferrals -- w:gridAfter(169)/
+% -- w:gridBefore(170) -> CT_DecimalNumber (CT_TrPr.grid_after/before read .val
+% -- on them) and w:tblStyle(178) -> CT_String (CT_TblPr.style reads .val on it;
+% -- a HARD functional dependency the brief's registry list omitted -- SAME
+% -- pattern as P5-1's w:evenAndOddHeaders @:213 -- NOT a feature, it is a real
+% -- register_element_cls P6-1 deferred "to P6-2/P6-3"). CT_DecimalNumber exists
+% -- since P4-6; confirmed w:gridAfter/w:gridBefore/w:tblStyle were NOT already
+% -- registered. A2: w:jc is NOT re-registered -- it is ALREADY CT_Jc (P4-2,@:241);
+% -- CT_TblPr.alignment REUSES that one CT_Jc, reading its @w:val as
+% -- WD_TABLE_ALIGNMENT context (one element class, two context enums). w:gridSpan
+% -- (172), w:tbl(173), w:tc(179), w:tcPr(180), w:bidiVisual(168) stay DEFERRED to
+% -- P6-3/P6-3a (their container classes CT_Tc/CT_TcPr/CT_Tbl are not yet ported).
+% --
+% -- M1-NEUTRALITY: of these 7 tags, only w:tblPr appears in an M1 part --
+% -- styles.xml/stylesWithEffects.xml carry 100 <w:tblPr> nodes each (inside table
+% -- styles), which now transit CT_TblPr on load. Byte-neutral (registering a CT
+% -- changes only a parsed node's CLASS, not content/order -- P4-6/P5-1 precedent);
+% -- M1 must stay 17/17. w:tblStyle/w:tblPrEx/w:tr/w:trPr/w:gridAfter/w:gridBefore
+% -- have ZERO occurrences in default.docx (verified), so they never transit on
+% -- the M1 path. Flip-neutral: ZERO existing exact-class XmlElement pins target
+% -- these 7 tags (checked); the deferred-generic gridAfter/gridBefore were never
+% -- pinned generic (0 occurrences to pin).
+map = registerElementCls_(map, "w:gridAfter",  "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:169 (P6-2; closes P4-6 deferral)
+map = registerElementCls_(map, "w:gridBefore", "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:170 (P6-2; closes P4-6 deferral)
 map = registerElementCls_(map, "w:gridCol",   "mat2doc.oxml.table.CT_TblGridCol");    % __init__.py:171 (P6-1)
 map = registerElementCls_(map, "w:tblGrid",   "mat2doc.oxml.table.CT_TblGrid");       % __init__.py:174 (P6-1)
 map = registerElementCls_(map, "w:tblLayout", "mat2doc.oxml.table.CT_TblLayoutType"); % __init__.py:175 (P6-1)
+map = registerElementCls_(map, "w:tblPr",     "mat2doc.oxml.table.CT_TblPr");         % __init__.py:176 (P6-2)
+map = registerElementCls_(map, "w:tblPrEx",   "mat2doc.oxml.table.CT_TblPrEx");       % __init__.py:177 (P6-2)
+map = registerElementCls_(map, "w:tblStyle",  "mat2doc.oxml.shared.CT_String");       % __init__.py:178 (P6-2; CT_TblPr.style dep, closes P6-1 deferral)
 map = registerElementCls_(map, "w:tcW",       "mat2doc.oxml.table.CT_TblWidth");      % __init__.py:181 (P6-1; C4: w:tcW only, NO w:tblW)
+map = registerElementCls_(map, "w:tr",        "mat2doc.oxml.table.CT_Row");           % __init__.py:182 (P6-2)
 map = registerElementCls_(map, "w:trHeight",  "mat2doc.oxml.table.CT_Height");        % __init__.py:183 (P6-1)
+map = registerElementCls_(map, "w:trPr",      "mat2doc.oxml.table.CT_TrPr");          % __init__.py:184 (P6-2)
 map = registerElementCls_(map, "w:vAlign",    "mat2doc.oxml.table.CT_VerticalJc");    % __init__.py:185 (P6-1)
 map = registerElementCls_(map, "w:vMerge",    "mat2doc.oxml.table.CT_VMerge");        % __init__.py:186 (P6-1)
 % -------------------------------------------------------------------------
