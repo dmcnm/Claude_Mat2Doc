@@ -337,18 +337,18 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
             % the three thin XmlPart shells now ported -- WML_STYLES -> StylesPart,
             % WML_SETTINGS -> SettingsPart, WML_NUMBERING -> NumberingPart. All are
             % IS-A XmlPart, so every flip is byte-neutral: the 17/17 L1 sweep is
-            % unchanged ("row flip moves the pin"). The remaining 3 rows
-            % (WML_COMMENTS -> P8-2, WML_FOOTER/WML_HEADER -> P5-3b) stay the base
-            % XmlPart stand-in. Exact-class pin (not isa) -- the flip must land on
-            % the exact class.
+            % unchanged ("row flip moves the pin"). P5-3b flips WML_HEADER ->
+            % HeaderPart and WML_FOOTER -> FooterPart. The remaining 1 row
+            % (WML_COMMENTS -> P8-2) stays the base XmlPart stand-in. Exact-class
+            % pin (not isa) -- the flip must land on the exact class.
             CT = mat2doc.opc.CONTENT_TYPE;
             XP = "mat2doc.opc.XmlPart";
             expected = { ...
                 CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart"; ...  % P1-8 flip
                 CT.WML_COMMENTS,        XP;                                     ...  % P8-2 stand-in
                 CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";           ...  % P1-8 flip
-                CT.WML_FOOTER,          XP;                                     ...  % P5-3b stand-in
-                CT.WML_HEADER,          XP;                                     ...  % P5-3b stand-in
+                CT.WML_FOOTER,          "mat2doc.parts.FooterPart";             ...  % P5-3b flip
+                CT.WML_HEADER,          "mat2doc.parts.HeaderPart";             ...  % P5-3b flip
                 CT.WML_NUMBERING,       "mat2doc.parts.NumberingPart";          ...  % P2-2 flip
                 CT.WML_SETTINGS,        "mat2doc.parts.SettingsPart";           ...  % P2-2 flip
                 CT.WML_STYLES,          "mat2doc.parts.StylesPart"};                 % P2-2 flip
