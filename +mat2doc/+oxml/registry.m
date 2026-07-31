@@ -248,6 +248,43 @@ map = registerElementCls_(map, "w:pgMar",           "mat2doc.oxml.section.CT_Pag
 map = registerElementCls_(map, "w:pgSz",            "mat2doc.oxml.section.CT_PageSz");        % __init__.py:128
 map = registerElementCls_(map, "w:sectPr",          "mat2doc.oxml.section.CT_SectPr");        % __init__.py:129
 map = registerElementCls_(map, "w:type",            "mat2doc.oxml.section.CT_SectType");      % __init__.py:130
+% -- table LEAF classes, P6-1 -- FIRST WP of Phase 6 (tables). The 7 LEAF table
+% -- element classes from oxml/table.py, in docx/oxml/__init__.py source order.
+% -- The table block (__init__.py:168-186, 19 rows) is SPLIT across P6-1/P6-2/
+% -- P6-3: P6-1 ports the 7 rows below (CT_Height/CT_TblWidth/CT_TblGrid/
+% -- CT_TblGridCol/CT_TblLayoutType/CT_VerticalJc/CT_VMerge). The other 12 rows
+% -- are DEFERRED to P6-2/P6-3 with their owning container classes:
+% --   w:bidiVisual@168 (CT_OnOff, CT_TblPr child), w:gridAfter@169 +
+% --   w:gridBefore@170 (CT_DecimalNumber, CT_TrPr), w:gridSpan@172
+% --   (CT_DecimalNumber, CT_TcPr), w:tbl@173 (CT_Tbl), w:tblPr@176 (CT_TblPr),
+% --   w:tblPrEx@177 (CT_TblPrEx), w:tblStyle@178 (CT_String, CT_TblPr child),
+% --   w:tc@179 (CT_Tc), w:tcPr@180 (CT_TcPr), w:tr@182 (CT_Row), w:trPr@184
+% --   (CT_TrPr). Those 12 tags stay generic XmlElement until P6-2/P6-3.
+% --
+% -- C4 (P5->P6 boundary-audit brief-correction): register ONLY w:tcW ->
+% -- CT_TblWidth. Upstream has NO `w:tblW` register_element_cls row (verified:
+% -- grep '"w:tblW"' docx/oxml/__init__.py -> 0 hits); a <w:tblW> element stays a
+% -- plain XmlElement and CT_TblPr has NO tblW descriptor. Registering w:tblW
+% -- would be a divergence -- it is deliberately ABSENT here.
+% --
+% -- M1-NEUTRAL: none of these 7 tags appears in any of the 17 default.docx parts
+% -- (default.docx has no table), so nothing transits these CT classes on the M1
+% -- parse path; Document().save() stays 17/17 byte-identical. Flip-neutral: ZERO
+% -- existing exact-class XmlElement pins reference these tags. The rows light up
+% -- only when a table subtree is loaded/created (first at the P6-2/P6-3 API).
+% --
+% -- w:vAlign COLLISION CHECK: __init__.py:185 registers the ELEMENT w:vAlign ->
+% -- CT_VerticalJc, and NO prior registry row registers the element w:vAlign
+% -- (CT_SectPr only NAMES w:vAlign in its _tag_seq with no descriptor; the many
+% -- @w:vAlign hits elsewhere are ATTRIBUTES, a disjoint namespace from
+% -- element-tag registration). No conflict.
+map = registerElementCls_(map, "w:gridCol",   "mat2doc.oxml.table.CT_TblGridCol");    % __init__.py:171 (P6-1)
+map = registerElementCls_(map, "w:tblGrid",   "mat2doc.oxml.table.CT_TblGrid");       % __init__.py:174 (P6-1)
+map = registerElementCls_(map, "w:tblLayout", "mat2doc.oxml.table.CT_TblLayoutType"); % __init__.py:175 (P6-1)
+map = registerElementCls_(map, "w:tcW",       "mat2doc.oxml.table.CT_TblWidth");      % __init__.py:181 (P6-1; C4: w:tcW only, NO w:tblW)
+map = registerElementCls_(map, "w:trHeight",  "mat2doc.oxml.table.CT_Height");        % __init__.py:183 (P6-1)
+map = registerElementCls_(map, "w:vAlign",    "mat2doc.oxml.table.CT_VerticalJc");    % __init__.py:185 (P6-1)
+map = registerElementCls_(map, "w:vMerge",    "mat2doc.oxml.table.CT_VMerge");        % __init__.py:186 (P6-1)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE

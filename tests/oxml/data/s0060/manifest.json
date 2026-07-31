@@ -1,0 +1,57 @@
+{
+  "schema": "p6-1-roundtrip/1",
+  "wp": "Mat2Doc P6-1",
+  "source": "python-docx v1.2.0 (e454546) / lxml 5.3.0",
+  "fixtures": [
+    {
+      "name": "grid",
+      "size": 1271,
+      "sha256": "bc491330ac0ddb8484d8934c13a825a524f5c578ceda3a44b1f9ec05536d9d81"
+    },
+    {
+      "name": "tblLayout",
+      "size": 1231,
+      "sha256": "a437756a1e8b8e78781b57c2e0d463f4c845e116e404bb7f4e6a3702dfb0a09f"
+    },
+    {
+      "name": "trPr",
+      "size": 1260,
+      "sha256": "8e0b1fc36ba356b5f489b716734a6c6965a2dba58f40612ecdea2bc57c640022"
+    },
+    {
+      "name": "tcPr_00",
+      "size": 1277,
+      "sha256": "c8a9709e5a8a2c8f65c42f7afa7d88a3ff657dfec2fef8f8987d48026816f539"
+    },
+    {
+      "name": "tcPr_01",
+      "size": 1278,
+      "sha256": "ef33d893482736808a954ba98cca3ee6ebd53b8029445658de6f3f6286462a33"
+    },
+    {
+      "name": "tcPr_11",
+      "size": 1262,
+      "sha256": "3b2c20907cd959997f447cfeb334585584fb64b06a102e754ba3224240f9ad88"
+    },
+    {
+      "name": "tcW_dxa",
+      "size": 159,
+      "sha256": "99d255fe4cade8f8d8916871e78923f11d1806746afd17e03724e8f8177c6700"
+    },
+    {
+      "name": "tcW_pct",
+      "size": 159,
+      "sha256": "288496dd137b936c0c73bae38d4cd4652779608d105d72aa7661884fe7bd8ee1"
+    },
+    {
+      "name": "tcW_auto",
+      "size": 157,
+      "sha256": "59cff78bdee07e3204e8a42d9a10c07d9d3902eb5edb062c8bf1de043259e1f4"
+    },
+    {
+      "name": "tcW_setter",
+      "size": 159,
+      "sha256": "9e429ebbe06a2cbc53a1d71c07bd04016e8d04cc9c3b3aa43a866481d3f6bcb9"
+    }
+  ]
+}
