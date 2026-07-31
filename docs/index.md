@@ -63,7 +63,17 @@ syntax, description, example, ported-from).
   finally the **hyperlink + rendered-page-break tier** (`hyperlink.py` →
   `CT_Hyperlink`, and `pagebreak.py` → `CT_LastRenderedPageBreak` with its
   precedes/follows detection and paragraph fragment-split algorithm) — a
-  byte-neutral pure lookup addition that **completes the text-oxml element layer**.
+  byte-neutral pure lookup addition that **completes the text-oxml element layer**;
+  and finally the **styles-oxml element tier** (`styles.py` → `CT_Styles` /
+  `CT_Style` [10 `ZeroOrOne` over the 22-entry `_tag_seq`, the H3 tri-state `.._val`
+  members, the `basedOn`/`next` sibling chains] / `CT_LatentStyles` /
+  `CT_LsdException` + the `styleId_from_name` H15 mangler, plus the shared
+  `CT_DecimalNumber` leaf) — the **first WP of the styles chain**, which registers
+  the 12 styles-block tags **byte-neutrally** (the 349 KB `styles.xml` now transits
+  `CT_Styles`, M1 17/17 preserved), raises the **H17** `delete()`/destructor-collision
+  ruling (guarded-destructor override, SIGNED-PROVISIONAL), and carries the F-1
+  `bool(None)→"0"` truthiness fix — **styles-oxml COMPLETE → the styles API
+  (P4-7a/b) is next → M2**.
 - **OPC layer (opc)** — the two-tier serializer that regenerates
   `[Content_Types].xml` and the `.rels` parts (`CT_Types` / `CT_Default` /
   `CT_Override` / `CT_Relationships` / `CT_Relationship`), plus the OPC
