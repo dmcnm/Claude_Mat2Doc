@@ -38,8 +38,9 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
 %     * iter_inner_content w:tbl guard (test_iter_inner_content): a <w:tbl> block
 %       raises mat2doc:notYetPorted (owner P6-4a) and is NEVER silently dropped; a
 %       <w:p> resolves to a Paragraph.
-%     * P5-3b hdr/ftr stubs (test_p5_3b_stubs): all SIX header/footer members stay
-%       mat2doc:notYetPorted (owner P5-3b).
+%     * P5-3b hdr/ftr members (test_p5_3b_members_resolve_to_proxies): all SIX
+%       header/footer members RESOLVE to the right Header_/Footer_ proxy
+%       (registry-flip re-pin at P5-3b Gate-4; they were notYetPorted at P5-3a).
 %
 %   Provenance (Gate-1..3, all 2026-07-31):
 %     * Audit    : validation\mat2doc\audit_P5-3a_sections_api.md (Porter Gate-1
@@ -72,7 +73,7 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
 %                     SLICE battery; non-ASCII paragraph text through
 %                     iter_inner_content; the IndexError / ValueError error paths
 %                     (verbatim identifier + message); the w:tbl -> notYetPorted
-%                     guard; the 6 P5-3b stubs.
+%                     guard; the 6 P5-3b hdr/ftr members resolving to proxies.
 %   * Equivalence  -- test_equivalence_full_battery_vs_frozen_oracle replays the
 %                     ENTIRE s0045 battery (runProbes, the .m twin's body verbatim,
 %                     incl. section_props / sequence(12-slice) / iter_inner_content /
@@ -105,6 +106,11 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
 
         SECTION  = 'mat2doc.section.Section'
         SECTIONS = 'mat2doc.section.Sections'
+
+        % P5-3b hdr/ftr proxy classes (registry-flip re-pin: the six Section
+        % header/footer members RESOLVE to these instead of raising notYetPorted).
+        SECTION_HEADER = 'mat2doc.section.Header_'
+        SECTION_FOOTER = 'mat2doc.section.Footer_'
 
         % --- frozen s0001 M1 word/document.xml (un-stub neutrality guard) ---
         DOC_SIZE_M1 = 1548
@@ -479,28 +485,38 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
         end
 
         % =============================================================== %
-        % 8. P5-3b hdr/ftr stubs (all six stay notYetPorted)               %
+        % 8. P5-3b hdr/ftr members RESOLVE (registry-flip re-pin)          %
         % =============================================================== %
 
-        function test_p5_3b_stubs(testCase)
-            % Regression (error path, section.py 61-142): the SIX header/footer
-            % members return _Header/_Footer objects (P5-3b) and stay STUBBED as
-            % mat2doc:notYetPorted. A regression that un-stubs early (or silently
-            % no-ops) goes RED.
-            d = mat2doc.Document();
-            sec = d.sections.getitem_(0);
-            stubs = { ...
-                'even_page_footer',  @() sec.even_page_footer(); ...
-                'even_page_header',  @() sec.even_page_header(); ...
-                'first_page_footer', @() sec.first_page_footer(); ...
-                'first_page_header', @() sec.first_page_header(); ...
-                'footer',            @() sec.footer(); ...
-                'header',            @() sec.header() };
-            for i = 1:size(stubs, 1)
-                ME = captureError(stubs{i, 2});
-                testCase.verifyEqual(string(ME.identifier), "mat2doc:notYetPorted", ...
-                    sprintf('Section.%s must raise mat2doc:notYetPorted (P5-3b stub)', stubs{i, 1}));
-            end
+        function test_p5_3b_members_resolve_to_proxies(testCase)
+            % REGISTRY-FLIP RE-PIN (P5-3b Gate-4, registry-flip stale-pins lesson):
+            % this method previously asserted all SIX Section header/footer members
+            % raise mat2doc:notYetPorted (owner P5-3b). P5-3b un-stubbed them, so
+            % they now RESOLVE to the right Header_/Footer_ proxy with the correct
+            % WD_HEADER_FOOTER index (header/footer -> PRIMARY; even_page_* ->
+            % EVEN_PAGE; first_page_* -> FIRST_PAGE). The stub loop is replaced with
+            % positive class checks. The index is not public, so the class (Header_
+            % vs Footer_) is pinned here; the index -> headerReference w:type byte
+            % wiring is proven by Test_p5_3b_hdrftr_api (frozen s0055). A regression
+            % that re-stubs or mis-wires a member goes RED here.
+            %
+            % The full behavioral surface (kinds / is_linked / inherit-walk / byte
+            % packages) lives in tests\section\Test_p5_3b_hdrftr_api.m; this stays a
+            % lightweight positive pin so the P5-3a class no longer falsely asserts
+            % the members are stubs.
+            sec = mat2doc.Document().sections.getitem_(0);
+            testCase.verifyClass(sec.header,            testCase.SECTION_HEADER, ...
+                'Section.header RESOLVES to a Header_ (PRIMARY; un-stubbed P5-3b)');
+            testCase.verifyClass(sec.footer,            testCase.SECTION_FOOTER, ...
+                'Section.footer RESOLVES to a Footer_ (PRIMARY; un-stubbed P5-3b)');
+            testCase.verifyClass(sec.even_page_header,  testCase.SECTION_HEADER, ...
+                'Section.even_page_header RESOLVES to a Header_ (EVEN_PAGE)');
+            testCase.verifyClass(sec.even_page_footer,  testCase.SECTION_FOOTER, ...
+                'Section.even_page_footer RESOLVES to a Footer_ (EVEN_PAGE)');
+            testCase.verifyClass(sec.first_page_header, testCase.SECTION_HEADER, ...
+                'Section.first_page_header RESOLVES to a Header_ (FIRST_PAGE)');
+            testCase.verifyClass(sec.first_page_footer, testCase.SECTION_FOOTER, ...
+                'Section.first_page_footer RESOLVES to a Footer_ (FIRST_PAGE)');
         end
 
         % =============================================================== %

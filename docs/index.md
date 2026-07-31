@@ -259,9 +259,21 @@ syntax, description, example, ported-from).
   (the intermediate-sectPr nesting, clone-before-hdr/ftr-removal) — with **no registry rows**, so
   the default `Document().save()` stays M1 17/17 (`document.xml` `0e4dd503…` unchanged) while the
   `add_section` (all 5 start types + 2/3-section chains) and Section-property-write paths are
-  byte-identical to python-docx (`s0046`–`s0051`), **0 new D-numbers**. The six `_Header`/`_Footer`
-  members stay clean `mat2doc:notYetPorted` stubs → **P5-3b**. **Section API live — headers/footers
-  (P5-3b, the separate-part hdr/ftr rels) next → completes P5 sections.**
+  byte-identical to python-docx (`s0046`–`s0051`), **0 new D-numbers**. Finally, the **headers/footers**
+  page (**P5-3b**, the FINAL P5 WP) lands the separate-part hdr/ftr tier: `mat2doc.section.Header_` /
+  `Footer_` / `BaseHeaderFooter_` (the `_Header`/`_Footer` proxies over a `BlockItemContainer` — the six
+  `Section` header/footer accessors [three `WD_HEADER_FOOTER` index kinds], `is_linked_to_previous`
+  get/set as the add/drop authoring trigger, `paragraphs`/`add_paragraph`, the `part` story-parent
+  override, and the 3-case `_get_or_add_definition` **inherit-walk**) and `mat2doc.parts.HeaderPart` /
+  `FooterPart` (the `StoryPart` part classes minted at runtime — the **FIRST runtime-added parts** in
+  Mat2Doc, each `word/headerN.xml` carrying its own `[Content_Types]` Override + rels). The **C3
+  `BlockItemContainer` element-accessor seam** (property→protected method, since MATLAB cannot redefine
+  a stored property in a subclass — byte-neutral for M1 17/17 + M2 s0033) supports the lazy
+  part-creation on first content access. Full-package byte-identical to python-docx across header /
+  footer / both / even+first+titlePg / add→drop / reload (`s0052`–`s0058`), **0 new D-numbers**, and
+  **COM-verified in real Word** (all four packages open clean; `DifferentFirstPage` rendered).
+  **★ PHASE 5 COMPLETE — sections, settings and headers/footers all done + COM-verified; the cross-part
+  hazard (risk-register #4) cleared.** See the [headers & footers page](api/headers_footers.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

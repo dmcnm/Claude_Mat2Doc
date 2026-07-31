@@ -39,17 +39,18 @@ classdef Section < handle
 %   `part` (section.py 218-220) and iter_inner_content (section.py 157-163) are
 %   zero-argument methods (property-as-method / generator surface).
 %
-%   ============================ P5-3b STUBS (header/footer) =====================
-%   Six members return _Header/_Footer/_BaseHeaderFooter objects (the separate
-%   hdr/ftr part wiring), which are P5-3b -- STUBBED here as mat2doc:notYetPorted:
+%   ======================= P5-3b header/footer (LIVE) ==========================
+%   Six members return a Header_/Footer_ over this section's sectPr with the
+%   correct WD_HEADER_FOOTER index (the separate hdr/ftr part wiring):
 %     even_page_footer (section.py 61-68)   even_page_header (section.py 70-77)
 %     first_page_footer (section.py 79-86)  first_page_header (section.py 88-95)
 %     footer  (@lazyproperty, section.py 97-104)
 %     header  (@lazyproperty, section.py 135-142)
-%   Owner tag: "P5-3b (_Header/_Footer + hdr/ftr separate-part wiring)". They are
-%   ported as methods that raise (no _Header/_Footer type exists yet); the
-%   underlying CT_SectPr hdr/ftr-ref accessors (get/add/remove headerReference /
-%   footerReference) are already LIVE (P5-2a), so P5-3b only adds the proxy layer.
+%   header/footer CACHE their proxy (@lazyproperty -> computed-flag caching);
+%   even_page_*/first_page_* mint a FRESH proxy each access (plain @property),
+%   matching python-docx. The underlying CT_SectPr hdr/ftr-ref accessors
+%   (get/add/remove headerReference/footerReference, preceding_sectPr) are LIVE
+%   since P5-2a; P5-3b adds this proxy layer + the Header_/Footer_ classes.
 %
 %   ============================ C2 (iter_inner_content) =========================
 %   iter_inner_content yields Paragraph | Table over CT_SectPr.iter_inner_content
@@ -76,6 +77,13 @@ classdef Section < handle
     properties (Access = private)
         sectPr_          % _sectPr (section.py 32): the wrapped CT_SectPr
         document_part_   % _document_part (section.py 33): the owning DocumentPart
+        % @lazyproperty caches for header/footer (section.py 97/135). Manual
+        % computed-flag caching (design.md @lazyproperty rule; NEVER isempty as the
+        % sentinel -- a Header_/Footer_ is always a valid non-empty cached value).
+        header_cache_
+        header_computed_ (1,1) logical = false
+        footer_cache_
+        footer_computed_ (1,1) logical = false
     end
 
     properties (Dependent)
@@ -128,46 +136,65 @@ classdef Section < handle
             obj.sectPr_.titlePg_val = value;
         end
 
-        % ========================= header/footer STUBS =========================
-        % Six members return _Header/_Footer/_BaseHeaderFooter -> P5-3b.
-        function ftr = even_page_footer(obj) %#ok<STOUT,MANU>
-            % EVEN_PAGE_FOOTER STUB (section.py 61-68): _Footer(..., EVEN_PAGE).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Footer (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.even_page_footer");
+        % ===================== header/footer (P5-3b, LIVE) =====================
+        % Six members return a Header_/Footer_ over this section's sectPr with the
+        % correct WD_HEADER_FOOTER index. header/footer are @lazyproperty (cached);
+        % even_page_*/first_page_* are plain @property (a FRESH proxy each access,
+        % matching python-docx). H1: the index members are DATA, never shifted.
+        function ftr = even_page_footer(obj)
+            % EVEN_PAGE_FOOTER (section.py 61-68, @property): _Footer for even
+            %   pages. Python: return _Footer(self._sectPr, self._document_part,
+            %   WD_HEADER_FOOTER.EVEN_PAGE). Fresh each access.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.even_page_footer
+            ftr = mat2doc.section.Footer_(obj.sectPr_, obj.document_part_, ...
+                mat2doc.enum.section.WD_HEADER_FOOTER.EVEN_PAGE);
         end
 
-        function hdr = even_page_header(obj) %#ok<STOUT,MANU>
-            % EVEN_PAGE_HEADER STUB (section.py 70-77): _Header(..., EVEN_PAGE).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Header (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.even_page_header");
+        function hdr = even_page_header(obj)
+            % EVEN_PAGE_HEADER (section.py 70-77, @property): _Header for even
+            %   pages. Python: return _Header(self._sectPr, self._document_part,
+            %   WD_HEADER_FOOTER.EVEN_PAGE). Fresh each access.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.even_page_header
+            hdr = mat2doc.section.Header_(obj.sectPr_, obj.document_part_, ...
+                mat2doc.enum.section.WD_HEADER_FOOTER.EVEN_PAGE);
         end
 
-        function ftr = first_page_footer(obj) %#ok<STOUT,MANU>
-            % FIRST_PAGE_FOOTER STUB (section.py 79-86): _Footer(..., FIRST_PAGE).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Footer (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.first_page_footer");
+        function ftr = first_page_footer(obj)
+            % FIRST_PAGE_FOOTER (section.py 79-86, @property): _Footer for the
+            %   first page of this section. Python: return _Footer(self._sectPr,
+            %   self._document_part, WD_HEADER_FOOTER.FIRST_PAGE). Fresh each access.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.first_page_footer
+            ftr = mat2doc.section.Footer_(obj.sectPr_, obj.document_part_, ...
+                mat2doc.enum.section.WD_HEADER_FOOTER.FIRST_PAGE);
         end
 
-        function hdr = first_page_header(obj) %#ok<STOUT,MANU>
-            % FIRST_PAGE_HEADER STUB (section.py 88-95): _Header(..., FIRST_PAGE).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Header (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.first_page_header");
+        function hdr = first_page_header(obj)
+            % FIRST_PAGE_HEADER (section.py 88-95, @property): _Header for the
+            %   first page of this section. Python: return _Header(self._sectPr,
+            %   self._document_part, WD_HEADER_FOOTER.FIRST_PAGE). Fresh each access.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.first_page_header
+            hdr = mat2doc.section.Header_(obj.sectPr_, obj.document_part_, ...
+                mat2doc.enum.section.WD_HEADER_FOOTER.FIRST_PAGE);
         end
 
-        function ftr = footer(obj) %#ok<STOUT,MANU>
-            % FOOTER STUB (section.py 97-104, @lazyproperty): _Footer(..., PRIMARY).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Footer (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.footer");
+        function ftr = footer(obj)
+            % FOOTER (section.py 97-104, @lazyproperty): the default page footer for
+            %   this section (used for odd pages when separate odd/even footers are
+            %   enabled; both otherwise). Python: return _Footer(self._sectPr,
+            %   self._document_part, WD_HEADER_FOOTER.PRIMARY). CACHED (@lazyproperty)
+            %   -- repeated reads return the SAME Footer_ handle (H5/H9).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.footer
+            if ~obj.footer_computed_
+                obj.footer_cache_ = mat2doc.section.Footer_(obj.sectPr_, ...
+                    obj.document_part_, mat2doc.enum.section.WD_HEADER_FOOTER.PRIMARY);
+                obj.footer_computed_ = true;
+            end
+            ftr = obj.footer_cache_;
         end
 
         % ============================ footer_distance ============================
@@ -190,12 +217,20 @@ classdef Section < handle
             obj.sectPr_.gutter = value;
         end
 
-        function hdr = header(obj) %#ok<STOUT,MANU>
-            % HEADER STUB (section.py 135-142, @lazyproperty): _Header(..., PRIMARY).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.section._Header (owning WP: P5-3b (_Header/_Footer + " + ...
-                "hdr/ftr separate-part wiring)) required by " + ...
-                "mat2doc.section.Section.header");
+        function hdr = header(obj)
+            % HEADER (section.py 135-142, @lazyproperty): the default page header for
+            %   this section (used for odd pages when separate odd/even headers are
+            %   enabled; both otherwise). Python: return _Header(self._sectPr,
+            %   self._document_part, WD_HEADER_FOOTER.PRIMARY). CACHED (@lazyproperty)
+            %   -- repeated reads return the SAME Header_ handle (H5/H9).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/section.py::Section.header
+            if ~obj.header_computed_
+                obj.header_cache_ = mat2doc.section.Header_(obj.sectPr_, ...
+                    obj.document_part_, mat2doc.enum.section.WD_HEADER_FOOTER.PRIMARY);
+                obj.header_computed_ = true;
+            end
+            hdr = obj.header_cache_;
         end
 
         % ============================ header_distance ============================

@@ -15,19 +15,21 @@ already-registered `CT_SectPr`, `Sections` is the section sequence, and
 `add_section` is the section-authoring byte path.
 
 :::{note}
-**★ Section API live — `_Header`/`_Footer` + the hdr/ftr separate parts (P5-3b)
-next → completes P5 sections.** This is the **fourth work package of Phase 5**
-(the sections tier). It ports the user-facing `Section` / `Sections` **proxies**
-that read and write the `CT_SectPr` geometry/type surface built at P5-2a, and
+**★ PHASE 5 COMPLETE — `Header_`/`Footer_` + the hdr/ftr separate parts landed
+at P5-3b.** This is the **fourth work package of Phase 5** (the sections tier).
+It ports the user-facing `Section` / `Sections` **proxies** that read and write
+the `CT_SectPr` geometry/type surface built at P5-2a, and
 **un-stubs the section-authoring path** (`Document.sections` / `Document.add_section`
 + `CT_Body.add_section_break`) so a document can now grow sections. It adds **no
 `register_element_cls` row and no serialization code** — equivalence is
 **behavioral** (proxy value parity) plus serialized-bytes parity on the novel
 `add_section` and property-write paths — so it is **byte-neutral** (M1 stays
-17/17, **zero new D-numbers**). What remains in **Phase 5** is the
-**headers/footers** tier — `_Header`/`_Footer` and the separate-part hdr/ftr
-relationships (**P5-3b**), which consume the `Settings.odd_and_even_pages_header_footer`
-toggle ported at P5-1 and complete the sections work.
+17/17, **zero new D-numbers**). The final Phase-5 tier — the
+**headers/footers** (`Header_`/`Footer_` and the separate-part hdr/ftr
+relationships, **P5-3b**, which consume the
+`Settings.odd_and_even_pages_header_footer` toggle from P5-1) — is now landed on
+the **[headers & footers page](headers_footers.md)**, completing the sections
+work and **Phase 5**.
 :::
 
 :::{note}
@@ -155,16 +157,16 @@ materialized (no tree mutation during iteration, so laziness is unobservable);
 H10: `isinstance(element, CT_P)` → `isa(element, "mat2doc.oxml.text.CT_P")`.
 
 (id-section-hdrftr-stubs)=
-**The six header/footer properties — stubbed to P5-3b.** Six members return
-`_Header`/`_Footer`/`_BaseHeaderFooter` objects — the separate hdr/ftr part
-wiring — which is **P5-3b**. They are ported here as methods that **raise**
-`mat2doc:notYetPorted` naming owner *P5-3b (`_Header`/`_Footer` + hdr/ftr
-separate-part wiring)*: `even_page_footer` (`section.py:61-68`), `even_page_header`
-(`70-77`), `first_page_footer` (`79-86`), `first_page_header` (`88-95`), `footer`
-(`97-104`, `@lazyproperty`), `header` (`135-142`, `@lazyproperty`). The underlying
-`CT_SectPr` hdr/ftr-reference accessors (`get`/`add`/`remove` `headerReference` /
-`footerReference`) are already **LIVE** (P5-2a), so P5-3b adds only the proxy
-layer.
+**The six header/footer properties — now LIVE (P5-3b).** Six members return
+`Header_`/`Footer_` proxies over the separate hdr/ftr parts: `even_page_footer`
+(`section.py:61-68`), `even_page_header` (`70-77`), `first_page_footer`
+(`79-86`), `first_page_header` (`88-95`), `footer` (`97-104`, `@lazyproperty`),
+`header` (`135-142`, `@lazyproperty`) — three `WD_HEADER_FOOTER` index kinds
+(`PRIMARY`/`EVEN_PAGE`/`FIRST_PAGE`). The underlying `CT_SectPr`
+hdr/ftr-reference accessors (`get`/`add`/`remove` `headerReference` /
+`footerReference`) are **LIVE** (P5-2a); **P5-3b** added the proxy layer, the
+`HeaderPart`/`FooterPart` part classes and the separate-part wiring — see the
+**[headers & footers page](headers_footers.md)**.
 
 **Example**
 
@@ -320,7 +322,7 @@ the hdr/ftr-reference-removal branch) and every property write (including
 
 ---
 
-## Section API live — headers/footers (P5-3b) next → completes P5 sections
+## Section API live — headers/footers (P5-3b) landed → PHASE 5 COMPLETE
 
 P5-3a lands the section **API surface**: the `Section` geometry/type proxy (all
 twelve accessors + `part` + `iter_inner_content` with the P6-4a table debt), the
@@ -329,11 +331,10 @@ twelve accessors + `part` + `iter_inner_content` with the P6-4a table debt), the
 path** (`Document.sections` / `add_section` + `CT_Body.add_section_break`, byte-
 proven). It is behavioral + un-stub with **no registry rows**, byte-neutral (M1
 17/17, `document.xml` `0e4dd503…` unchanged), and carries **zero new D-numbers**.
-What remains in **Phase 5** is **P5-3b** — `_Header`/`_Footer` and the separate-
-part header/footer relationships (`Header`/`FooterPart`, `relate_to`), which
-un-stub the six `Section` header/footer members above, consume the P5-1
-`odd_and_even_pages_header_footer` toggle, and complete the sections work. The
-3-section (`references\s0048`) and full property-write (`references\s0050`)
-`.docx` files are routed to **mso-office-verifier** (Word COM oracle) at the
-P5-3b milestone sweep — a new authoring surface to confirm opens with no repair
-prompt.
+The final Phase-5 tier — **P5-3b**, `Header_`/`Footer_` and the separate-part
+header/footer relationships (`HeaderPart`/`FooterPart`), which un-stub the six
+`Section` header/footer members above, consume the P5-1
+`odd_and_even_pages_header_footer` toggle, and complete the sections work — is
+now landed on the **[headers & footers page](headers_footers.md)** and is
+**COM-verified in real Word** (all four header/footer packages open clean).
+**Phase 5 is COMPLETE.**

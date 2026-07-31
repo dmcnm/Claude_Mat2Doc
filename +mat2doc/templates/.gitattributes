@@ -2,3 +2,5 @@
 default.docx binary
 default-styles.xml binary
 default-settings.xml binary
+default-header.xml binary
+default-footer.xml binary
