@@ -605,9 +605,10 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
 
         function test_unstub_resolution(testCase)
             % Regression (audit section 8 un-stub ledger): every delegated styles
-            % path RESOLVES end-to-end (no mat2doc:notYetPorted), while the genuine
-            % still-stubbed Styles.latent_styles REMAINS a clean notYetPorted stub
-            % (P4-7b owner).
+            % path RESOLVES end-to-end (no mat2doc:notYetPorted). Styles.latent_styles
+            % was the last stub in this chain; P4-7b (the M2 milestone WP) un-stubbed
+            % it, so the tail check below is now a RESOLVES pin (registry-flip re-pin,
+            % 2026-07-30) rather than a notYetPorted pin.
             ST = @(n) mat2doc.enum.style.WD_STYLE_TYPE.(n);
             d = mat2doc.Document();
 
@@ -646,10 +647,12 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
             testCase.verifyEqual(string(rr(end).style), "Emphasis", ...
                 'Run.style SET writes w:rPr/w:rStyle w:val="Emphasis" on the CT_R (byte-level)');
 
-            % latent_styles STILL a clean notYetPorted stub (P4-7b owner)
-            ME = captureError(@() d.styles.latent_styles());
-            testCase.verifyEqual(string(ME.identifier), "mat2doc:notYetPorted", ...
-                'Styles.latent_styles STAYS a clean mat2doc:notYetPorted stub (P4-7b)');
+            % REGISTRY-FLIP RE-PIN (P4-7b Gate-4): Styles.latent_styles was un-stubbed
+            % at P4-7b (the M2 milestone WP) and now RESOLVES to a LatentStyles proxy
+            % over get_or_add_latentStyles (the un-stub moved the behavior, so the pin
+            % moves with it). Its full surface is pinned in Test_p4_7b_latent_m2.
+            testCase.verifyClass(d.styles.latent_styles(), 'mat2doc.styles.LatentStyles', ...
+                'Styles.latent_styles RESOLVES to a LatentStyles (P4-7b un-stub, M2)');
         end
 
         % =============================================================== %

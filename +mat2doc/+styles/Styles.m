@@ -214,15 +214,16 @@ classdef Styles < mat2doc.shared.ElementProxy
             end
         end
 
-        function ls = latent_styles(obj) %#ok<MANU,STOUT>
-            % LATENT_STYLES STUB (styles.py 100-105, @property). Owner: P4-7b.
-            %   Faithful body: return LatentStyles(self._element.get_or_add_latentStyles()).
-            %   The LatentStyles proxy (docx/styles/latent.py) lands at P4-7b; this
-            %   accessor stays a clean notYetPorted stub naming that owner. The
-            %   underlying CT_Styles.get_or_add_latentStyles descriptor IS live (P4-6).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.LatentStyles (owning WP: P4-7b latent-styles tier) " + ...
-                "required by mat2doc.styles.Styles.latent_styles");
+        function ls = latent_styles(obj)
+            % LATENT_STYLES A LatentStyles object providing access to the default
+            %   latent-style behaviors and the collection of _LatentStyle overrides
+            %   (styles.py 100-105, @property). Python:
+            %   return LatentStyles(self._element.get_or_add_latentStyles()).
+            %   UN-STUBBED at P4-7b (LatentStyles now ported; the underlying
+            %   CT_Styles.get_or_add_latentStyles descriptor was already live, P4-6).
+            %
+            %   Ported from python-docx v1.2.0: styles/styles.py::Styles.latent_styles
+            ls = mat2doc.styles.LatentStyles(obj.element_.get_or_add_latentStyles());
         end
     end
 

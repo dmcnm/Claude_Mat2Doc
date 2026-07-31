@@ -1,27 +1,30 @@
 ---
-title: "mat2doc.styles — the styles API/proxy tier (StyleFactory · BaseStyle hierarchy · Styles collection · BabelFish)"
+title: "mat2doc.styles — the styles API/proxy tier (StyleFactory · BaseStyle hierarchy · Styles collection · BabelFish · LatentStyles)"
 ---
 
-# `mat2doc.styles` — the styles API/proxy tier (`StyleFactory` + `BaseStyle`/`CharacterStyle`/`ParagraphStyle`/`TableStyle_`/`NumberingStyle_` + `Styles` + `BabelFish`)
+# `mat2doc.styles` — the styles API/proxy tier (`StyleFactory` + `BaseStyle`/`CharacterStyle`/`ParagraphStyle`/`TableStyle_`/`NumberingStyle_` + `Styles` + `BabelFish` + `LatentStyles`/`LatentStyle_`)
 
 Ported from python-docx v1.2.0 `src/docx/styles/style.py` (the module function
 `StyleFactory` plus five style classes — `BaseStyle`, `CharacterStyle`,
 `ParagraphStyle`, `_TableStyle`, `_NumberingStyle`), `src/docx/styles/styles.py`
-(the `Styles` collection), and `src/docx/styles/__init__.py` (`BabelFish`) — all
+(the `Styles` collection), `src/docx/styles/__init__.py` (`BabelFish`), and
+`src/docx/styles/latent.py` (`LatentStyles` + `_LatentStyle`, **P4-7b**) — all
 **flattened** into the single package `+mat2doc/+styles/`.
 
 :::{note}
-This is the **second work package of the styles chain** — P4-6 (oxml/styles) →
-**P4-7a (the `styles`/`style` API)** → P4-7b (latent styles) → **M2**. It ports
-the user-facing style **proxies** that read the `<w:styles>` element surface P4-6
-built, and **un-stubs** the styles delegation across the document object graph
+This page covers the **styles API/proxy chain**: P4-6 (oxml/styles) →
+**P4-7a (the `styles`/`style` API)** → **P4-7b (latent styles + the `add_heading`
+/ `add_paragraph` authoring path → ★ M2)**. It ports the user-facing style
+**proxies** that read the `<w:styles>` element surface P4-6 built, and **un-stubs**
+the styles delegation across the document object graph
 (`StylesPart`/`DocumentPart`/`Document`/`Run`/`Paragraph`). It adds **no
 `register_element_cls` row and no serialization code**, so equivalence is
-**behavioral** (probe value parity) plus serialized-bytes parity on the two
-output-visible whole-part paths (`delete_`, `add_style`) and the end-to-end
-style-by-name document byte pin — **byte-neutral** (M1 stays 17/17, **zero new
-D-numbers**). It is not itself an M2 or COM milestone; the M2 COM oracle fires at
-P4-7b, when `add_heading` forces the whole chain.
+**behavioral** (probe value parity) plus serialized-bytes parity on the
+output-visible whole-part paths (`delete_`, `add_style`, the latent WRITE path)
+and the end-to-end style-by-name document byte pin — **byte-neutral** (M1 stays
+17/17, **zero new D-numbers**). **P4-7b reaches ★ M2** — `add_heading` /
+`add_paragraph` produce a byte-identical `document.xml` that opens clean in real
+Word (see the [M2 milestone page](../m2_milestone.md)).
 :::
 
 :::{note}
@@ -45,6 +48,7 @@ module-mirroring sub-packages, per the FLAG-3 docx policy), so every symbol is
 | `styles/style.py` | `+mat2doc\+styles\` | `StyleFactory`, `BaseStyle`, `CharacterStyle`, `ParagraphStyle`, `_TableStyle`→`TableStyle_`, `_NumberingStyle`→`NumberingStyle_` |
 | `styles/styles.py` | `+mat2doc\+styles\Styles.m` | `Styles` |
 | `styles/__init__.py` | `+mat2doc\+styles\BabelFish.m` | `BabelFish` |
+| `styles/latent.py` (**P4-7b**) | `+mat2doc\+styles\LatentStyles.m` / `LatentStyle_.m` | `LatentStyles`, `_LatentStyle`→`LatentStyle_` |
 
 Two private classes rotate their leading underscore to a trailing one (the
 toolbox-wide FLAG-3 convention `_Cell`→`Cell_`): `_TableStyle`→`TableStyle_`,
@@ -424,6 +428,175 @@ passthrough) and `internal2ui("Heading 1")` → `"Heading 1"` (miss → passthro
 
 ---
 
+(id-latentstyles)=
+## `LatentStyles` (P4-7b)
+
+**Syntax**
+
+```matlab
+d  = mat2doc.Document();
+ls = d.styles.latent_styles;       % a mat2doc.styles.LatentStyles
+ls.len_()                          % number of <w:lsdException> overrides (137 in the template)
+n  = ls.getitem_("Normal");        % Python ls["Normal"] -> LatentStyle_
+x  = ls.add_latent_style("Table Grid");   % add and return a new override
+ls.default_priority = 99;          % w:defUIPriority
+ls.default_to_hidden = true;       % w:defSemiHidden
+```
+
+**Description**
+
+Provides access to the **default behaviors** for latent styles in a document, and
+to the collection of [`LatentStyle_`](#id-latentstyle) objects that override those
+defaults for particular named latent styles. Reached via
+[`Styles.latent_styles`](#id-styles), which wraps the `<w:latentStyles>` root child
+of the styles part (a P4-6 `CT_LatentStyles`). `< mat2doc.shared.ElementProxy`
+(reference semantics + H5 element-identity `eq`/`ne` inherited).
+
+(id-latent-collection)=
+:::{note}
+**VERIFY-COLLECTION (same precedent as `Styles`/`TabStops`).** The shared 1-based
+`RedefinesParen` `()` collection base is a **future WP**; the Python sequence
+dunder surface is ported here as **explicit methods** (keys are style **names**, so
+there is **no** integer index → **no H1 shift**):
+
+| Python dunder | MATLAB method | usage |
+|---|---|---|
+| `latent_styles[key]` | `ls.getitem_(key)` | dictionary-style access by UI name |
+| `for s in latent_styles` | `for s = ls.to_array()` | iterate the overrides |
+| `len(latent_styles)` | `ls.len_()` | override count |
+
+When the collection base lands, `LatentStyles` should derive from it and expose
+native `()` access; do NOT retrofit now.
+:::
+
+**The surface** (`latent.py:7-107`; faithful to the v1.2.0 source — the class
+exposes **exactly** these members):
+
+- **`getitem_(key)`** — `BabelFish.ui2internal(key)` then
+  `element.get_by_name(style_name)`; a miss raises `mat2doc:KeyError` (message
+  `no latent style with name '<key>'`, verbatim). Returns a `LatentStyle_`.
+- **`to_array()`** (`__iter__`) — a `LatentStyle_` per `<w:lsdException>` child in
+  document order, materialized to a `1×N` array (no children → a typed `1×0`).
+- **`len_()`** (`__len__`) — `numel(element.lsdException_lst)`.
+- **`add_latent_style(name)`** — appends a new `<w:lsdException>` via
+  `element.add_lsdException()`, sets its `@w:name` to `BabelFish.ui2internal(name)`,
+  and returns the new `LatentStyle_`.
+- **`default_priority`** — `w:defUIPriority` (`int` or `[]`/None — H3).
+- **`default_to_hidden` / `default_to_locked` / `default_to_quick_style` /
+  `default_to_unhide_when_used`** — the `w:defSemiHidden` / `w:defLockedState` /
+  `w:defQFormat` / `w:defUnhideWhenUsed` booleans. Their getters read
+  `CT_LatentStyles.bool_prop`, which returns the logical `false` (**not `[]`**)
+  when the attribute is absent — the "effective default" python-docx reports.
+  Their setters go through `set_bool_prop`, whose **F-1** fix writes `bool(None) →
+  False → "0"` (a `[]` assignment serializes `w:def..="0"`, it does **not** remove
+  the attribute).
+- **`load_count`** — `w:count`, the number of built-in styles to initialize
+  (`int` or `[]`/None — H3).
+
+:::{note}
+**Source vs the WP brief (VERIFY-2, closed at Gate-3).** v1.2.0's `LatentStyles`
+has **no** `styles` list, and **no** `count`/`element`/`default_to_builtin`
+members (those named in an earlier brief do not exist in the source). `element` is
+inherited from `ElementProxy`; `load_count` is the member reading/writing the
+underlying `w:count`. The port follows the SOURCE.
+:::
+
+**Example**
+
+```matlab
+d  = mat2doc.Document();
+ls = d.styles.latent_styles;
+disp(class(ls));                       % mat2doc.styles.LatentStyles
+disp(ls.len_());                       % 137 (template overrides)
+nrm = ls.getitem_("Normal");
+disp(nrm.name);                        % "Normal"
+disp(ls.default_to_hidden);            % effective-default logical (false when absent)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/styles/latent.py::LatentStyles`*
+
+---
+
+(id-latentstyle)=
+## `LatentStyle_` (`_LatentStyle`, P4-7b)
+
+**Syntax**
+
+```matlab
+ls = d.styles.latent_styles;
+x  = ls.add_latent_style("Table Grid");
+x.priority = 59;          % w:uiPriority
+x.hidden = false;         % w:semiHidden="0"
+x.quick_style = true;     % w:qFormat="1"
+x.delete_();              % remove the <w:lsdException> from its parent
+```
+
+**Description**
+
+Proxy for a single `<w:lsdException>` element — **one latent-style override**. It
+specifies display behaviors for a built-in style when no definition for that style
+is stored yet in `styles.xml`; its values override the parent
+`<w:latentStyles>` defaults. `< mat2doc.shared.ElementProxy` (reference semantics
++ H5 element-identity `eq`/`ne` inherited).
+
+**FLAG-3 (naming).** Python's private `_LatentStyle` maps to the trailing-underscore
+convention **`LatentStyle_`** (leading→trailing rotation), matching the sibling
+`TableStyle_` / `NumberingStyle_` renames.
+
+**The property surface** (`latent.py:110-198`):
+
+- **`name`** (read-only) — `BabelFish.internal2ui` of the **required** `@w:name`
+  (always present → no `[]` guard).
+- **`priority`** — `w:uiPriority` (`int` or `[]`/None — H3).
+- **`hidden` / `locked` / `quick_style` / `unhide_when_used`** — the
+  `w:semiHidden` / `w:locked` / `w:qFormat` / `w:unhideWhenUsed` booleans, read
+  through `CT_LsdException.on_off_prop`, which returns the **RAW tri-state**
+  `{[] (None), true, false}` — where `[]` means "**inherit** the parent
+  `latentStyles` default". This **contrasts** `BaseStyle`'s `*_val` booleans (which
+  collapse an absent attribute to `false`).
+
+(id-latentstyle-delete)=
+**`delete_()` — the H17 proxy-layer resolution.** `_LatentStyle.delete()`
+(`latent.py:119-128`) detaches the `<w:lsdException>` from its parent then drops
+its element handle (`self._element.delete(); self._element = None`). The **same**
+H17 friction as `BaseStyle.delete()` applies — in MATLAB `delete` on a `handle`
+subclass **is the destructor**, and a `LatentStyle_` is minted transiently
+(`getitem_` / `to_array` / `add_latent_style`) and **not** held by the tree, so
+overriding `delete` would detach a still-parented element on ordinary GC.
+**Resolution (identical to [`BaseStyle`](#id-h17-delete-proxy)):** `delete` is
+**NOT overridden** (GC-safe); the faithful body is exposed as **`delete_()`**,
+which detaches the parented element through the P4-6 element-layer guarded
+`CT_LsdException.delete` and is therefore **byte-identical** to python-docx
+`_LatentStyle.delete()`. A FLAG-3 method-**naming** resolution — **not an output
+deviation → no D-number.**
+
+:::{warning}
+**Binding Gate-4 rule.** After `delete_()` the MATLAB element handle is **invalid**
+(destroyed), whereas Python's element survives detached — **never inspect the
+handle after `delete_`**; assert only the parent-side effect (child count /
+serialized bytes). The GC-invariance safety property was re-proven at Gate-3
+(transient `LatentStyle_` proxies minted + cleared leave the styles part
+bit-for-bit unchanged).
+:::
+
+**Example**
+
+```matlab
+d  = mat2doc.Document();
+ls = d.styles.latent_styles;
+x  = ls.add_latent_style("Table Grid");
+disp(class(x));                        % mat2doc.styles.LatentStyle_
+disp(x.hidden);                        % []  (raw tri-state: inherit the default)
+x.priority = 59; x.hidden = false; x.quick_style = true;
+before = ls.len_();
+x.delete_();                           % remove the override
+disp(ls.len_() == before - 1);         % 1  (assert the PARENT-side effect only)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/styles/latent.py::_LatentStyle`*
+
+---
+
 (id-h17-delete-proxy)=
 ## The H17 hazard at the proxy layer — `delete()` → `delete_()`
 
@@ -507,23 +680,30 @@ whole chain (`Paragraph.style = "Heading 1"` → `DocumentPart.get_style_id` →
 M2's `add_heading`.
 
 :::{note}
-**Still stubbed for P4-7b.** `Styles.latent_styles` remains a clean
-`mat2doc:notYetPorted` stub naming P4-7b (the `LatentStyles` proxy); the
-underlying `CT_Styles.get_or_add_latentStyles` descriptor is already live (P4-6).
+**Un-stubbed at P4-7b.** `Styles.latent_styles` now resolves to a
+`mat2doc.styles.LatentStyles` over `CT_Styles.get_or_add_latentStyles()` (the
+underlying descriptor was already live at P4-6). See
+[`LatentStyles`](#id-latentstyles) below.
 :::
 
 ---
 
-## Styles API un-stubbed — latent styles (P4-7b) is next → M2
+## Styles API COMPLETE → ★ M2 ACHIEVED (P4-7b)
 
-This WP completes the **styles API/proxy tier**: the `StyleFactory` dispatch, the
+The **styles API/proxy tier** is complete: the `StyleFactory` dispatch, the
 `BaseStyle`→`CharacterStyle`→`ParagraphStyle`→`TableStyle_`/`NumberingStyle_`
 hierarchy with its full property surface and `base_style`/`next_paragraph_style`
-chains, the `Styles` collection, and `BabelFish`. The styles delegation is
-un-stubbed across the document object graph, the H17 `delete()` collision is
-resolved by the byte-faithful `delete_()` rename, and everything stays
-**byte-neutral** (M1 17/17, **zero new D-numbers**). What remains before **M2** is
-**P4-7b** — the latent-styles API (`LatentStyles`/`_LatentStyle`, un-stubbing
-`Styles.latent_styles`) — after which `Document.add_paragraph` / `add_heading`
-produce a real, byte-identical `document.xml` that opens clean in Word (the M2
-milestone gate + the Word-COM oracle).
+chains, the `Styles` collection, `BabelFish`, and — at **P4-7b** — the
+latent-styles API (`LatentStyles`/`LatentStyle_`, un-stubbing
+`Styles.latent_styles`). The styles delegation is un-stubbed across the document
+object graph, the H17 `delete()` collision is resolved by the byte-faithful
+`delete_()` rename at both the element and proxy layers, and everything stays
+**byte-neutral** (M1 17/17, **zero new D-numbers**); the latent WRITE path has its
+own 17/17 byte proof (`s0034`, only `word/styles.xml` changes, SHA `3981d463…ab53`).
+
+With `Styles.latent_styles` live, **P4-7b un-stubs the `add_heading` /
+`add_paragraph` authoring path** — `mat2doc.Document(); add_heading(_,0/1/2);
+add_paragraph(); save()` produces a `word/document.xml` **byte-identical** to
+python-docx that **opens clean in real Word**. That is **★ M2 — ACHIEVED**, and it
+**completes Phase 4**. See the [M2 milestone page](../m2_milestone.md) for the
+hello-world document, the 17/17 byte result, and the Word COM oracle.

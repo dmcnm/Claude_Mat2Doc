@@ -192,6 +192,25 @@ D-numbers across all of P2**. What remains is the **feature surface**: content
 authoring lights up at **P3** (enums + simpletypes) → **P4** (paragraph/run) and
 onward toward **M2**.
 
+## ★ P4-7b UPDATE — the content adders go live (→ M2)
+
+At **P4-7b** the paragraph-authoring surface stubbed here goes **live**, reaching
+the **★ M2 milestone**: `mat2doc.Document(); add_heading(_,0/1/2); add_paragraph();
+save()` produces a `word/document.xml` **byte-identical** to python-docx that
+**opens clean in real Word**. The now-live members:
+
+| Member | P4-7b status | Behavior |
+|---|---|---|
+| `Document.add_heading(text, level)` | **LIVE** | level → style: `0`→"Title", `1` (default)→"Heading 1", `2..9`→"Heading N"; `level` outside `0-9` → `mat2doc:ValueError` (verbatim `level must be in range 0-9, got %d`); delegates to `add_paragraph(text, style)` |
+| `Document.add_paragraph(text, style)` | **LIVE** | → `body_().add_paragraph(text, style)`; `if text` adds a run (H4), `if style is not None` sets the style |
+| `BlockItemContainer.add_paragraph` / `add_paragraph_` / `paragraphs` | **LIVE** | the real workers over the LIVE `CT_Body.add_p()` / `p_lst` and the P4-5b `Paragraph` proxy |
+| `Document.paragraphs` / `add_page_break` | **still stub** (deps live) | out of P4-7b's named scope; honest stubs whose dependencies are now all live — clean un-stub candidates for the next content WP |
+
+Full detail — the level→style-name mapping, the `ValueError` bounds, and the byte /
+Word-COM results — is on the **[M2 milestone page](../m2_milestone.md)**. The
+tables below reflect the **M1/P2-3** snapshot (historical); read them together
+with this update.
+
 ## The walking skeleton — what is LIVE vs STUBBED at M1
 
 **LIVE (the open→save spine):** `mat2doc.Document` (entry) → `Package.open`
