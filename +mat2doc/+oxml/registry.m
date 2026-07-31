@@ -135,17 +135,16 @@ map = registerElementCls_(map, "w:t",              "mat2doc.oxml.text.CT_Text");
 map = registerElementCls_(map, "w:p",   "mat2doc.oxml.text.CT_P");   % __init__.py:229
 % -- parfmt block (docx/oxml/__init__.py:231-251), P4-2. The 6 parfmt CT_* classes
 % -- + the shared CT_OnOff/CT_String rows this block registers, in __init__.py
-% -- source order. NOTE w:outlineLvl @:244 -> CT_DecimalNumber is DEFERRED: that
-% -- shared class (oxml/shared.py) is not yet ported (its first registration is in
-% -- the numbering block @:105, owned by a later shared/numbering WP), so
-% -- w:outlineLvl resolves to a generic XmlElement until then -- BYTE-NEUTRAL and
-% -- behavior-neutral (CT_PPr.outlineLvl is never read for .val). Same deferral
-% -- pattern as w:tab was deferred from the run block to here.
+% -- source order. NOTE w:outlineLvl @:244 -> CT_DecimalNumber was DEFERRED by
+% -- P4-2 (the shared CT_DecimalNumber class was not yet ported); P4-6 PORTS
+% -- CT_DecimalNumber (oxml/shared.py) and CLOSES that deferral -- the row below
+% -- is now LIVE. w:outlineLvl still round-trips byte-identically (CT_PPr never
+% -- reads .val on it); the only change is that it now transits CT_DecimalNumber.
 map = registerElementCls_(map, "w:ind",             "mat2doc.oxml.text.CT_Ind");        % __init__.py:240
 map = registerElementCls_(map, "w:jc",              "mat2doc.oxml.text.CT_Jc");         % __init__.py:241
 map = registerElementCls_(map, "w:keepLines",       "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:242
 map = registerElementCls_(map, "w:keepNext",        "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:243
-% w:outlineLvl -> CT_DecimalNumber DEFERRED (shared.py, later WP)              % __init__.py:244
+map = registerElementCls_(map, "w:outlineLvl",      "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:244 (deferral CLOSED by P4-6)
 map = registerElementCls_(map, "w:pageBreakBefore", "mat2doc.oxml.shared.CT_OnOff");    % __init__.py:245
 map = registerElementCls_(map, "w:pPr",             "mat2doc.oxml.text.CT_PPr");        % __init__.py:246
 map = registerElementCls_(map, "w:pStyle",          "mat2doc.oxml.shared.CT_String");   % __init__.py:247
@@ -164,6 +163,30 @@ map = registerElementCls_(map, "w:hyperlink", ...
     "mat2doc.oxml.text.CT_Hyperlink");             % __init__.py:67 (P4-3)
 map = registerElementCls_(map, "w:lastRenderedPageBreak", ...
     "mat2doc.oxml.text.CT_LastRenderedPageBreak"); % __init__.py:74 (P4-3)
+% -- styles block (docx/oxml/__init__.py:136-149), P4-6 -- FIRST WP of the styles
+% -- chain. The 4 styles CT_* classes (CT_LatentStyles/CT_LsdException/CT_Style/
+% -- CT_Styles) + the shared CT_String/CT_OnOff/CT_DecimalNumber rows this block
+% -- registers, in __init__.py source order. ALL 12 tags appear in word/styles.xml
+% -- (see boundary audit "12 styles tags"); registering them makes styles.xml
+% -- transit these CT_* classes on load (the M1 parse path) and lights up
+% -- CT_Style's .val accessors (name_val/basedOn_val/next_style read .val on the
+% -- CT_String/CT_DecimalNumber/CT_OnOff children). w:uiPriority is
+% -- CT_DecimalNumber's FIRST registration. The numbering/table CT_DecimalNumber
+% -- rows (w:gridSpan/w:numId/...) stay DEFERRED to P6/P8 (they do not appear in
+% -- styles.xml). ZERO exact-class XmlElement pins target these 12 tags (boundary
+% -- audit), so no stale-pin flip.
+map = registerElementCls_(map, "w:basedOn",         "mat2doc.oxml.shared.CT_String");        % __init__.py:138
+map = registerElementCls_(map, "w:latentStyles",    "mat2doc.oxml.styles.CT_LatentStyles");  % __init__.py:139
+map = registerElementCls_(map, "w:locked",          "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:140
+map = registerElementCls_(map, "w:lsdException",    "mat2doc.oxml.styles.CT_LsdException");   % __init__.py:141
+map = registerElementCls_(map, "w:name",            "mat2doc.oxml.shared.CT_String");        % __init__.py:142
+map = registerElementCls_(map, "w:next",            "mat2doc.oxml.shared.CT_String");        % __init__.py:143
+map = registerElementCls_(map, "w:qFormat",         "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:144
+map = registerElementCls_(map, "w:semiHidden",      "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:145
+map = registerElementCls_(map, "w:style",           "mat2doc.oxml.styles.CT_Style");          % __init__.py:146
+map = registerElementCls_(map, "w:styles",          "mat2doc.oxml.styles.CT_Styles");         % __init__.py:147
+map = registerElementCls_(map, "w:uiPriority",      "mat2doc.oxml.shared.CT_DecimalNumber");  % __init__.py:148
+map = registerElementCls_(map, "w:unhideWhenUsed",  "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:149
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE

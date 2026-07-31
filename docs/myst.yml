@@ -26,6 +26,7 @@ project:
         - file: api/oxml_xmlchemy.md
         - file: api/simpletypes.md
         - file: api/oxml_text.md
+        - file: api/oxml_styles.md
     - title: OPC layer (opc)
       children:
         - file: api/opc_oxml.md
