@@ -246,9 +246,22 @@ syntax, description, example, ported-from).
   live). Registering `w:hdr`/`w:ftr` is **M1-neutral** (separate-part roots absent from
   `default.docx`) — M1 17/17 unchanged, **zero re-pins**, the header-part round-trip
   byte-identical (`s0043`) and the adversarial 4-doc / 11-section partition corpus equal to the
-  python-docx oracle (`s0044`), **0 new D-numbers**. **Section oxml layer COMPLETE (core +
-  hdr/ftr bodies + iterator) — the Section/Sections API (P5-3a, with the `add_section` un-stub)
-  and headers/footers (P5-3b) next.**
+  python-docx oracle (`s0044`), **0 new D-numbers**. The **Section / Sections API** page
+  (**P5-3a**) then opens the section API surface: `mat2doc.section.Section` (the transparent
+  proxy over a registered `CT_SectPr` — all twelve geometry/type accessors delegated one-to-one,
+  the `orientation` NO-w/h-swap, the `start_type` identity setter, the `different_first_page`
+  `titlePg` bool, `part` as the story-parent hook, and `iter_inner_content` wrapping each `CT_P`
+  as a `Paragraph` with the `w:tbl`→`Table` branch raising `mat2doc:notYetPorted` owner P6-4a —
+  never a silent drop) and `mat2doc.section.Sections` (the section sequence — the **0-based**
+  `getitem_` int/negative/slice with the verbatim `IndexError`/`ValueError`, `to_array`, `len_`,
+  the interim struct-slice currency per the TabStops precedent). It **un-stubs the section-
+  authoring path** — `Document.sections` / `Document.add_section` + `CT_Body.add_section_break`
+  (the intermediate-sectPr nesting, clone-before-hdr/ftr-removal) — with **no registry rows**, so
+  the default `Document().save()` stays M1 17/17 (`document.xml` `0e4dd503…` unchanged) while the
+  `add_section` (all 5 start types + 2/3-section chains) and Section-property-write paths are
+  byte-identical to python-docx (`s0046`–`s0051`), **0 new D-numbers**. The six `_Header`/`_Footer`
+  members stay clean `mat2doc:notYetPorted` stubs → **P5-3b**. **Section API live — headers/footers
+  (P5-3b, the separate-part hdr/ftr rels) next → completes P5 sections.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

@@ -1,0 +1,117 @@
+{
+  "section_props": {
+    "default": {
+      "bottom_margin": "914400",
+      "top_margin": "914400",
+      "left_margin": "1143000",
+      "right_margin": "1143000",
+      "gutter": "0",
+      "header_distance": "457200",
+      "footer_distance": "457200",
+      "page_width": "7772400",
+      "page_height": "10058400",
+      "orientation": "PORTRAIT",
+      "start_type": "NEW_PAGE",
+      "different_first_page_header_footer": "False"
+    },
+    "part_is_doc_part": "True",
+    "after_set": {
+      "bottom_margin": "457200",
+      "top_margin": "1143000",
+      "left_margin": "635000",
+      "right_margin": "None",
+      "gutter": "152400",
+      "header_distance": "365760",
+      "footer_distance": "None",
+      "page_width": "10058400",
+      "page_height": "7772400",
+      "orientation": "LANDSCAPE",
+      "start_type": "EVEN_PAGE",
+      "different_first_page_header_footer": "True"
+    },
+    "after_none": {
+      "orientation": "PORTRAIT",
+      "start_type": "NEW_PAGE",
+      "different_first_page_header_footer": "False"
+    }
+  },
+  "sequence": {
+    "len": "3",
+    "iter_start_types": [
+      "NEW_PAGE",
+      "NEW_PAGE",
+      "ODD_PAGE"
+    ],
+    "getitem_int": [
+      "NEW_PAGE",
+      "NEW_PAGE",
+      "ODD_PAGE"
+    ],
+    "getitem_neg": [
+      "ODD_PAGE",
+      "NEW_PAGE",
+      "NEW_PAGE"
+    ],
+    "neg1_is_last": "True",
+    "slices": {
+      "sl_0_2_None": [
+        "NEW_PAGE",
+        "NEW_PAGE"
+      ],
+      "sl_None_None_None": [
+        "NEW_PAGE",
+        "NEW_PAGE",
+        "ODD_PAGE"
+      ],
+      "sl_None_None_2": [
+        "NEW_PAGE",
+        "ODD_PAGE"
+      ],
+      "sl_neg2_None_None": [
+        "NEW_PAGE",
+        "ODD_PAGE"
+      ],
+      "sl_2_1_None_empty": [],
+      "sl_None_None_neg1": [
+        "ODD_PAGE",
+        "NEW_PAGE",
+        "NEW_PAGE"
+      ],
+      "sl_neg1_None_neg1": [
+        "ODD_PAGE",
+        "NEW_PAGE",
+        "NEW_PAGE"
+      ],
+      "sl_1_None_neg2": [
+        "NEW_PAGE"
+      ],
+      "sl_0_3_2": [
+        "NEW_PAGE",
+        "ODD_PAGE"
+      ],
+      "sl_5_None_None_clamp": [],
+      "sl_neg5_2_None_clamp": [
+        "NEW_PAGE",
+        "NEW_PAGE"
+      ],
+      "sl_None_1_neg1": [
+        "ODD_PAGE"
+      ]
+    },
+    "err_index_pos": "list index out of range",
+    "err_index_neg": "list index out of range",
+    "err_slice_step0": "slice step cannot be zero"
+  },
+  "iter_inner_content": {
+    "types": [
+      "Paragraph"
+    ],
+    "para_texts": [
+      "IIC-café"
+    ]
+  },
+  "block_width": {
+    "default": "5486400",
+    "modified": "8229600"
+  }
+}

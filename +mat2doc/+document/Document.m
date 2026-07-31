@@ -4,13 +4,14 @@ classdef Document < mat2doc.shared.ElementProxy
 %   Not intended to be constructed directly. Use the package-level factory
 %   MAT2DOC.DOCUMENT (`+mat2doc\Document.m`) to open or create a document.
 %
-%   P2-3 SLICE (+ P4-7a/P4-7b): `save`, `core_properties`, `part`, `styles`
-%   (P4-7a), and the paragraph adders `add_heading` / `add_paragraph` (P4-7b,
-%   the M2 critical path) are LIVE, as are the private object-graph accessors
-%   `body_` / `block_width_`. The remaining content members (add_table /
-%   add_picture / add_page_break / paragraphs / sections / settings /
-%   inline_shapes / tables / comments / ...) are mat2doc:notYetPorted stubs.
-%   NONE of the stubs is on the open->save path.
+%   P2-3 SLICE (+ P4-7a/P4-7b/P5-1/P5-3a): `save`, `core_properties`, `part`,
+%   `styles` (P4-7a), `settings` (P5-1), the paragraph adders `add_heading` /
+%   `add_paragraph` (P4-7b, the M2 critical path), and -- UN-STUBBED at P5-3a
+%   (C1) -- `sections` and `add_section` are LIVE, as are the private
+%   object-graph accessors `body_` / `block_width_` (block_width_ now reaches the
+%   live sections). The remaining content members (add_table / add_picture /
+%   add_page_break / paragraphs / inline_shapes / tables / comments / ...) are
+%   mat2doc:notYetPorted stubs. NONE of the stubs is on the open->save path.
 %
 %   VERIFY-M1-DOC-BASE (RESOLVED in P2-1): in python-docx Document extends
 %   ElementProxy (document.py 28, `class Document(ElementProxy)`), which
@@ -108,12 +109,12 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         % ------------------------------------------------------------------
-        % LIVE object-graph SHELL (P2-3): the private _body / _block_width
+        % LIVE object-graph SHELL (P2-3 + P5-3a): the private _body / _block_width
         % accessors. NEITHER is on the clean open->save path (proven: a bare
-        % Document().save() fires ZERO stubs), so they are live plumbing without
-        % pulling P4/P5/P6 forward. body_ is fully functional now; block_width_
-        % is ported faithfully but transitively hits the `sections` stub (P5) --
-        % it is reached only by add_table (itself a P6 stub), so no live caller.
+        % Document().save() fires ZERO stubs). body_ and (as of P5-3a, with
+        % sections now LIVE) block_width_ are both fully functional; block_width_
+        % is still reached only by add_table (a P6 stub), so it has no live caller
+        % yet, but it now computes a real value rather than raising.
         % ------------------------------------------------------------------
 
         function b = body_(obj)
@@ -146,26 +147,29 @@ classdef Document < mat2doc.shared.ElementProxy
             %       left_margin = section.left_margin or Inches(1)
             %       right_margin= section.right_margin or Inches(1)
             %       return Emu(page_width - left_margin - right_margin)
-            %   Ported FAITHFULLY, but `sections` is a P5 stub, so this transitively
-            %   raises mat2doc:notYetPorted when invoked -- reached only via
-            %   add_table (a P6 stub), so there is no live caller at P2-3. The
-            %   Python `x or Inches(...)` falsy-default (H4: Length(0) is falsy) is
-            %   ported for when sections goes live; Emu/Inches are the shared Length
-            %   subclasses (arithmetic in EMU, H6). Underscore rotation:
-            %   _block_width -> block_width_.
+            %   Ported FAITHFULLY. As of P5-3a `sections` is LIVE (C1), so this
+            %   computes a real value; it is still reached only via add_table (a P6
+            %   stub), so there is no live caller yet. The Python `x or Inches(...)`
+            %   falsy-default (H4: Length(0) is falsy) is ported; Emu/Inches are the
+            %   shared Length subclasses (arithmetic in EMU, H6). Underscore
+            %   rotation: _block_width -> block_width_.
             %
             %   Ported from python-docx v1.2.0: src/docx/document.py::Document._block_width
-            section = obj.sections();                        % P5 stub -> notYetPorted
-            section = section(end);                          % sections[-1] (H1: end)
-            page_width = section.page_width();
+            %   P5-3a: sections is now LIVE (C1). `self.sections[-1]` -> the
+            %   0-based getitem_(-1) on the Sections collection (negative wrap to
+            %   the last section), replacing the stub-era `sections()(end)`
+            %   placeholder that assumed sections returned a plain array.
+            s = obj.sections();                              % Sections collection (LIVE, C1)
+            section = s.getitem_(-1);                        % Python: self.sections[-1]
+            page_width = section.page_width;                 % Python: section.page_width
             if isequal(page_width, []) || page_width == 0    % `or Inches(8.5)` (H4)
                 page_width = mat2doc.shared.Inches(8.5);
             end
-            left_margin = section.left_margin();
+            left_margin = section.left_margin;               % Python: section.left_margin
             if isequal(left_margin, []) || left_margin == 0  % `or Inches(1)` (H4)
                 left_margin = mat2doc.shared.Inches(1);
             end
-            right_margin = section.right_margin();
+            right_margin = section.right_margin;             % Python: section.right_margin
             if isequal(right_margin, []) || right_margin == 0 % `or Inches(1)` (H4)
                 right_margin = mat2doc.shared.Inches(1);
             end
@@ -261,11 +265,30 @@ classdef Document < mat2doc.shared.ElementProxy
                 "tier) is not yet ported");
         end
 
-        function section = add_section(obj, start_type) %#ok<INUSD,MANU,STOUT>
-            % ADD_SECTION STUB (document.py 140-148). Owner: P5 section tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_section (owning WP: P5 section " + ...
-                "tier) is not yet ported");
+        function section = add_section(obj, start_type)
+            % ADD_SECTION Return a Section newly added at the end of the document
+            %   (document.py 140-148). UN-STUBBED at P5-3a (C1). `start_type` must
+            %   be a WD_SECTION (== WD_SECTION_START) member and defaults to
+            %   WD_SECTION.NEW_PAGE.
+            %
+            %   Python:
+            %     new_sectPr = self._element.body.add_section_break()
+            %     new_sectPr.start_type = start_type
+            %     return Section(new_sectPr, self._part)
+            %
+            %   H13 default fidelity: add_section(start_type=WD_SECTION.NEW_PAGE).
+            %   add_section_break (CT_Body, LIVE P5-3a) clones the prior sentinel
+            %   sectPr into a new trailing paragraph and returns the sentinel; its
+            %   start_type is then set, and the Section proxy wraps it.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_section
+            arguments
+                obj
+                start_type = mat2doc.enum.section.WD_SECTION.NEW_PAGE   % Python default
+            end
+            new_sectPr = obj.element_.body.add_section_break();   % Python: self._element.body.add_section_break()
+            new_sectPr.start_type = start_type;                   % Python: new_sectPr.start_type = start_type
+            section = mat2doc.section.Section(new_sectPr, obj.part_);  % Python: return Section(new_sectPr, self._part)
         end
 
         function table = add_table(obj, rows, cols, style) %#ok<INUSD,MANU,STOUT>
@@ -310,11 +333,13 @@ classdef Document < mat2doc.shared.ElementProxy
                 "follow-up; deps live via _body.paragraphs) is not yet ported");
         end
 
-        function s = sections(obj) %#ok<MANU,STOUT>
-            % SECTIONS STUB (document.py 206-209). Owner: P5 section tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.sections (owning WP: P5 section tier) " + ...
-                "is not yet ported");
+        function s = sections(obj)
+            % SECTIONS A Sections object providing access to each section in this
+            %   document (document.py 206-209, @property). UN-STUBBED at P5-3a (C1).
+            %   Python: return Sections(self._element, self._part).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.sections
+            s = mat2doc.section.Sections(obj.element_, obj.part_);
         end
 
         function s = settings(obj)
