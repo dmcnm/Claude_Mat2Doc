@@ -289,10 +289,27 @@ syntax, description, example, ported-from).
   brief-correction that `w:tblW` is **not** registered upstream (only `w:tcW`). The
   table-leaf subtrees of a real python-docx table round-trip **byte-identical**
   (10/10, `references\s0060`) and the width union is byte-proven both ways,
-  **0 new D-numbers**. The container classes (`CT_TblPr`/`CT_TblPrEx`/`CT_TrPr`/
-  `CT_Row` → P6-2; the **CT_Tc merge engine** at **P6-3a**, the hardest WP, with its
-  own pre-launch plan-audit; `CT_TcPr`/`CT_Tbl` → P6-3b; the `Table`/`_Cell` API →
-  P6-4a/b + the table Word-COM sweep) follow. See the
+  **0 new D-numbers**. **P6-2** then adds the **property containers** that consume
+  those leaves — `mat2doc.oxml.table.CT_TblPr` (table properties: `alignment` /
+  `autofit` / `style`), `CT_TblPrEx` (the bare property-exceptions container),
+  `CT_TrPr` (row properties: grid-before/after skips + row height) and `CT_Row`
+  (the `<w:tr>` row element: the delegated row accessors, `tr_idx`, the custom
+  `tblPrEx`/`trPr` inserters, and the tag-based **CT_Tc boundary** handlers
+  `_new_tc` / `tc_at_grid_offset`→P6-3a). The **first NON-neutral** table WP:
+  registering `w:tblPr` puts the 100 `<w:tblPr>` nodes in the shipped table styles
+  on the live `word/styles.xml` parse path, proven byte-neutral by the M1 17/17
+  `styles.xml` `02d71a68…` match. **★ A2 cross-enum:** `CT_TblPr.alignment` reuses
+  the single registered `CT_Jc` (one element, two context enums — **no second
+  `w:jc` row**) and faithfully returns a `WD_PARAGRAPH_ALIGNMENT` member
+  (python-docx's `cast` is a runtime no-op; a converting getter would crash on the
+  legal `<w:jc w:val="both">` = Justify) — the binding idiom is compare **by name**
+  (`== "CENTER"`) or `.value`, never cross-class `==` (design.md §2, ruled no-D).
+  P6-2 also closes the `w:tblStyle`→`CT_String` and `w:gridAfter`/`w:gridBefore`→
+  `CT_DecimalNumber` deferrals; props round-trip **6/6 byte-identical**
+  (`references\s0062`, incl. the `w:jc val="both"` edge), **0 new D-numbers**. What
+  remains: the **CT_Tc merge engine** at **P6-3a** (the hardest WP, with its own
+  dedicated pre-launch plan-audit); `CT_TcPr`/`CT_Tbl` → P6-3b; the `Table`/`_Cell`
+  API → P6-4a/b + the table Word-COM sweep. See the
   [table oxml page](api/oxml_table.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
