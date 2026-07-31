@@ -234,6 +234,15 @@ map = registerElementCls_(map, "w:settings",          "mat2doc.oxml.settings.CT_
 % -- ATTRIBUTES, a disjoint namespace from element-tag registration). No conflict.
 map = registerElementCls_(map, "w:titlePg",         "mat2doc.oxml.shared.CT_OnOff");          % __init__.py:84  (P5-1 deferral CLOSED)
 map = registerElementCls_(map, "w:footerReference", "mat2doc.oxml.section.CT_HdrFtrRef");     % __init__.py:123
+% -- w:ftr / w:hdr (__init__.py:124-125), P5-2b -- closes the P5-2a CT_HdrFtr
+% -- deferral. w:hdr/w:ftr are ROOTS of SEPARATE header/footer parts (header1.xml/
+% -- footer1.xml), NOT children of document.xml, so registering them is
+% -- M1-NEUTRAL: default.docx has no header/footer part and no <w:hdr>/<w:ftr>
+% -- transits the M1 parse path (planaudit_2026-07-31 finding (e)). Flip-neutral:
+% -- no exact-class XmlElement pin can see a w:hdr/w:ftr class. The rows light up
+% -- only when a header/footer part is loaded (first at P5-3b).
+map = registerElementCls_(map, "w:ftr",             "mat2doc.oxml.section.CT_HdrFtr");        % __init__.py:124 (P5-2b)
+map = registerElementCls_(map, "w:hdr",             "mat2doc.oxml.section.CT_HdrFtr");        % __init__.py:125 (P5-2b)
 map = registerElementCls_(map, "w:headerReference", "mat2doc.oxml.section.CT_HdrFtrRef");     % __init__.py:126
 map = registerElementCls_(map, "w:pgMar",           "mat2doc.oxml.section.CT_PageMar");       % __init__.py:127
 map = registerElementCls_(map, "w:pgSz",            "mat2doc.oxml.section.CT_PageSz");        % __init__.py:128

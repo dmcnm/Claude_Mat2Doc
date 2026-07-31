@@ -235,8 +235,20 @@ syntax, description, example, ported-from).
   `word/document.xml` (17/17 preserved, SHA `0e4dd503…` unchanged); the geometry-write /
   LANDSCAPE novel paths are byte-identical to python-docx (`s0040`/`s0041`), the loose-element
   `r:` auto-prefix is the pre-existing SIGNED **D-nsprefix-rewrite** (dead-on-generation),
-  **0 new D-numbers**. **Settings + section oxml core done — CT_HdrFtr + the section iterator
-  (P5-2b), then the Section/Sections API (P5-3a) and headers/footers (P5-3b) next.**
+  **0 new D-numbers**. The **section-oxml layer is then COMPLETED** at **P5-2b**:
+  `mat2doc.oxml.section.CT_HdrFtr` (the `<w:hdr>`/`<w:ftr>` header/footer **PART root** —
+  its `ZeroOrMore` p/tbl descriptors and the `inner_content_elements` tag-based child union,
+  with an unregistered `w:tbl` INCLUDED as a generic `XmlElement` until P6, and `w:ins`-nested
+  content excluded) and `mat2doc.oxml.section.SectBlockElementIterator_` (the
+  `_SectBlockElementIterator` that partitions a body's block elements into sections by `sectPr`
+  — the mutually-exclusive p-sect/body-sect xpath shapes, the skip-count boundary arithmetic,
+  and the concat-equals-body invariant), which **un-stubs `CT_SectPr.iter_inner_content`** (now
+  live). Registering `w:hdr`/`w:ftr` is **M1-neutral** (separate-part roots absent from
+  `default.docx`) — M1 17/17 unchanged, **zero re-pins**, the header-part round-trip
+  byte-identical (`s0043`) and the adversarial 4-doc / 11-section partition corpus equal to the
+  python-docx oracle (`s0044`), **0 new D-numbers**. **Section oxml layer COMPLETE (core +
+  hdr/ftr bodies + iterator) — the Section/Sections API (P5-3a, with the `add_section` un-stub)
+  and headers/footers (P5-3b) next.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

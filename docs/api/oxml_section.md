@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.oxml.section — the section-properties oxml core (CT_SectPr · CT_PageSz · CT_PageMar · CT_SectType · CT_HdrFtrRef)"
+title: "mat2doc.oxml.section — the section oxml layer (CT_SectPr · CT_PageSz · CT_PageMar · CT_SectType · CT_HdrFtrRef · CT_HdrFtr · the section block-element iterator)"
 ---
 
-# `mat2doc.oxml.section` — the section-properties oxml core (`CT_SectPr` + page geometry)
+# `mat2doc.oxml.section` — the section oxml layer (`CT_SectPr` + page geometry + `CT_HdrFtr` + the section iterator)
 
 Ported from python-docx v1.2.0 `src/docx/oxml/section.py` (in the NEW package
 `+mat2doc/+oxml/+section/`) — the `<w:sectPr>` section-properties element and the
@@ -379,19 +379,201 @@ real API usage), and `probe_diff` is a clean MATCH.
 
 ---
 
-## Section oxml core COMPLETE — CT_HdrFtr + iterator (P5-2b), then Section/Sections (P5-3a) next
+(id-p5-2b)=
+## P5-2b — `CT_HdrFtr`, the section block-element iterator, and the `iter_inner_content` un-stub
 
-This WP completes the section-properties **element core**: `CT_SectPr` (its 20-tag
-`TAG_SEQ` and the H11 successor slices), the page-geometry / start-type / titlePg
-accessors with the NO-w/h-swap orientation and the `[None, False]` titlePg breadth,
-the header/footer-reference surface, and the four child classes `CT_PageSz` /
-`CT_PageMar` / `CT_SectType` / `CT_HdrFtrRef`. Registering the seven tags is
-**byte-neutral on the M1-central `word/document.xml`** (17/17 preserved), the
-geometry-write paths are byte-proven, and there are **zero new D-numbers**. What
-remains in **Phase 5** is the header/footer **bodies** and the section walk
-(**P5-2b** — `CT_HdrFtr` for the `w:hdr`/`w:ftr` roots + `_SectBlockElementIterator`,
-which un-stubs `CT_SectPr.iter_inner_content`; a **pre-launch cross-part
-plan-audit** is booked here for the separate-part header/footer rels hazard), then
-the **section API** (**P5-3a** `Section`/`Sections` reading this `CT_SectPr`
-surface, **P5-3b** `_Header`/`_Footer` + the separate-part header/footer rels,
-which consume the `Settings.odd_and_even_pages_header_footer` toggle from P5-1).
+:::{note}
+**★ Section oxml layer COMPLETE (core + hdr/ftr bodies + the section iterator).**
+P5-2b adds the header/footer **PART root** `CT_HdrFtr` and the
+`_SectBlockElementIterator` that partitions a body's block elements into sections,
+and un-stubs `CT_SectPr.iter_inner_content` so it is now **live**. It registers
+`w:hdr`/`w:ftr` — **M1-neutral** (separate-part roots absent from `default.docx`) —
+so M1 stays 17/17 with **zero re-pins** and **zero new D-numbers**. What remains in
+**Phase 5** is the API surface: the `Section`/`Sections` proxies (**P5-3a**) and the
+`_Header`/`_Footer` separate-part rels (**P5-3b**).
+:::
+
+(id-ct_hdrftr)=
+### `CT_HdrFtr` — the header/footer part root
+
+**Syntax**
+
+```matlab
+h = mat2doc.oxml.OxmlElement("w:hdr");   % a CT_HdrFtr (registered for w:hdr AND w:ftr)
+p = h.add_p();                            % new <w:p>, appended at end
+elms = h.inner_content_elements;          % 1xN [CT_P | XmlElement(tbl)], document order
+```
+
+**Description**
+
+`<w:hdr>` / `<w:ftr>` is the **root of a SEPARATE package part**
+(`word/header1.xml`, `word/footer1.xml`, …) — never a child of `document.xml`. It
+holds block content (`w:p` / `w:tbl` children) exactly as `CT_Body` holds the main
+story, and a single class serves **both** the header and the footer part (registered
+for both tags in `oxml/__init__.py` :124–:125).
+
+**The `ZeroOrMore` descriptor family (tag-based, append-at-end).** `p` and `tbl`
+are both `ZeroOrMore` with `successors=()`, generating the docx-form member set
+`p_lst` / `new_p_` / `insert_p_` / `add_p_` / `add_p` (and the `tbl` analogues) — a
+public `add_x` adder, **no** bare getter, **no** get-or-add, **no** remover
+(D-delta-4). `successors=()` maps to `NO_SUCCESSORS` (append at end), mirroring the
+`CT_Body` sentinel pattern.
+
+(id-ct_hdrftr-ice)=
+**`inner_content_elements` — the tag-based child union (CT_Tbl included as generic).**
+The accessor is `xpath("./w:p | ./w:tbl")` — a **tag-based** child union, not
+`isinstance` dispatch. `CT_Tbl` is not registered until **P6**, so a `w:tbl` child
+resolves to a **generic `XmlElement`** (the `CT_Body.tbl_lst` precedent, live since
+P2-3) and is **INCLUDED in document order**, never dropped, never crashed — only its
+element *class* is generic. This class therefore ports **COMPLETE with zero stubs**:
+no `notYetPorted` table branch belongs at the oxml tier (the only table-branch
+decision is `Section.iter_inner_content`'s `isinstance` dispatch at P5-3a, whose
+else-branch is owner P6-4a). A `w:p` **nested inside `w:ins`** (or any other wrapper)
+is **NOT** included — the xpath is a fixed two-branch **child** union, not a
+descendant scan. The return is the materialized `1×N` heterogeneous `XmlElement`
+array (H9 — the Python `@property` returns a list); a **typed empty array** when no
+p/tbl are present (never `[]` / None). H5: two reads return the same live child
+handles.
+
+**Gate-3 header-part byte proof.** A real python-docx v1.2.0 header part (a
+paragraph + a 1×2 table + a paragraph, non-ASCII in both a paragraph and a cell) is
+frozen as `references\s0043\header1.xml` (1842 B, SHA `e6abe568…b397fcb2`, a
+co-located `.gitattributes` `* binary` pin). MATLAB `parse_xml` → `CT_HdrFtr` →
+`inner_content_elements` iterated → `serialize_part_xml` reproduces the input
+**byte-identical**, and that SHA equals **python-docx's own** parse→serialize
+round-trip — extending the D-001 own-parser round-trip proof to a real header PART (a
+fresh input class).
+
+**Example**
+
+```matlab
+h = mat2doc.oxml.OxmlElement("w:hdr");   % a CT_HdrFtr
+h.add_p();                                % append <w:p>
+h.add_tbl();                              % append a generic <w:tbl>
+elms = h.inner_content_elements;          % 1x2 [CT_P, XmlElement]
+disp(numel(elms));                        % 2 (the tbl is INCLUDED, as a generic element)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/section.py::CT_HdrFtr`*
+
+---
+
+(id-sect-iterator)=
+### `SectBlockElementIterator_` — partitioning a body into sections
+
+**Description**
+
+`_SectBlockElementIterator` (FLAG-3 → `SectBlockElementIterator_`) walks the
+block-item elements (`w:p` / `w:tbl`) that **belong to one section**: the block
+elements after the previous section's terminus up to and including this section's
+terminal element. The static entry
+`iter_sect_block_elements(sectPr)` returns them as a **materialized `1×N`
+heterogeneous `XmlElement` array** in document order (`CT_P` for `w:p`, generic
+`XmlElement` for `w:tbl`) — the Python `_iter_sect_block_elements` **generator**
+collapses to a precomputed array (H9: consumers iterate with no tree mutation, so
+laziness is unobservable). This is the surface `CT_SectPr.iter_inner_content` and
+(at P5-3a) `Section.iter_inner_content` consume.
+
+(id-sect-iterator-strategy)=
+**The boundary strategy (section.py 454–537).** Get all block elements from the
+start of the document to **and including** this section, then compute the count of
+those that came from **prior** sections and skip that many, leaving only this
+section's. `sectPrs` is every `w:sectPr` in document order; `sectPr_idx` is this
+sectPr's position; `n_blks_to_skip` is `0` for the first section, else the block
+count of the previous section's "in-and-above" set; the result is
+`blocks-in-and-above(this)[n_blks_to_skip:]`. Three xpath shapes assemble the
+"in-and-above" node-set, all built in `blocks_in_and_above_section_xpath_` verbatim
+from section.py 502–518:
+
+| selector | XPath | selects |
+|---|---|---|
+| `p_sect_term_block` | `./parent::w:pPr/parent::w:p` | the `w:p` a `sectPr` sits in |
+| `body_sect_term` | `self::w:sectPr[parent::w:body]` | the final (body) `sectPr` |
+| `pred_ps_and_tbls` | `preceding-sibling::*[self::w:p \| self::w:tbl]` | the p/tbl before the context node |
+
+`p_sect_term_block` and `body_sect_term` are **mutually exclusive** (a `sectPr`
+lives in a `w:pPr` OR directly in `w:body`), so exactly one shape contributes per
+`sectPr`. The engine returns the union in **document order** (`docSortDedupe`,
+matching lxml), which is the precondition the skip-count arithmetic depends on.
+
+(id-sect-iterator-hazards)=
+**Index and identity hazards.** H1 — `sectPrs.index(sectPr)` is Python 0-based; the
+MATLAB `find` result is 1-based, so the first-section test `sectPr_idx == 0` maps to
+`idx == 1`, the previous-section access `sectPrs[sectPr_idx - 1]` to
+`sectPrs(idx - 1)` (base-invariant predecessor arithmetic), and the slice
+`[n_blks_to_skip:]` to `(n_blks_to_skip + 1 : end)` (the 0→1 slice-start
+conversion; an empty `1×0` result when `n_blks_to_skip == numel(blocks)`). H5 —
+`sectPrs.index` is an element **identity** search (`find(sectPrs == sectPr, 1)` over
+the Sealed `==`); a not-found search raises `mat2doc:ValueError` "sectPr is not in
+list" (faithful to Python `list.index()`'s implicit contract, unreachable in
+practice). Two Python perf optimizations are dropped as **unobservable** (H9): the
+two compiled `etree.XPath` class attributes (the engine re-parses each call) and the
+separate `count(...)` xpath (`numel` of the same node-set is value-identical).
+
+**Gate-3 partition corpus.** The adversarial 4-document / 11-section corpus
+(`references\s0044\probe.json`, frozen) matches the python-docx
+`_SectBlockElementIterator` oracle **exactly**, and per document the concatenation of
+all partitions equals the body's block children in order with **no drop and no
+double-count of any boundary paragraph** — across every edge: an empty first section
+(bare break-p → `[p|]`), a break paragraph carrying content, a table first / last in
+a section, a body section ending in a table, and an empty body section (a typed
+`1×0` array, no error at the slice boundary).
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/section.py::_SectBlockElementIterator`*
+
+---
+
+(id-iter-inner-content-unstub)=
+### `CT_SectPr.iter_inner_content` — now live
+
+The P5-2a stub (a clean `mat2doc:notYetPorted` naming `_SectBlockElementIterator`)
+is **un-stubbed COMPLETELY** at P5-2b: it delegates one line to
+`SectBlockElementIterator_.iter_sect_block_elements(obj)`. Tag-based throughout, so
+there is no CT_Tbl issue at this tier — the un-stub is full, not partial.
+`probe_diff` (s0042) confirms it resolves (`resolves = true`, no `notYetPorted`) and
+yields the correct per-section partitions on a realistic 3-section body.
+
+---
+
+(id-hdrftr-registry)=
+### The `w:hdr` / `w:ftr` registry rows — M1-neutral
+
+Two rows are added in `oxml/__init__.py` source order, between the existing
+`w:footerReference` (:123) and `w:headerReference` (:126):
+
+| tag | class | `oxml/__init__.py` | role |
+|---|---|---|---|
+| `w:ftr` | `section.CT_HdrFtr` | :124 | the footer-part root |
+| `w:hdr` | `section.CT_HdrFtr` | :125 | the header-part root |
+
+`default.docx` has **17 parts and no header/footer part**; the strings
+"header"/"footer" do not occur in its `[Content_Types].xml`, and no M1 part carries a
+`<w:hdr>`/`<w:ftr>` tag. So these rows light up **only** when a header/footer part is
+actually loaded (first materialized at P5-3b) — they touch no M1 parse path. The WP
+is **byte-neutral AND flip-neutral**: no existing exact-class `XmlElement` pin can see
+a `w:hdr`/`w:ftr` class (contrast the P5-2a `sectPr` flip, which re-pinned one test).
+M1 stays **17/17** (`word/document.xml` re-derived `0e4dd503…`, unchanged) with
+**zero re-pins**.
+
+---
+
+## Section oxml layer COMPLETE — Section/Sections API (P5-3a) next
+
+The section oxml layer is now whole: the section-properties **element core**
+(`CT_SectPr` + its 20-tag `TAG_SEQ`, the page-geometry / start-type / titlePg
+accessors, the header/footer-reference surface, and the four children `CT_PageSz` /
+`CT_PageMar` / `CT_SectType` / `CT_HdrFtrRef`), the header/footer **part root**
+`CT_HdrFtr`, and the **section block-element iterator** — with
+`CT_SectPr.iter_inner_content` live. Registering `w:sectPr`/… (P5-2a) is byte-neutral
+on the M1-central `word/document.xml`; registering `w:hdr`/`w:ftr` (P5-2b) is
+M1-neutral; every geometry-write path is byte-proven, the header-part round-trip is
+byte-identical, and every iterator partition equals the python-docx oracle — with
+**zero new D-numbers** across both WPs.
+
+What remains in **Phase 5** is the **API surface**: **P5-3a** (`Section`/`Sections`
+reading this `CT_SectPr` surface, plus the `Document.sections` / `add_section` +
+`CT_Body.add_section_break` un-stubs — the section-authoring path; its
+`Section.iter_inner_content` table branch carries a P6-4a debt) and **P5-3b**
+(`_Header`/`_Footer` + the separate-part header/footer rels, which consume the
+`Settings.odd_and_even_pages_header_footer` toggle from P5-1, and which pre-decide
+the `BlockItemContainer` element-accessor refactor).

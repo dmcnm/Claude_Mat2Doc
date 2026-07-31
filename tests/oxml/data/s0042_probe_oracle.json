@@ -1,0 +1,74 @@
+{
+  "hdrftr": {
+    "empty": {
+      "is_hdrftr": true,
+      "n": 0,
+      "sigs": [],
+      "two_read_identity": true
+    },
+    "p_only": {
+      "is_hdrftr": true,
+      "n": 1,
+      "sigs": [
+        "p|H1"
+      ],
+      "two_read_identity": true
+    },
+    "tbl_only": {
+      "is_hdrftr": true,
+      "n": 1,
+      "sigs": [
+        "tbl|T"
+      ],
+      "two_read_identity": true
+    },
+    "mixed": {
+      "is_hdrftr": true,
+      "n": 3,
+      "sigs": [
+        "p|H-P1",
+        "tbl|H-T00",
+        "p|H-P2"
+      ],
+      "two_read_identity": true
+    },
+    "ins_shaded": {
+      "is_hdrftr": true,
+      "n": 2,
+      "sigs": [
+        "p|H1",
+        "tbl|T"
+      ],
+      "two_read_identity": true
+    },
+    "nonascii": {
+      "is_hdrftr": true,
+      "n": 2,
+      "sigs": [
+        "p|café-Ñ—end",
+        "tbl|中文"
+      ],
+      "two_read_identity": true
+    }
+  },
+  "iter_res": {
+    "n_sections": 3,
+    "resolves": true,
+    "partitions": [
+      [
+        "p|A-S1-P1",
+        "p|A-S1-P2",
+        "tbl|A-S1-T",
+        "p|"
+      ],
+      [
+        "p|A-S2-P1",
+        "p|"
+      ],
+      [
+        "p|A-S3-P1",
+        "p|A-S3-P2"
+      ]
+    ]
+  }
+}

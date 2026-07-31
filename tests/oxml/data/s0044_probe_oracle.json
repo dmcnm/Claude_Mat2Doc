@@ -1,0 +1,74 @@
+{
+  "docA": {
+    "n_sections": 3,
+    "partitions": [
+      [
+        "p|A-S1-P1",
+        "p|A-S1-P2",
+        "tbl|A-S1-T",
+        "p|"
+      ],
+      [
+        "p|A-S2-P1",
+        "p|"
+      ],
+      [
+        "p|A-S3-P1",
+        "p|A-S3-P2"
+      ]
+    ],
+    "concat_eq_body": true,
+    "has_empty_partition": false
+  },
+  "docE": {
+    "n_sections": 5,
+    "partitions": [
+      [
+        "p|"
+      ],
+      [
+        "p|S2-P1",
+        "tbl|S2-T",
+        "p|S2-break-text"
+      ],
+      [
+        "tbl|S3-T",
+        "p|"
+      ],
+      [
+        "p|S4-P1",
+        "tbl|S4-T",
+        "p|"
+      ],
+      []
+    ],
+    "concat_eq_body": true,
+    "has_empty_partition": true
+  },
+  "docC": {
+    "n_sections": 2,
+    "partitions": [
+      [
+        "p|C-S1-P1",
+        "p|"
+      ],
+      [
+        "p|C-S2-P1",
+        "tbl|C-S2-T"
+      ]
+    ],
+    "concat_eq_body": true,
+    "has_empty_partition": false
+  },
+  "docD": {
+    "n_sections": 1,
+    "partitions": [
+      [
+        "p|D-P1",
+        "p|D-P2"
+      ]
+    ],
+    "concat_eq_body": true,
+    "has_empty_partition": false
+  }
+}
