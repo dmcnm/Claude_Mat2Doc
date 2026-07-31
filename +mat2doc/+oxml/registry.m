@@ -212,6 +212,33 @@ map = registerElementCls_(map, "w:unhideWhenUsed",  "mat2doc.oxml.shared.CT_OnOf
 % --      -> P4-6 closed).
 map = registerElementCls_(map, "w:evenAndOddHeaders", "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:83  (P5-1; CT_Settings dep)
 map = registerElementCls_(map, "w:settings",          "mat2doc.oxml.settings.CT_Settings");    % __init__.py:134 (P5-1)
+% -- section oxml core, P5-2a -- the section-properties tier. Rows in
+% -- docx/oxml/__init__.py source order. The section block (__init__.py:123-130)
+% -- registers 8 tags across 6 classes; this WP ports 5 of them (CT_SectPr,
+% -- CT_PageMar, CT_PageSz, CT_SectType, CT_HdrFtrRef) and DEFERS CT_HdrFtr
+% -- (w:hdr @125 / w:ftr @124) to P5-2b. PLUS w:titlePg (__init__.py:84, the
+% -- header/footer block) -> CT_OnOff: DEFERRED by P5-1 ("P5 section tier owns
+% -- it") and CLOSED here -- it is a CT_SectPr child (titlePg/titlePg_val).
+% --
+% -- M1 CENTRALITY (headline): default.docx's word/document.xml carries a
+% -- <w:sectPr> with <w:pgSz>+<w:pgMar> (+ w:cols/w:docGrid, which stay generic
+% -- XmlElement -- unregistered). Registering w:sectPr/w:pgSz/w:pgMar/w:type/
+% -- w:titlePg makes that subtree transit these CT classes on EVERY load, so
+% -- Document().save() re-serializes document.xml through the new parse path.
+% -- Byte-neutral (registering a CT changes only the parsed node's CLASS, not
+% -- its content/order -- P4-6/P5-1 precedent); M1 must stay 17/17.
+% --
+% -- w:type COLLISION CHECK: __init__.py:130 registers the ELEMENT w:type ->
+% -- CT_SectType, and NO prior registry row registers the element w:type (the
+% -- many `w:type` hits elsewhere -- CT_Br/CT_Style/tables -- are @w:type
+% -- ATTRIBUTES, a disjoint namespace from element-tag registration). No conflict.
+map = registerElementCls_(map, "w:titlePg",         "mat2doc.oxml.shared.CT_OnOff");          % __init__.py:84  (P5-1 deferral CLOSED)
+map = registerElementCls_(map, "w:footerReference", "mat2doc.oxml.section.CT_HdrFtrRef");     % __init__.py:123
+map = registerElementCls_(map, "w:headerReference", "mat2doc.oxml.section.CT_HdrFtrRef");     % __init__.py:126
+map = registerElementCls_(map, "w:pgMar",           "mat2doc.oxml.section.CT_PageMar");       % __init__.py:127
+map = registerElementCls_(map, "w:pgSz",            "mat2doc.oxml.section.CT_PageSz");        % __init__.py:128
+map = registerElementCls_(map, "w:sectPr",          "mat2doc.oxml.section.CT_SectPr");        % __init__.py:129
+map = registerElementCls_(map, "w:type",            "mat2doc.oxml.section.CT_SectType");      % __init__.py:130
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
