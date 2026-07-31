@@ -317,11 +317,13 @@ classdef Document < mat2doc.shared.ElementProxy
                 "is not yet ported");
         end
 
-        function s = settings(obj) %#ok<MANU,STOUT>
-            % SETTINGS STUB (document.py 211-214). Owner: P5-1 settings tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.settings (owning WP: P5-1 settings " + ...
-                "tier) is not yet ported");
+        function s = settings(obj)
+            % SETTINGS A Settings object providing access to the document-level
+            %   settings (document.py 211-214, @property). Python:
+            %   return self._part.settings. UN-STUBBED at P5-1.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.settings
+            s = obj.part_.settings();
         end
 
         function s = styles(obj)

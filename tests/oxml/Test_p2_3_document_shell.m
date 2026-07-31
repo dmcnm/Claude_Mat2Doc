@@ -94,10 +94,11 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %       P4-7a un-stubbed Document.styles                    (21 -> 20)
         %       P4-7b un-stubbed Document.add_paragraph/add_heading +
         %             Body_.add_paragraph/Body_.paragraphs          (20 -> 16)
+        %       P5-1  un-stubbed Document.settings                  (16 -> 15)
         %     Document.add_page_break / Document.paragraphs / Body_.add_table /
-        %     Body_.tables / Body_.iter_inner_content and the P5/P6/P7/P8 adders
+        %     Body_.tables / Body_.iter_inner_content and the P6/P7/P8 adders
         %     REMAIN genuinely stubbed. ---
-        STUB_COUNT = 16
+        STUB_COUNT = 15
     end
 
     methods (TestClassSetup)
@@ -299,6 +300,8 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             %   * P4-7b (M2 milestone WP): Document.add_paragraph / Document.add_heading
             %     / Body_.add_paragraph / Body_.paragraphs un-stubbed -> REMOVED (all
             %     asserted resolved below). (20 -> 16.)
+            %   * P5-1: Document.settings un-stubbed -> REMOVED (asserted resolved
+            %     below). (16 -> 15.)
             % Document.add_page_break / Document.paragraphs (P4-7b VERIFY-1 scope --
             % deps live but deliberately left stubbed for the next content WP),
             % Body_.add_table / Body_.tables / Body_.iter_inner_content and the
@@ -315,7 +318,6 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
                 'Document.sections',           @() d.sections(); ...
-                'Document.settings',           @() d.settings(); ...
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes(); ...
                 'Document.iter_inner_content', @() d.iter_inner_content(); ...
@@ -324,7 +326,7 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Body_.iter_inner_content',    @() b.iter_inner_content(); ...
                 'CT_Body.add_section_break',   @() ct.add_section_break()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 16 members (Document.styles P4-7a + 4 adders P4-7b un-stubbed)');
+                'the stub battery must cover exactly 15 members (Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -340,6 +342,9 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % Document.styles now RESOLVES (un-stubbed at P4-7a).
             testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
                 'Document.styles RESOLVES to a Styles proxy (P4-7a un-stub)');
+            % Document.settings now RESOLVES (un-stubbed at P5-1).
+            testCase.verifyClass(d.settings(), 'mat2doc.settings.Settings', ...
+                'Document.settings RESOLVES to a Settings proxy (P5-1 un-stub)');
 
             % The P4-7b (M2) adder un-stubs now RESOLVE end-to-end. Use fresh
             % handles so these positive checks do not interfere with the stub loop's

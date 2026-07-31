@@ -210,6 +210,20 @@ syntax, description, example, ported-from).
   byte-neutral (M1 17/17, 0 new D-numbers). With latent styles live, P4-7b un-stubs
   the `add_heading`/`add_paragraph` authoring path → ★ M2 ACHIEVED → Phase 4
   COMPLETE.**
+- **Sections & settings tier (Phase 5)** — **Phase 5 begins** (sections + settings +
+  headers/footers). The **settings** page opens it: `mat2doc.oxml.settings.CT_Settings`
+  (the `<w:settings>` root — its **98-tag** `TAG_SEQ` and the byte-critical H11
+  `evenAndOddHeaders` successor slice `_tag_seq[48:]` → `TAG_SEQ(49:end)`, the H3 tri-state
+  `evenAndOddHeaders_val` with the D-delta-1 empty-element emission and the H4
+  identity-not-truthiness guard) and `mat2doc.settings.Settings` (the thin `ElementProxy`
+  the `Document.settings` property returns, with the one read/write member
+  `odd_and_even_pages_header_footer`). Registers `w:settings` (→ `CT_Settings`, the
+  settings-part root) + `w:evenAndOddHeaders` (→ `CT_OnOff`, the tri-state child) **byte-
+  neutrally** — `word/settings.xml` now transits `CT_Settings`, M1 17/17 preserved — and
+  un-stubs the settings delegation across `SettingsPart`/`DocumentPart`/`Document`. The
+  novel write path (insert `<w:evenAndOddHeaders/>`) and remove path are **byte-identical
+  to python-docx** (`s0037`/`s0038`), **0 new D-numbers**. **Settings done — sections
+  (P5-2a CT_SectPr / page geometry) and headers/footers (P5-2b/P5-3b) next.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

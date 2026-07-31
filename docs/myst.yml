@@ -52,6 +52,9 @@ project:
     - title: Styles API tier (styles)
       children:
         - file: api/styles_api.md
+    - title: Sections & settings tier (Phase 5)
+      children:
+        - file: api/settings.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

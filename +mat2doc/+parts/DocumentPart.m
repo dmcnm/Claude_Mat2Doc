@@ -224,15 +224,14 @@ classdef DocumentPart < mat2doc.parts.StoryPart
                 "P8-1 numbering tier) required by mat2doc.parts.DocumentPart.numbering_part");
         end
 
-        function s = settings(obj) %#ok<MANU,STOUT>
-            % SETTINGS STUB (parts/document.py 116-120). Owner: P5-1.
-            %   Faithful body: return self._settings_part.settings. _settings_part
-            %   is LIVE (returns a real SettingsPart); SettingsPart.settings (the
-            %   Settings proxy) is the P5-1 stub, so the notYetPorted surfaces
-            %   there.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.settings.Settings (owning WP: P5-1 settings tier) " + ...
-                "required by mat2doc.parts.DocumentPart.settings");
+        function s = settings(obj)
+            % SETTINGS The Settings object for this document (parts/document.py
+            %   116-120, @property). Python: return self._settings_part.settings.
+            %   UN-STUBBED at P5-1: _settings_part (settings_part_) is LIVE and
+            %   SettingsPart.settings now returns a real Settings proxy.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.settings
+            s = obj.settings_part_().settings;
         end
 
         function s = styles(obj)
