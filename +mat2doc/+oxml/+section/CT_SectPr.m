@@ -85,9 +85,10 @@ classdef CT_SectPr < mat2doc.oxml.BaseOxmlElement
 %   H5 (identity): get_headerReference/get_footerReference return the LIVE child
 %   handle (xpath, first match); remove_* detach it by handle identity.
 %
-%   OUT OF SCOPE (P5-2b): iter_inner_content depends on _SectBlockElementIterator
-%   (deferred) -- STUBBED mat2doc:notYetPorted. CT_HdrFtr (w:hdr/w:ftr roots)
-%   also P5-2b.
+%   iter_inner_content (P5-2b, LIVE): delegates to
+%   mat2doc.oxml.section.SectBlockElementIterator_.iter_sect_block_elements --
+%   tag-based, so no CT_Tbl dependency (un-stubbed fully). CT_HdrFtr (w:hdr/w:ftr
+%   roots) also ported at P5-2b.
 %
 %   TRANSPARENT PASS-THROUGH CONSTRUCTOR (design.md section 2 INT-1): the parser
 %   instantiates this on document.xml's <w:sectPr> on every M1 load.
@@ -312,15 +313,21 @@ classdef CT_SectPr < mat2doc.oxml.BaseOxmlElement
             pgMar.header = mat2doc.oxml.section.CT_SectPr.asLengthOrNone_(value);
         end
 
-        function iter_inner_content(obj) %#ok<MANU>
-            % ITER_INNER_CONTENT STUB (section.py 263-269). Owner: P5-2b.
-            %   Faithful body needs _SectBlockElementIterator.iter_sect_block_elements
-            %   (section.py 437-538), the block-item iterator helper deferred to
-            %   P5-2b. Stubbed to avoid a partial implementation.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.oxml.section._SectBlockElementIterator " + ...
-                "(owning WP: P5-2b) required by " + ...
-                "mat2doc.oxml.section.CT_SectPr.iter_inner_content");
+        function items = iter_inner_content(obj)
+            % ITER_INNER_CONTENT All <w:p> and <w:tbl> elements in this section,
+            %   in document order, as a 1xN heterogeneous XmlElement array (CT_P
+            %   for <w:p> + generic XmlElement for <w:tbl>; the iterator is
+            %   TAG-BASED, so an unregistered <w:tbl> is INCLUDED, not dropped --
+            %   no CT_Tbl dependency, un-stubbed FULLY at P5-2b). Delegates to the
+            %   block-item iterator helper. Elements shaded by nesting in a w:ins
+            %   or other wrapper are NOT included. H9: the Python generator is
+            %   materialized (no mutation during iteration).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/oxml/section.py::
+            %   CT_SectPr.iter_inner_content (263-269):
+            %   return _SectBlockElementIterator.iter_sect_block_elements(self)
+            items = mat2doc.oxml.section.SectBlockElementIterator_ ...
+                .iter_sect_block_elements(obj);
         end
 
         function value = get.left_margin(obj)

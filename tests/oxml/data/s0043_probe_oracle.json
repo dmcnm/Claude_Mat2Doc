@@ -1,0 +1,13 @@
+{
+  "in_len": 1842,
+  "in_sha": "e6abe5685afb0e53eb1d80b0747ffe09b102c486947524a0a62ba487b397fcb2",
+  "py_rt_len": 1842,
+  "py_rt_sha": "e6abe5685afb0e53eb1d80b0747ffe09b102c486947524a0a62ba487b397fcb2",
+  "py_rt_identical_to_input": true,
+  "root_is_hdrftr": true,
+  "ice_sigs": [
+    "p|S0043-HDR-café",
+    "tbl|C00-中文/C01",
+    "p|S0043-HDR-P2"
+  ]
+}
