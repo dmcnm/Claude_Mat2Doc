@@ -56,6 +56,7 @@ project:
       children:
         - file: api/settings.md
         - file: api/oxml_section.md
+        - file: api/section_api.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

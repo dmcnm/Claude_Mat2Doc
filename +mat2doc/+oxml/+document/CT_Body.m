@@ -42,14 +42,13 @@ classdef CT_Body < mat2doc.oxml.BaseOxmlElement
 %   still serialize correctly and insert in the right sequence -- only the element
 %   CLASS is generic. The descriptors need ONLY the nsptag strings, all present.
 %
-%   LIVE vs STUB (P2-3):
-%     LIVE  -- every descriptor member (all pure oxml, no proxy forward dep),
-%              clear_content (xpath-based, document.py 73-79),
-%              inner_content_elements (xpath-based, document.py 81-88).
-%     STUB  -- add_section_break (document.py 51-71): it needs
-%              sentinel_sectPr.clone() (CT_SectPr, P5) and self.add_p().set_sectPr
-%              (CT_P, P5/P4). Owner: P5 section tier. Note add_p() itself is LIVE;
-%              only the section-break orchestration stubs.
+%   LIVE (P2-3 + P5-3a):
+%     every descriptor member (all pure oxml, no proxy forward dep),
+%     clear_content (xpath-based, document.py 73-79),
+%     inner_content_elements (xpath-based, document.py 81-88), and -- UN-STUBBED
+%     at P5-3a (C1) -- add_section_break (document.py 51-71): its deps
+%     sentinel_sectPr.clone() (CT_SectPr.clone, P5-2a) and add_p().set_sectPr
+%     (CT_P.set_sectPr, P4) are all now LIVE.
 %
 %   TRANSPARENT PASS-THROUGH CONSTRUCTOR (design.md section 2 INT-1): forwards all
 %   positional args verbatim -- REQUIRED because the parser instantiates this
@@ -115,18 +114,41 @@ classdef CT_Body < mat2doc.oxml.BaseOxmlElement
         function child = add_sectPr_(obj, varargin); child = obj.addChild(obj.SECTPR_TAG, obj.NO_SUCCESSORS, varargin{:}); end
         function remove_sectPr_(obj);                obj.removeChild(obj.SECTPR_TAG); end
 
-        % ======================= add_section_break (STUB) =======================
-        function sectPr = add_section_break(obj) %#ok<MANU,STOUT>
-            % ADD_SECTION_BREAK STUB (document.py 51-71). Owner: P5 section tier.
-            %   Faithful body needs sentinel_sectPr.clone() (CT_SectPr.clone, P5)
-            %   and self.add_p().set_sectPr(...) (CT_P.set_sectPr, P4/P5) plus
-            %   sentinel_sectPr.xpath("w:headerReference|w:footerReference") removal.
-            %   add_p()/get_or_add_sectPr() are LIVE here; only the clone/set_sectPr
-            %   orchestration is unported. Stubbed to avoid a half-applied mutation.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.oxml.section.CT_SectPr.clone / mat2doc.oxml.text.CT_P.set_sectPr " + ...
-                "(owning WP: P5 section tier) required by " + ...
-                "mat2doc.oxml.document.CT_Body.add_section_break");
+        % ======================= add_section_break (LIVE, P5-3a C1) =============
+        function sectPr = add_section_break(obj)
+            % ADD_SECTION_BREAK The w:sectPr for a new section added at end of the
+            %   document (document.py 51-71). UN-STUBBED at P5-3a (C1). The
+            %   previously-last w:sectPr becomes second-to-last inside a new
+            %   trailing w:p; the returned (sentinel) w:sectPr IS that prior
+            %   sentinel with all header/footer references removed (so the new last
+            %   section now "inherits" them from the prior section).
+            %
+            %   Python:
+            %     sentinel_sectPr = self.get_or_add_sectPr()
+            %     self.add_p().set_sectPr(sentinel_sectPr.clone())
+            %     for hdrftr_ref in sentinel_sectPr.xpath("w:headerReference|w:footerReference"):
+            %         sentinel_sectPr.remove(hdrftr_ref)
+            %     return sentinel_sectPr
+            %
+            %   All deps LIVE: get_or_add_sectPr / add_p (this class), CT_SectPr
+            %   .clone (P5-2a), CT_P.set_sectPr (P4). H11: add_p() inserts the new
+            %   <w:p> BEFORE the body sentinel <w:sectPr> (p successors=("w:sectPr",)),
+            %   so the CLONE (carrying the prior section's geometry) lands in a
+            %   paragraph ahead of the sentinel, which stays last and governs the
+            %   new final section. H9/H5: xpath() materializes the hdr/ftr refs
+            %   before the removal loop (removing during iteration is safe).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/oxml/document.py::
+            %   CT_Body.add_section_break
+            sentinel_sectPr = obj.get_or_add_sectPr();               % Python: self.get_or_add_sectPr()
+            % Python: self.add_p().set_sectPr(sentinel_sectPr.clone())
+            obj.add_p().set_sectPr(sentinel_sectPr.clone());
+            % Python: for hdrftr_ref in sentinel_sectPr.xpath("w:headerReference|w:footerReference")
+            hdrftr_refs = sentinel_sectPr.xpath("w:headerReference|w:footerReference");
+            for k = 1:numel(hdrftr_refs)
+                sentinel_sectPr.remove(hdrftr_refs(k));              % Python: sentinel_sectPr.remove(hdrftr_ref)
+            end
+            sectPr = sentinel_sectPr;                                % Python: return sentinel_sectPr
         end
 
         % ========================= clear_content (LIVE) =========================

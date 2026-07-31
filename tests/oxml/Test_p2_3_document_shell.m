@@ -95,10 +95,12 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %       P4-7b un-stubbed Document.add_paragraph/add_heading +
         %             Body_.add_paragraph/Body_.paragraphs          (20 -> 16)
         %       P5-1  un-stubbed Document.settings                  (16 -> 15)
+        %       P5-3a un-stubbed Document.add_section / Document.sections /
+        %             CT_Body.add_section_break                     (15 -> 12)
         %     Document.add_page_break / Document.paragraphs / Body_.add_table /
         %     Body_.tables / Body_.iter_inner_content and the P6/P7/P8 adders
         %     REMAIN genuinely stubbed. ---
-        STUB_COUNT = 15
+        STUB_COUNT = 12
     end
 
     methods (TestClassSetup)
@@ -304,10 +306,13 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             %     asserted resolved below). (20 -> 16.)
             %   * P5-1: Document.settings un-stubbed -> REMOVED (asserted resolved
             %     below). (16 -> 15.)
+            %   * P5-3a: Document.add_section / Document.sections /
+            %     CT_Body.add_section_break un-stubbed -> REMOVED (all asserted
+            %     resolved below). (15 -> 12.)
             % Document.add_page_break / Document.paragraphs (P4-7b VERIFY-1 scope --
             % deps live but deliberately left stubbed for the next content WP),
             % Body_.add_table / Body_.tables / Body_.iter_inner_content and the
-            % P5/P6/P7/P8 adders REMAIN genuinely pinned.
+            % P6/P7/P8 adders REMAIN genuinely pinned.
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
@@ -315,20 +320,17 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Document.add_page_break',     @() d.add_page_break(); ...
                 'Document.add_table',          @() d.add_table(1, 1, []); ...
                 'Document.add_picture',        @() d.add_picture("x"); ...
-                'Document.add_section',        @() d.add_section(); ...
                 'Document.add_comment',        @() d.add_comment([], "t", "a", "i"); ...
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
-                'Document.sections',           @() d.sections(); ...
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes(); ...
                 'Document.iter_inner_content', @() d.iter_inner_content(); ...
                 'Body_.add_table',             @() b.add_table(1, 1, []); ...
                 'Body_.tables',                @() b.tables(); ...
-                'Body_.iter_inner_content',    @() b.iter_inner_content(); ...
-                'CT_Body.add_section_break',   @() ct.add_section_break()};
+                'Body_.iter_inner_content',    @() b.iter_inner_content()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 15 members (Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 un-stubbed)');
+                'the stub battery must cover exactly 12 members (Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -362,6 +364,19 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Body_.add_paragraph RESOLVES to a Paragraph (P4-7b un-stub)');
             testCase.verifyClass(br.paragraphs(), 'mat2doc.text.Paragraph', ...
                 'Body_.paragraphs RESOLVES to a Paragraph array (P4-7b un-stub)');
+
+            % The P5-3a section un-stubs now RESOLVE (registry-flip re-pins:
+            % Document.sections / Document.add_section / CT_Body.add_section_break
+            % moved out of the notYetPorted battery to their resolved behavior). Use
+            % fresh handles so add_section's body mutation does not perturb others.
+            testCase.verifyClass(dr.sections(), 'mat2doc.section.Sections', ...
+                'Document.sections RESOLVES to a Sections proxy (P5-3a un-stub)');
+            testCase.verifyClass(dr.add_section(), 'mat2doc.section.Section', ...
+                'Document.add_section RESOLVES to a Section (P5-3a un-stub)');
+            % CT_Body.add_section_break returns the (sentinel) CT_SectPr. `ct` is the
+            % standalone CT_Body from parseBody() (untouched by the stub loop).
+            testCase.verifyClass(ct.add_section_break(), 'mat2doc.oxml.section.CT_SectPr', ...
+                'CT_Body.add_section_break RESOLVES to a CT_SectPr (P5-3a un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)
