@@ -37,13 +37,11 @@ classdef Paragraph < mat2doc.shared.StoryChild
 %   no mutation during iteration, so laziness is unobservable).
 %
 %   STYLE DELEGATION (paragraph.py 130-147): style get/set delegate through
-%   self.part.get_style / get_style_id -- the P4-7 stubs that raise
-%   mat2doc:notYetPorted (DocumentPart.get_style/get_style_id). The delegation is
-%   ported EXACTLY; the getter and setter therefore both raise notYetPorted until
-%   P4-7 wires styles. This is faithful stub PROPAGATION, not a stand-in. Ported
-%   as a Dependent read/write property to preserve its true Python shape (both
-%   `p.style` and `p.style = x` raise the same notYetPorted). Auto-display is safe
-%   (MATLAB catches the erroring getter and omits the style row; cf. Run.style).
+%   self.part.get_style / get_style_id with WD_STYLE_TYPE.PARAGRAPH. UN-STUBBED
+%   at P4-7a (DocumentPart.get_style/get_style_id are now live): `p.style`
+%   resolves to a ParagraphStyle (or the document default paragraph style) and
+%   `p.style = name/style/[]` applies/removes it. The delegation is ported
+%   EXACTLY; a Dependent read/write property preserving its Python shape.
 %
 %   H3 (None): inline isequal(x, []) (established Mat2Doc None idiom -- no shared
 %   isNone helper). H4 (truthiness): `if text:` is a non-empty-string test;
@@ -71,7 +69,7 @@ classdef Paragraph < mat2doc.shared.StoryChild
         paragraph_format    % ParagraphFormat (read-only) -- fresh each access
         rendered_page_breaks% 1xN RenderedPageBreak array -- all rendered page-breaks
         runs                % 1xN Run array -- a Run per <w:r> child
-        style               % ParagraphStyle -- STUB delegation (P4-7)
+        style               % ParagraphStyle -- LIVE at P4-7a (resolves via the styles tier)
         text                % string -- concatenated inner-content text (CT_P.text)
     end
 
@@ -97,8 +95,9 @@ classdef Paragraph < mat2doc.shared.StoryChild
             %   (paragraph.py 30-44). `text` may contain \t (-> <w:tab/>) and
             %   \n/\r (-> line breaks); when `text` is None (default []) the new
             %   run is empty. `style` (default None [] ) is a style name or a
-            %   CharacterStyle. NOTE: assigning `style` reaches Run.style, the
-            %   P4-7 STUB (raises mat2doc:notYetPorted) -- faithful propagation.
+            %   CharacterStyle. NOTE: assigning `style` reaches Run.style, which
+            %   RESOLVES the character style via the styles tier (LIVE at P4-7a) --
+            %   faithful propagation.
             %
             %   Ported from python-docx v1.2.0: src/docx/text/paragraph.py::Paragraph.add_run
             arguments
@@ -166,7 +165,7 @@ classdef Paragraph < mat2doc.shared.StoryChild
             % INSERT_PARAGRAPH_BEFORE Return a new paragraph inserted directly
             %   before this one (paragraph.py 79-92). If `text` supplied, the new
             %   paragraph holds it in a single run; if `style` is not None it is
-            %   assigned (reaching Paragraph.style, the P4-7 STUB -> notYetPorted).
+            %   assigned (reaching Paragraph.style, LIVE at P4-7a).
             %
             %   NOTE the DISTINCT guards (paragraph.py 88, 90): `if text:`
             %   (truthiness) vs `if style is not None:` (None-identity).
@@ -247,12 +246,12 @@ classdef Paragraph < mat2doc.shared.StoryChild
             end
         end
 
-        % ============================ style (STUB delegation, P4-7) ============================
+        % ============================ style (LIVE delegation, P4-7a) ============================
         function value = get.style(obj)
             % STYLE get (paragraph.py 130-142): style_id = self._p.style; then
             %   self.part.get_style(style_id, WD_STYLE_TYPE.PARAGRAPH). part is the
-            %   DocumentPart whose get_style is the P4-7 STUB -> mat2doc:notYetPorted.
-            %   Delegation ported EXACTLY (no stand-in).
+            %   DocumentPart whose get_style is LIVE at P4-7a. Delegation ported
+            %   EXACTLY (no stand-in).
             style_id = obj.p_.style;               % Python: style_id = self._p.style
             value = obj.part().get_style( ...      % Python: self.part.get_style(...)
                 style_id, mat2doc.enum.style.WD_STYLE_TYPE.PARAGRAPH);
@@ -260,8 +259,7 @@ classdef Paragraph < mat2doc.shared.StoryChild
         function set.style(obj, style_or_name)
             % STYLE set (paragraph.py 144-147): style_id =
             %   self.part.get_style_id(value, WD_STYLE_TYPE.PARAGRAPH);
-            %   self._p.style = style_id. get_style_id is the P4-7 STUB ->
-            %   mat2doc:notYetPorted (raised before self._p.style is touched).
+            %   self._p.style = style_id. get_style_id is LIVE at P4-7a.
             style_id = obj.part().get_style_id( ...% Python: self.part.get_style_id(...)
                 style_or_name, mat2doc.enum.style.WD_STYLE_TYPE.PARAGRAPH);
             obj.p_.style = style_id;               % Python: self._p.style = style_id

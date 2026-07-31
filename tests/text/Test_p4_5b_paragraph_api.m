@@ -23,8 +23,8 @@ classdef Test_p4_5b_paragraph_api < matlab.unittest.TestCase
 %       "a\tb" -> <w:tab/>; "x\ny\rz" -> two <w:br/> (text getter maps to
 %       "x\ny\nz"); non-ASCII "café ☕ 日本語" UTF-8 round-trip; two runs (the
 %       second add_run gets xml:space="preserve" on "Hello "). char-style path
-%       (add_run(text, style)) reaches Run.style, the P4-7 STUB -> raises
-%       mat2doc:notYetPorted (identifier pinned).
+%       (add_run(text, style)) reaches Run.style, UN-STUBBED at P4-7a -> the
+%       character style is APPLIED (w:rStyle val, re-pinned at Gate-4).
 %
 %     (alignment) CENTER get/set round-trip -> <w:jc w:val="center"/>; []-reset
 %       removes w:jc (H3 tri-state, get -> [] None).
@@ -53,9 +53,10 @@ classdef Test_p4_5b_paragraph_api < matlab.unittest.TestCase
 %       rootless-<w:p/> case raises mat2doc:TypeError at add_p_before (identifier +
 %       verbatim message pinned -- identical on both sides, Gate-3 section 6).
 %
-%     (Paragraph.style) get AND set both raise mat2doc:notYetPorted -- faithful
-%       P4-7 stub delegation through part().get_style / get_style_id (identifier
-%       pinned; NOT a stand-in).
+%     (Paragraph.style) get AND set RESOLVE end-to-end (UN-STUBBED at P4-7a):
+%       delegation through part().get_style / get_style_id is now live -- get
+%       returns a ParagraphStyle, set-by-name writes the styleId (re-pinned at
+%       Gate-4).
 %
 %     (Hyperlink) address: external r:id -> target_ref resolved LIVE via a real
 %       relationship ("https://google.com/"), internal jump (w:anchor only) -> "";
@@ -111,8 +112,7 @@ classdef Test_p4_5b_paragraph_api < matlab.unittest.TestCase
 %                     alignment []-reset; single-element lists; internal jump
 %                     (address ""); leading/trailing fragment None; the atomic
 %                     break-inside-hyperlink split.
-%   * Error path   -- add_run char-style + Paragraph.style get/set raise
-%                     mat2doc:notYetPorted (P4-7 stub); rootless
+%   * Error path   -- rootless
 %                     insert_paragraph_before raises mat2doc:TypeError; the
 %                     second-break fragment raises mat2doc:ValueError. Each verifies
 %                     the IDENTIFIER (a mat2ppt:<PyExceptionName>-class id, not
@@ -246,15 +246,25 @@ classdef Test_p4_5b_paragraph_api < matlab.unittest.TestCase
             testCase.verifyEqual(string(para.text), NONASCII, 'non-ASCII text round-trip');
         end
 
-        function test_add_run_charstyle_notYetPorted(testCase)
-            % Error path (paragraph.py 42-43, H4 `if style:`): a truthy char-style
-            % reaches Run.style, the P4-7 STUB -> mat2doc:notYetPorted. Pin the
-            % IDENTIFIER (a mat2ppt:<PyExceptionName>-class id), not merely a throw.
+        function test_add_run_charstyle_applies(testCase)
+            % Regression (paragraph.py 42-43, H4 `if style:`). REGISTRY-FLIP RE-PIN
+            % (P4-7a Gate-4): a truthy char-style reaches Run.style, which was
+            % un-stubbed at P4-7a and now APPLIES the character style. Re-pinned from
+            % the old mat2doc:notYetPorted assertion to the resolved char-style
+            % application (byte-check the run's rStyle). The parent is the real
+            % Document d, so part().get_style_id resolves the name to a styleId.
             d = mat2doc.Document();
-            [~, para] = newParsed(testCase, "", d);
-            ME = captureError(@() para.add_run("t", "Emphasis"));
-            testCase.verifyEqual(string(ME.identifier), "mat2doc:notYetPorted", ...
-                'add_run char-style -> mat2doc:notYetPorted identifier (P4-7 stub)');
+            [p, para] = newParsed(testCase, "", d);
+            para.add_run("t", "Emphasis");
+            testCase.verifyEqual(numel(para.runs), 1, 'add_run(text, style) -> 1 run');
+            testCase.verifyEqual(string(para.text), "t", 'add_run text applied');
+            % the char style is applied: the run's CT_R rStyle val is "Emphasis"
+            % (reached via xpath on the CT_P -- Run exposes no element() accessor).
+            rr = p.xpath('.//w:r');
+            testCase.verifyEqual(string(rr(end).style), "Emphasis", ...
+                'add_run applies the char style -> w:rPr/w:rStyle w:val="Emphasis" (byte-level)');
+            testCase.verifyTrue(contains(ser(p), "<w:rStyle w:val=""Emphasis""/>"), ...
+                'serialized run carries <w:rStyle w:val="Emphasis"/> (L1 fragment)');
         end
 
         % =============================================================== %
@@ -508,18 +518,24 @@ classdef Test_p4_5b_paragraph_api < matlab.unittest.TestCase
         % 7. Paragraph.style -- the P4-7 stub (get AND set raise)         %
         % =============================================================== %
 
-        function test_paragraph_style_stub_notYetPorted(testCase)
-            % Error path (paragraph.py 130-147): style get AND set both delegate
-            % through part().get_style / get_style_id -- the P4-7 STUBS -> both
-            % raise mat2doc:notYetPorted (faithful propagation, NOT a stand-in).
+        function test_paragraph_style_resolves(testCase)
+            % Regression (paragraph.py 130-147). REGISTRY-FLIP RE-PIN (P4-7a Gate-4):
+            % style get AND set delegate through part().get_style / get_style_id,
+            % which were un-stubbed at P4-7a and now RESOLVE end-to-end. Re-pinned
+            % from the old mat2doc:notYetPorted assertion to the resolved get/set
+            % (style-by-name -> styleId). The parent is the real Document d.
             d = mat2doc.Document();
-            [~, para] = newParsed(testCase, "", d);
-            MEget = captureError(@() para.style);
-            testCase.verifyEqual(string(MEget.identifier), "mat2doc:notYetPorted", ...
-                'Paragraph.style GETTER -> mat2doc:notYetPorted (P4-7 stub)');
-            MEset = captureError(@() setParaStyle(para, "Normal"));
-            testCase.verifyEqual(string(MEset.identifier), "mat2doc:notYetPorted", ...
-                'Paragraph.style SETTER -> mat2doc:notYetPorted (P4-7 stub)');
+            [p, para] = newParsed(testCase, "", d);
+            % GET (default): the document default paragraph style (Normal)
+            testCase.verifyClass(para.style, 'mat2doc.styles.ParagraphStyle', ...
+                'Paragraph.style GET RESOLVES to a ParagraphStyle (P4-7a un-stub)');
+            testCase.verifyEqual(para.style.style_id, "Normal", 'Paragraph.style GET default -> Normal');
+            % SET by name -> writes styleId on w:pPr/w:pStyle; GET round-trips
+            para.style = "Heading 1";
+            testCase.verifyEqual(para.style.style_id, "Heading1", ...
+                'Paragraph.style SET by name -> Heading1 (style-by-name -> styleId)');
+            testCase.verifyEqual(string(p.style), "Heading1", ...
+                'Paragraph.style SET writes styleId "Heading1" on ./w:pPr/w:pStyle (CT_P.style, byte-level)');
         end
 
         % =============================================================== %

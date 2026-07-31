@@ -266,11 +266,13 @@ classdef Document < mat2doc.shared.ElementProxy
                 "tier) is not yet ported");
         end
 
-        function s = styles(obj) %#ok<MANU,STOUT>
-            % STYLES STUB (document.py 216-219). Owner: P4-7 styles tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.styles (owning WP: P4-7 styles tier) " + ...
-                "is not yet ported");
+        function s = styles(obj)
+            % STYLES A Styles object providing access to the styles in this
+            %   document (document.py 216-219, @property). Python:
+            %   return self._part.styles. UN-STUBBED at P4-7a.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.styles
+            s = obj.part_.styles();
         end
 
         function t = tables(obj) %#ok<MANU,STOUT>

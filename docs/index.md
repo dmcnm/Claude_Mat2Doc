@@ -165,6 +165,29 @@ syntax, description, example, ported-from).
   `ElementProxy` element-identity of the earlier proxies), and the s7 ns-decl
   reopen-check (still unreachable, re-booked at P7). **API tier COMPLETE — the
   styles chain (P4-6/P4-7) is next → M2.**
+- **Styles API tier (styles)** — the user-facing style **proxies** that read the
+  P4-6 `<w:styles>` element surface and **un-stub** the styles delegation across
+  the document object graph (`StylesPart`/`DocumentPart`/`Document`/`Run`/
+  `Paragraph`). The **second WP of the styles chain** (P4-6 → P4-7a → P4-7b → M2):
+  `mat2doc.styles.StyleFactory` (the H10 `WD_STYLE_TYPE` → leaf-class dispatch,
+  with the `KeyError`-on-None edge), the
+  `BaseStyle`→`CharacterStyle`→`ParagraphStyle`→`TableStyle_`/`NumberingStyle_`
+  hierarchy (`BaseStyle` the `matlab.mixin.Heterogeneous` root; the full H3
+  tri-state property surface; the `base_style`/`next_paragraph_style` sibling
+  chains and the `font`/`paragraph_format` fresh-proxy accessors), the `Styles`
+  collection (the interim explicit `contains_`/`getitem_`/`to_array`/`len_`
+  sequence surface plus `add_style`/`default`/`get_by_id`/`get_style_id`/`element`,
+  and the still-stubbed `latent_styles` → P4-7b), and `BabelFish` (the
+  case-sensitive UI↔internal style-name alias table). Documents the **H17
+  proxy-layer resolution** — `delete()`→`delete_()` (why `delete` cannot be
+  overridden at the proxy layer; `delete_()` is byte-faithful, a FLAG-3-class
+  method-naming resolution, **no D-number**), the project's **first ported
+  `warnings.warn`** (`mat2doc:UserWarning` house convention on the deprecated by-id
+  `getitem_` path), and the un-stub that makes `Paragraph.style`/`Run.style`/
+  `get_style` resolve end-to-end (the style-by-name path byte-proven, the direct M2
+  `add_heading` precursor). **API/proxy tier — no registry row, no serialization
+  change → behavioral equivalence, byte-neutral (M1 17/17, 0 new D-numbers).
+  Styles API un-stubbed → latent styles (P4-7b) → M2 next.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

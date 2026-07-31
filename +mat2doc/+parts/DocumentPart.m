@@ -174,22 +174,28 @@ classdef DocumentPart < mat2doc.parts.StoryPart
                 "required by mat2doc.parts.DocumentPart.footer_part");
         end
 
-        function style = get_style(obj, style_id, style_type) %#ok<INUSD,MANU,STOUT>
-            % GET_STYLE STUB (parts/document.py 71-77). Owner: P4-7.
-            %   OVERRIDES StoryPart.get_style (docx DocumentPart defines its own,
-            %   `self.styles.get_by_id(...)`); stays stubbed until P4-7 styles.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.Styles.get_by_id (owning WP: P4-7 styles tier) " + ...
-                "required by mat2doc.parts.DocumentPart.get_style");
+        function style = get_style(obj, style_id, style_type)
+            % GET_STYLE The style matching `style_id` (parts/document.py 71-77).
+            %   Returns the default style for `style_type` if `style_id` is []
+            %   (None) or does not match a defined style of `style_type`. Python:
+            %   return self.styles.get_by_id(style_id, style_type). UN-STUBBED at
+            %   P4-7a. OVERRIDES StoryPart.get_style (docx DocumentPart defines its
+            %   own).
+            %
+            %   Ported from python-docx v1.2.0: parts/document.py::DocumentPart.get_style
+            style = obj.styles().get_by_id(style_id, style_type);
         end
 
-        function style_id = get_style_id(obj, style_or_name, style_type) %#ok<INUSD,MANU,STOUT>
-            % GET_STYLE_ID STUB (parts/document.py 79-87). Owner: P4-7.
-            %   OVERRIDES StoryPart.get_style_id (docx DocumentPart defines its
-            %   own, `self.styles.get_style_id(...)`).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.Styles.get_style_id (owning WP: P4-7 styles tier) " + ...
-                "required by mat2doc.parts.DocumentPart.get_style_id");
+        function style_id = get_style_id(obj, style_or_name, style_type)
+            % GET_STYLE_ID The style_id matching `style_or_name`, or [] (parts/document.py 79-87).
+            %   Returns [] (None) if the style resolves to the default for
+            %   `style_type` or if `style_or_name` is [] (None). Raises if
+            %   `style_or_name` is a style of the wrong type or names a style not
+            %   present. Python: return self.styles.get_style_id(style_or_name,
+            %   style_type). UN-STUBBED at P4-7a. OVERRIDES StoryPart.get_style_id.
+            %
+            %   Ported from python-docx v1.2.0: parts/document.py::DocumentPart.get_style_id
+            style_id = obj.styles().get_style_id(style_or_name, style_type);
         end
 
         function hp = header_part(obj, rId) %#ok<INUSD,MANU,STOUT>
@@ -229,14 +235,14 @@ classdef DocumentPart < mat2doc.parts.StoryPart
                 "required by mat2doc.parts.DocumentPart.settings");
         end
 
-        function s = styles(obj) %#ok<MANU,STOUT>
-            % STYLES STUB (parts/document.py 122-126). Owner: P4-7.
-            %   Faithful body: return self._styles_part.styles. _styles_part is
-            %   LIVE (returns a real StylesPart); StylesPart.styles (the Styles
-            %   proxy) is the P4-7 stub.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.Styles (owning WP: P4-7 styles tier) required " + ...
-                "by mat2doc.parts.DocumentPart.styles");
+        function s = styles(obj)
+            % STYLES The styles in the styles part of this document (parts/document.py 122-126).
+            %   Python: return self._styles_part.styles. UN-STUBBED at P4-7a:
+            %   _styles_part is LIVE (a real StylesPart, P2-2) and StylesPart.styles
+            %   now returns the real mat2doc.styles.Styles proxy.
+            %
+            %   Ported from python-docx v1.2.0: parts/document.py::DocumentPart.styles
+            s = obj.styles_part_().styles();
         end
     end
 

@@ -87,8 +87,11 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         DOCXML_SIZE = 1548
         DOCXML_SHA  = "0e4dd503bc095219cd24e8312b372c588ca56bb834aacac53eafb7bf47836327"
 
-        % --- frozen matlab_only.json: the 21-stub battery names (bar 6) ---
-        STUB_COUNT = 21
+        % --- frozen matlab_only.json: the stub battery names (bar 6). P4-7a
+        %     un-stubbed Document.styles, so it drops out of this notYetPorted
+        %     battery (21 -> 20); it is re-pinned to its resolved behavior in
+        %     test_content_stubs_raise_notYetPorted (registry-flip stale-pins). ---
+        STUB_COUNT = 20
     end
 
     methods (TestClassSetup)
@@ -284,8 +287,10 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % Edge / Regression (error path, P2 EXIT): every content-authoring stub
             % raises the IDENTIFIER mat2doc:notYetPorted (not a silent no-op). Covers
             % the Document tier, the canonical BlockItemContainer/Body_ tier, and
-            % CT_Body.add_section_break -- 21 stubs, 0 offenders. (s0015 matlab_only
-            % stub_safety: count 21, all_notYetPorted true.)
+            % CT_Body.add_section_break. REGISTRY-FLIP RE-PIN (P4-7a Gate-4):
+            % Document.styles was un-stubbed at P4-7a and now RESOLVES, so it is
+            % REMOVED from this notYetPorted battery (21 -> 20) and asserted resolved
+            % below. Every other content stub stays pinned (registry-flip stale-pins).
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
@@ -300,7 +305,6 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
                 'Document.sections',           @() d.sections(); ...
-                'Document.styles',             @() d.styles(); ...
                 'Document.settings',           @() d.settings(); ...
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes(); ...
@@ -312,7 +316,7 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Body_.iter_inner_content',    @() b.iter_inner_content(); ...
                 'CT_Body.add_section_break',   @() ct.add_section_break()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 21 members');
+                'the stub battery must cover exactly 20 members (Document.styles un-stubbed at P4-7a)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -325,6 +329,9 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
                     sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 1}));
             end
+            % Document.styles now RESOLVES (un-stubbed at P4-7a).
+            testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
+                'Document.styles RESOLVES to a Styles proxy (P4-7a un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

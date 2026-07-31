@@ -77,8 +77,7 @@ classdef StoryPart < mat2doc.opc.XmlPart
             %   default style for `style_type`. Python:
             %   `return self._document_part.get_style(style_id, style_type)`.
             %   LIVE DELEGATION: _document_part resolves to the DocumentPart,
-            %   whose get_style is a P4-7 feature stub -- so the notYetPorted
-            %   surfaces at the P4-7 owner (styles resolution), faithfully.
+            %   whose get_style is LIVE at P4-7a (styles resolution).
             style = obj.document_part_().get_style(style_id, style_type);
         end
 
@@ -86,7 +85,7 @@ classdef StoryPart < mat2doc.opc.XmlPart
             % GET_STYLE_ID (story.py 49-58): the str style_id for `style_or_name`
             %   of `style_type`, or None. Python:
             %   `return self._document_part.get_style_id(style_or_name, style_type)`.
-            %   LIVE DELEGATION to the DocumentPart P4-7 stub (see get_style).
+            %   LIVE DELEGATION to DocumentPart.get_style_id, LIVE at P4-7a.
             style_id = obj.document_part_().get_style_id(style_or_name, style_type);
         end
 

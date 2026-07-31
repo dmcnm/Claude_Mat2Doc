@@ -162,6 +162,7 @@ descriptors use the generic `BaseOxmlElement` engine
 `val` is `RGBColor(0,0,0)`, and it is idempotent (the same live child handle on
 re-call, H5).
 
+(id-c3-tristate)=
 ## `CT_OnOff` / `CT_String` tri-state (the C3 leaves)
 
 **`CT_OnOff`** (`shared.py:27-36`) backs the boolean run/paragraph properties
@@ -324,7 +325,7 @@ b.val = false;                         % -> <w:b w:val="0"/>
 The boolean run/paragraph property element (`w:b`, `w:i`, `w:caps`, …), the target
 of 20 of the 28 font-block registry rows. `val` is an
 `OptionalAttribute("w:val", ST_OnOff, default=True)` — a non-None default, which
-drives the D-delta-1 tri-state (see [the tri-state section above](#ct_onoff--ct_string-tri-state-the-c3-leaves)):
+drives the D-delta-1 tri-state (see [the tri-state section above](#id-c3-tristate)):
 absent → `True`; `False` → `w:val="0"`; `True` (== default) or `[]` (None) →
 `@w:val` removed. `from_xml` maps `1`/`true`/`on` → `true`, `0`/`false`/`off`
 → `false`.

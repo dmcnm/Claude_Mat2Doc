@@ -127,7 +127,7 @@ full map (verified vs `font.py` line-by-line):
 | `italic` | `w:i` | `web_hidden` | `w:webHidden` |
 
 The tri-state fires through `CT_OnOff`'s D-delta-1 mechanism (see
-[the oxml page](oxml_text.md#ct_onoff--ct_string-tri-state-the-c3-leaves)):
+[the oxml page](oxml_text.md#id-c3-tristate)):
 `bold = true` → a bare `<w:b/>`; `bold = false` → `<w:b w:val="0"/>`; `bold = []`
 → the tag removed; get on an absent tag → `[]`.
 

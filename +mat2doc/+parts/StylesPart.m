@@ -36,13 +36,14 @@ classdef StylesPart < mat2doc.opc.XmlPart
             obj@mat2doc.opc.XmlPart(partname, content_type, element, package);
         end
 
-        function s = styles(obj) %#ok<MANU,STOUT>
-            % STYLES STUB (styles.py 30-34, @property). Owner: P4-7.
-            %   Faithful body: return Styles(self.element). The Styles proxy /
-            %   StyleFactory land at P4-7.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.styles.Styles (owning WP: P4-7 styles tier) " + ...
-                "required by mat2doc.parts.StylesPart.styles");
+        function s = styles(obj)
+            % STYLES The styles defined in this document (styles.py 30-34, @property).
+            %   Python: return Styles(self.element). UN-STUBBED at P4-7a: returns a
+            %   real mat2doc.styles.Styles proxy over this part's CT_Styles root.
+            %   `element` is inherited from XmlPart (the parsed <w:styles>).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/styles.py::StylesPart.styles
+            s = mat2doc.styles.Styles(obj.element());
         end
     end
 

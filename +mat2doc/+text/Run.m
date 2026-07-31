@@ -32,14 +32,12 @@ classdef Run < mat2doc.shared.StoryChild
 %     * iter_inner_content (run.py 153-174)-> P4-5b + P7 (RenderedPageBreak proxy /
 %                                             Drawing; also CT_R.inner_content_items
 %                                             is itself stubbed at P4-1b)
-%     * style get/set (run.py 188-203)     -> P4-7 (CharacterStyle +
+%     * style get/set (run.py 188-203)     -> LIVE at P4-7a (CharacterStyle via
 %                                             DocumentPart.get_style / get_style_id)
-%   Each raises mat2doc:notYetPorted naming the owning WP. NOTE (style): it is
-%   ported as a Dependent read/write property to preserve its true Python shape
-%   (so both `run.style` and `run.style = x` raise the SAME notYetPorted).
-%   Auto-DISPLAY of a Run is safe: MATLAB object display catches the erroring
-%   get.style and simply omits the style row (verified R2024b, Gate-2 probe);
-%   only an explicit `run.style` access raises, until P4-7 fills the bodies.
+%   NOTE (style): a Dependent read/write property delegating to
+%   part().get_style / get_style_id with WD_STYLE_TYPE.CHARACTER. UN-STUBBED at
+%   P4-7a: `run.style` resolves to a CharacterStyle (or the document default
+%   character style) and `run.style = name/style/[]` applies/removes it.
 %
 %   Example:
 %       r   = mat2doc.oxml.OxmlElement("w:r");
@@ -67,7 +65,7 @@ classdef Run < mat2doc.shared.StoryChild
         font                % Font (read-only) -- fresh Font(self._element) each access
         text                % string -- concatenated run inner-content text (CT_R.text)
         contains_page_break % bool -- any w:lastRenderedPageBreak descendant
-        style               % CharacterStyle -- STUB (P4-7)
+        style               % CharacterStyle -- LIVE at P4-7a (resolves via the styles tier)
     end
 
     methods
@@ -259,23 +257,32 @@ classdef Run < mat2doc.shared.StoryChild
             last_run.r_.insert_comment_range_end_and_reference_below(comment_id);
         end
 
-        % ============================ style (STUB) ============================
-        function value = get.style(obj) %#ok<STOUT,MANU>
-            % STYLE get STUB (run.py 188-198). Owner: P4-7 (CharacterStyle +
-            %   DocumentPart.get_style, WD_STYLE_TYPE.CHARACTER). Raises
-            %   mat2doc:notYetPorted on explicit access. Auto-display is safe:
-            %   MATLAB catches the getter error and omits the style row
-            %   (verified R2024b, Gate-2 probe).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.style.CharacterStyle + DocumentPart.get_style (P4-7) " + ...
-                "required by mat2doc.text.Run.style");
+        % ============================ style ============================
+        function value = get.style(obj)
+            % STYLE get (run.py 188-198): a CharacterStyle for the character style
+            %   applied to this run. The document's default character style is
+            %   returned when the run has no directly-applied character style.
+            %   Python: style_id = self._r.style;
+            %           return self.part.get_style(style_id, WD_STYLE_TYPE.CHARACTER)
+            %   UN-STUBBED at P4-7a (DocumentPart.get_style is now live).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/text/run.py::Run.style
+            style_id = obj.r_.style;               % Python: style_id = self._r.style
+            value = obj.part().get_style( ...      % Python: self.part.get_style(...)
+                style_id, mat2doc.enum.style.WD_STYLE_TYPE.CHARACTER);
         end
-        function set.style(obj, style_or_name) %#ok<INUSD>
-            % STYLE set STUB (run.py 200-203). Owner: P4-7
-            %   (DocumentPart.get_style_id). Raises mat2doc:notYetPorted.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.styles.style.CharacterStyle + DocumentPart.get_style_id (P4-7) " + ...
-                "required by mat2doc.text.Run.style");
+        function set.style(obj, style_or_name)
+            % STYLE set (run.py 200-203): apply character style `style_or_name`
+            %   (a name or CharacterStyle); [] (None) removes any directly-applied
+            %   character style. Python:
+            %     style_id = self.part.get_style_id(style_or_name, WD_STYLE_TYPE.CHARACTER)
+            %     self._r.style = style_id
+            %   UN-STUBBED at P4-7a (DocumentPart.get_style_id is now live).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/text/run.py::Run.style
+            style_id = obj.part().get_style_id( ...% Python: self.part.get_style_id(...)
+                style_or_name, mat2doc.enum.style.WD_STYLE_TYPE.CHARACTER);
+            obj.r_.style = style_id;               % Python: self._r.style = style_id
         end
 
         % ============================ text ============================
