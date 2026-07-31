@@ -46,6 +46,9 @@ project:
         - file: api/text_run.md
         - file: api/text_parfmt.md
         - file: api/text_paragraph.md
+    - title: Styles API tier (styles)
+      children:
+        - file: api/styles_api.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

@@ -377,17 +377,22 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
         function test_stub_set_raises_notyetported(testCase)
             % Regression / Edge (stub-safety, validate_P1-8 Bar 4): a representative
             % feature-stub set each raises mat2doc:notYetPorted (identifier pinned),
-            % NOT a silent no-op. Covers all three wired classes:
-            %   document.Document.add_paragraph / paragraphs / styles
+            % NOT a silent no-op. Covers the still-wired stubs:
+            %   document.Document.add_paragraph / paragraphs
             %   DocumentPart.numbering_part
             %   Package.image_parts
+            %
+            % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): Document.styles was un-stubbed at
+            % P4-7a and now RESOLVES (returns a Styles proxy over the real styles
+            % part); it moved from this notYetPorted set to the positive check below
+            % (the registry-flip stale-pins lesson -- the un-stub moved the behavior,
+            % so the pin moves with it).
             pkg = mat2doc.package.Package.open(char(testCase.templatePath()));
             dp  = pkg.main_document_part();
             d   = dp.document();
             calls = { ...
                 @() d.add_paragraph(),  'document.Document.add_paragraph'; ...
                 @() d.paragraphs(),     'document.Document.paragraphs'; ...
-                @() d.styles(),         'document.Document.styles'; ...
                 @() dp.numbering_part(),'parts.DocumentPart.numbering_part'; ...
                 @() pkg.image_parts(),  'package.Package.image_parts'};
             for k = 1:size(calls, 1)
@@ -402,6 +407,11 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
                 testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
                     sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 2}));
             end
+
+            % Document.styles now RESOLVES (un-stubbed at P4-7a) -> a Styles proxy
+            % over the real styles part.
+            testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
+                'Document.styles RESOLVES to a Styles over the real styles part (P4-7a)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

@@ -439,23 +439,43 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
         end
 
         % =============================================================== %
-        % 9. Stub-safety (4 unported-dependency stubs)                    %
+        % 9. Stub-safety (2 stubs) + Run.style RESOLVES (P4-7a un-stub)    %
         % =============================================================== %
 
         function test_stub_safety(testCase)
-            % Edge / stub-safety (run.py 59-81, 153-174, 188-203): the 4
+            % Edge / stub-safety (run.py 59-81, 153-174): the remaining
             % unported-dependency stubs each raise mat2doc:notYetPorted (identifier
-            % verified). add_picture -> P7; iter_inner_content -> P4-5b+P7; style
-            % get/set -> P4-7.
+            % verified). add_picture -> P7; iter_inner_content -> P4-5b+P7.
+            %
+            % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): Run.style GET and SET were
+            % un-stubbed at P4-7a (they delegate to the now-live
+            % DocumentPart.get_style / get_style_id) and RESOLVE over a run with a
+            % real Document part -- re-pinned to the resolved behavior below (the
+            % registry-flip stale-pins lesson). The old notYetPorted assertion is
+            % gone.
             [~, run] = newRun();
             testCase.verifyEqual(string(captureError(@() run.add_picture("x.png")).identifier), ...
                 "mat2doc:notYetPorted", 'add_picture -> mat2doc:notYetPorted');
             testCase.verifyEqual(string(captureError(@() run.iter_inner_content()).identifier), ...
                 "mat2doc:notYetPorted", 'iter_inner_content -> mat2doc:notYetPorted');
-            testCase.verifyEqual(string(captureError(@() run.style).identifier), ...
-                "mat2doc:notYetPorted", 'style (get) -> mat2doc:notYetPorted');
-            testCase.verifyEqual(string(captureError(@() setStyle(run)).identifier), ...
-                "mat2doc:notYetPorted", 'style (set) -> mat2doc:notYetPorted');
+
+            % --- Run.style get/set now RESOLVE end-to-end over a live Document ---
+            % Capture the CT_P so the CT_R rStyle can be reached via xpath (Run
+            % exposes no element() accessor; it is a StoryChild).
+            d = mat2doc.Document();
+            p = d.element().body.add_p();
+            para = mat2doc.text.Paragraph(p, d);
+            lrun = para.add_run("hi");
+            % GET (default): a CharacterStyle (the document default character style)
+            testCase.verifyClass(lrun.style, 'mat2doc.styles.CharacterStyle', ...
+                'Run.style GET RESOLVES to a CharacterStyle (P4-7a un-stub)');
+            % SET by name -> writes the run's rStyle; GET round-trips
+            lrun.style = "Emphasis";
+            rr = p.xpath('.//w:r');
+            testCase.verifyEqual(string(rr(end).style), "Emphasis", ...
+                'Run.style SET writes w:rPr/w:rStyle w:val="Emphasis" on the CT_R (byte-level)');
+            testCase.verifyEqual(lrun.style.style_id, "Emphasis", ...
+                'Run.style GET round-trips the applied character style');
         end
 
         % =============================================================== %

@@ -1,0 +1,12 @@
+# Byte-exact fixture pin (Gate-4 byte-fixture .gitattributes lesson).
+# s0032_document.xml is the frozen python-docx 1.2.0 word/document.xml (1774 B,
+# LF newline after the prolog) built through the NOW-UN-STUBBED style-by-name
+# delegation chain (Paragraph.style = "Heading 1"/by-object). It MUST be checked
+# out byte-for-byte -- a CRLF translation on the master checkout would grow it to
+# 1775 B and break the G-scenario byte/SHA pin in Test_p4_7a_styles_api. Pin it
+# binary.
+s0032_document.xml binary
+
+# (The s0031_probe_oracle.json oracle is value/serhex + byteproof SHAs and is
+#  read in binary mode; jsondecode is line-ending agnostic, so it needs no pin --
+#  s0028/s0030 precedent. Only the byte-exact XML fixture is pinned here.)
