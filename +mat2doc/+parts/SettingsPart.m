@@ -44,13 +44,14 @@ classdef SettingsPart < mat2doc.opc.XmlPart
             obj.settings_ = element;   % Python: self._settings = element
         end
 
-        function s = settings(obj) %#ok<MANU,STOUT>
-            % SETTINGS STUB (settings.py 36-42, @property). Owner: P5-1.
-            %   Faithful body: return Settings(self._settings). The Settings proxy
-            %   lands at P5-1.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.settings.Settings (owning WP: P5-1 settings tier) " + ...
-                "required by mat2doc.parts.SettingsPart.settings");
+        function s = settings(obj)
+            % SETTINGS A Settings proxy for the `w:settings` element in this part
+            %   (settings.py 36-42, @property). Contains the document-level
+            %   settings for this document. Python: return Settings(self._settings).
+            %   UN-STUBBED at P5-1 (the Settings proxy now ported).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/settings.py::SettingsPart.settings
+            s = mat2doc.settings.Settings(obj.settings_);
         end
     end
 

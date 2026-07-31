@@ -339,25 +339,27 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): P4-7a un-stubbed the styles
             % delegation, so FOUR of the original twelve now RESOLVE and moved to the
             % positive block below -- DocumentPart.styles / DocumentPart.get_style /
-            % DocumentPart.get_style_id / StylesPart.styles. The remaining EIGHT are
-            % genuine stubs (settings/numbering/images/header/footer tiers) and stay
-            % pinned notYetPorted. (The "styles"-related paths flipped; everything
-            % else is intact -- the registry-flip stale-pins lesson.)
+            % DocumentPart.get_style_id / StylesPart.styles.
+            % REGISTRY-FLIP RE-PIN (P5-1 Gate-4): P5-1 un-stubbed the settings
+            % delegation, so TWO MORE now RESOLVE and moved to the positive block
+            % below -- DocumentPart.settings / SettingsPart.settings (8 -> 6). The
+            % remaining SIX are genuine stubs (numbering/images/header/footer tiers)
+            % and stay pinned notYetPorted. (Only the "settings"-related paths
+            % flipped this WP; everything else is intact -- the registry-flip
+            % stale-pins lesson.)
             pkg = testCase.openPkg();
             dp = pkg.main_document_part();
             sp = dp.styles_part_();      % real StylesPart
             st = dp.settings_part_();    % real SettingsPart
             np = testCase.partByCT(pkg, mat2doc.opc.CONTENT_TYPE.WML_NUMBERING); % NumberingPart
             calls = { ...
-                @() dp.settings(),               'DocumentPart.settings'; ...
                 @() dp.numbering_part(),         'DocumentPart.numbering_part'; ...
                 @() dp.inline_shapes(),          'DocumentPart.inline_shapes'; ...
                 @() dp.add_header_part(),         'DocumentPart.add_header_part'; ...
                 @() dp.add_footer_part(),         'DocumentPart.add_footer_part'; ...
                 @() dp.get_or_add_image("x.png"), 'StoryPart.get_or_add_image'; ...
-                @() st.settings(),                'SettingsPart.settings'; ...
                 @() np.numbering_definitions(),   'NumberingPart.numbering_definitions'};
-            testCase.verifyEqual(size(calls, 1), 8, 'exactly 8 genuine feature stubs remain after the P4-7a styles un-stub');
+            testCase.verifyEqual(size(calls, 1), 6, 'exactly 6 genuine feature stubs remain after the P4-7a styles + P5-1 settings un-stubs');
             for k = 1:size(calls, 1)
                 caught = testCase.catchCall(calls{k, 1});
                 testCase.assertNotEmpty(caught, ...
@@ -376,6 +378,16 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
                 'DocumentPart.get_style RESOLVES (un-stubbed at P4-7a)');
             testCase.verifyEqual(dp.get_style_id("Heading 1", PARA), "Heading1", ...
                 'DocumentPart.get_style_id RESOLVES (un-stubbed at P4-7a)');
+
+            % --- the two settings paths P5-1 un-stubbed now RESOLVE (no stub) ---
+            testCase.verifyClass(dp.settings(), 'mat2doc.settings.Settings', ...
+                'DocumentPart.settings RESOLVES to a Settings proxy (un-stubbed at P5-1)');
+            testCase.verifyClass(st.settings(), 'mat2doc.settings.Settings', ...
+                'SettingsPart.settings RESOLVES to a Settings proxy (un-stubbed at P5-1)');
+            % H5 eq-chain: DocumentPart.settings delegates to SettingsPart.settings
+            % over the SAME CT_Settings element, so they compare == True.
+            testCase.verifyTrue(dp.settings() == st.settings(), ...
+                'H5: DocumentPart.settings == SettingsPart.settings (same element)');
         end
 
         function test_numberingpart_new_raises_notimplemented(testCase)

@@ -187,6 +187,31 @@ map = registerElementCls_(map, "w:style",           "mat2doc.oxml.styles.CT_Styl
 map = registerElementCls_(map, "w:styles",          "mat2doc.oxml.styles.CT_Styles");         % __init__.py:147
 map = registerElementCls_(map, "w:uiPriority",      "mat2doc.oxml.shared.CT_DecimalNumber");  % __init__.py:148
 map = registerElementCls_(map, "w:unhideWhenUsed",  "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:149
+% -- settings + header/footer block, P5-1 -- FIRST WP of Phase 5. TWO rows:
+% --  (1) w:settings (__init__.py:134) -> CT_Settings, the ROOT of
+% --      word/settings.xml, so settings.xml transits CT_Settings on load (the M1
+% --      parse path). CT_Settings is a faithful pass-through on parse/serialize
+% --      (only adds the evenAndOddHeaders descriptor + evenAndOddHeaders_val), so
+% --      the parse path is byte-neutral (P4-6 precedent). ZERO exact-class
+% --      XmlElement pins target w:settings (boundary audit: settings.xml
+% --      PIN-CLEAN). The only expected flips are 3 stub-battery expected-throws
+% --      (Test_p2_2:352/358, Test_p2_3:318) that flip by design at the un-stub.
+% --  (2) w:evenAndOddHeaders (__init__.py:83, "header/footer-related mappings"
+% --      block) -> CT_OnOff. This is a HARD FUNCTIONAL DEPENDENCY of CT_Settings:
+% --      the evenAndOddHeaders_val getter/setter reads/writes .val on this child,
+% --      which requires it to resolve to CT_OnOff (an unregistered child is a
+% --      generic XmlElement with no .val). The brief's "one row" framing omitted
+% --      it; it is NOT a feature beyond the original -- it is required for the
+% --      WP's core odd_and_even_pages_header_footer get/set to work at all
+% --      (VERIFY for the auditor). Byte-neutral: the default settings.xml carries
+% --      NO w:evenAndOddHeaders, so nothing transits CT_OnOff on the M1 parse
+% --      path; the row only lights up when the WP CREATES the element. The
+% --      SIBLING w:titlePg (__init__.py:84, same block) is DEFERRED to the P5
+% --      section tier (used only by CT_SectPr, not CT_Settings) -- same
+% --      split-a-source-block-across-WPs precedent as w:outlineLvl (P4-2 deferred
+% --      -> P4-6 closed).
+map = registerElementCls_(map, "w:evenAndOddHeaders", "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:83  (P5-1; CT_Settings dep)
+map = registerElementCls_(map, "w:settings",          "mat2doc.oxml.settings.CT_Settings");    % __init__.py:134 (P5-1)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
