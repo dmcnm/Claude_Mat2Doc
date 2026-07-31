@@ -16,17 +16,16 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
 %   mirroring `from docx.blkcntnr import BlockItemContainer`. It does NOT collide
 %   with the +mat2doc\Document.m factory function (distinct names).
 %
-%   LIVE vs STUB (P2-3):
+%   LIVE vs STUB (P2-3 + P4-7b):
 %     LIVE  -- the container wiring: __init__(element, parent) storing _element
-%              (rotated element_) and delegating parent to StoryChild.
-%     STUB  -- add_paragraph / _add_paragraph / add_table / paragraphs / tables /
-%              iter_inner_content. Each stubs EXACTLY at the item-CONSTRUCTION
-%              boundary: the container structure is real, but the RETURNED item is
-%              a Paragraph (needs CT_P + Paragraph, P4) or a Table (needs CT_Tbl +
-%              Table, P6). blkcntnr.py:99-101 shows _add_paragraph reduces to
-%              `Paragraph(self._element.add_p(), self)` -- the CT_Body.add_p() is
-%              LIVE (P2-3), but Paragraph is not, so the whole method must raise
-%              (calling add_p() first would leave a stray <w:p> in the tree).
+%              (rotated element_) and delegating parent to StoryChild; AND the
+%              paragraph surface add_paragraph / _add_paragraph (add_paragraph_) /
+%              paragraphs, un-stubbed at P4-7b now that Paragraph (P4-5b),
+%              add_run and style are all live over the LIVE CT_Body.add_p() /
+%              p_lst (P2-3).
+%     STUB  -- add_table / tables (need CT_Tbl + Table, P6) and iter_inner_content
+%              (heterogeneous Paragraph|Table -- still stubs at the Table P6
+%              boundary though Paragraph is now live).
 %
 %   UNDERSCORE ROTATION (design.md section 2): _element -> element_,
 %   _add_paragraph -> add_paragraph_.
@@ -59,15 +58,39 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             obj.element_ = element;
         end
 
-        function p = add_paragraph(obj, text, style) %#ok<INUSD,MANU,STOUT>
-            % ADD_PARAGRAPH STUB (blkcntnr.py 45-59). Owner: P4 paragraph tier.
-            %   Faithful body: paragraph = self._add_paragraph(); if text:
-            %   paragraph.add_run(text); if style is not None: paragraph.style =
-            %   style; return paragraph. Every step needs the Paragraph proxy /
-            %   CT_P (P4); stubbed at the class boundary.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.text.paragraph.Paragraph (owning WP: P4 paragraph tier) " + ...
-                "required by mat2doc.BlockItemContainer.add_paragraph");
+        function paragraph = add_paragraph(obj, text, style)
+            % ADD_PARAGRAPH Return a paragraph newly added to the end of this
+            %   container's content (blkcntnr.py 45-59). The paragraph has `text`
+            %   in a single run if present, and paragraph style `style`. If `style`
+            %   is [] (None) no style is applied (same effect as the 'Normal' style).
+            %   UN-STUBBED at P4-7b (Paragraph / add_run / style all live).
+            %
+            %   Python (blkcntnr.py 54-59):
+            %     paragraph = self._add_paragraph()
+            %     if text:                 # non-empty string (H4)
+            %         paragraph.add_run(text)
+            %     if style is not None:    # None-identity (H3), NOT truthiness
+            %         paragraph.style = style
+            %     return paragraph
+            %
+            %   H13 default fidelity: add_paragraph(text="", style=None) -> text="",
+            %   style=[]. The `if text:` guard mirrors Paragraph.add_run: the
+            %   short-circuit `~isequal(text,[]) && strlength(text)>0` treats both
+            %   "" and [] as falsy (no run) without calling strlength([]).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.add_paragraph
+            arguments
+                obj
+                text  = ""   % Python default ""
+                style = []   % Python default None
+            end
+            paragraph = obj.add_paragraph_();               % Python: self._add_paragraph()
+            if ~isequal(text, []) && strlength(text) > 0    % Python: if text:
+                paragraph.add_run(text);                    % Python: paragraph.add_run(text)
+            end
+            if ~isequal(style, [])                          % Python: if style is not None:
+                paragraph.style = style;                    % Python: paragraph.style = style
+            end
         end
 
         function t = add_table(obj, rows, cols, width) %#ok<INUSD,MANU,STOUT>
@@ -82,22 +105,30 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
         end
 
         function it = iter_inner_content(obj) %#ok<MANU,STOUT>
-            % ITER_INNER_CONTENT STUB (blkcntnr.py 74-79). Owner: P4/P6.
+            % ITER_INNER_CONTENT STUB (blkcntnr.py 74-79). Owner: P6 table tier.
             %   Faithful body iterates self._element.inner_content_elements (LIVE)
-            %   yielding Paragraph(element, self) or Table(element, self). The
-            %   Paragraph (P4) / Table (P6) construction is the stub boundary.
+            %   yielding Paragraph(element, self) or Table(element, self). Paragraph
+            %   is now LIVE (P4-7b) but Table is P6, so this heterogeneous iterator
+            %   still stubs at the Table boundary.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.text.paragraph.Paragraph (P4) / mat2doc.table.Table (P6) " + ...
+                "mat2doc.table.Table (owning WP: P6 table tier) " + ...
                 "required by mat2doc.BlockItemContainer.iter_inner_content");
         end
 
-        function ps = paragraphs(obj) %#ok<MANU,STOUT>
-            % PARAGRAPHS STUB (blkcntnr.py 81-87). Owner: P4 paragraph tier.
-            %   Faithful body: [Paragraph(p, self) for p in self._element.p_lst].
-            %   CT_Body.p_lst is LIVE; the Paragraph construction is the boundary.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.text.paragraph.Paragraph (owning WP: P4 paragraph tier) " + ...
-                "required by mat2doc.BlockItemContainer.paragraphs");
+        function ps = paragraphs(obj)
+            % PARAGRAPHS A list of the paragraphs in this container, in document
+            %   order (blkcntnr.py 81-87, @property, read-only). UN-STUBBED at
+            %   P4-7b. Python: [Paragraph(p, self) for p in self._element.p_lst].
+            %   A homogeneous 1xN Paragraph array (LIST-PROPERTY SURFACE, per the
+            %   Paragraph.runs precedent); each mints a FRESH Paragraph view (H5).
+            %   CT_Body.p_lst is LIVE (P2-3); empty -> a 1x0 Paragraph array.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.paragraphs
+            plst = obj.element_.p_lst;
+            ps = mat2doc.text.Paragraph.empty(1, 0);
+            for k = 1:numel(plst)   % Python: for p in self._element.p_lst
+                ps(k) = mat2doc.text.Paragraph(plst(k), obj);   % Paragraph(p, self)
+            end
         end
 
         function ts = tables(obj) %#ok<MANU,STOUT>
@@ -111,15 +142,15 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
     end
 
     methods (Access = protected)
-        function p = add_paragraph_(obj) %#ok<MANU,STOUT>
-            % _ADD_PARAGRAPH STUB (blkcntnr.py 99-101). Owner: P4 paragraph tier.
-            %   Faithful body: return Paragraph(self._element.add_p(), self). The
-            %   CT_Body.add_p() is LIVE (P2-3), but Paragraph is P4; the whole
-            %   method raises (calling add_p() first would leave a stray <w:p>).
-            %   Underscore rotation: _add_paragraph -> add_paragraph_.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.text.paragraph.Paragraph (owning WP: P4 paragraph tier) " + ...
-                "required by mat2doc.BlockItemContainer._add_paragraph");
+        function p = add_paragraph_(obj)
+            % _ADD_PARAGRAPH Return a paragraph newly added to the end of this
+            %   container's content (blkcntnr.py 99-101). UN-STUBBED at P4-7b.
+            %   Python: return Paragraph(self._element.add_p(), self). CT_Body.add_p()
+            %   is LIVE (P2-3); Paragraph is LIVE (P4-5b). Underscore rotation:
+            %   _add_paragraph -> add_paragraph_.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer._add_paragraph
+            p = mat2doc.text.Paragraph(obj.element_.add_p(), obj);
         end
     end
 end

@@ -4,11 +4,13 @@ classdef Document < mat2doc.shared.ElementProxy
 %   Not intended to be constructed directly. Use the package-level factory
 %   MAT2DOC.DOCUMENT (`+mat2doc\Document.m`) to open or create a document.
 %
-%   P2-3 SLICE: `save`, `core_properties`, `part`, and the private object-graph
-%   accessors `body_` / `block_width_` are LIVE; every content member
-%   (add_paragraph / add_heading / add_table / add_picture / paragraphs /
-%   sections / styles / settings / inline_shapes / tables / comments / ...) is a
-%   mat2doc:notYetPorted stub. NONE is on the open->save path.
+%   P2-3 SLICE (+ P4-7a/P4-7b): `save`, `core_properties`, `part`, `styles`
+%   (P4-7a), and the paragraph adders `add_heading` / `add_paragraph` (P4-7b,
+%   the M2 critical path) are LIVE, as are the private object-graph accessors
+%   `body_` / `block_width_`. The remaining content members (add_table /
+%   add_picture / add_page_break / paragraphs / sections / settings /
+%   inline_shapes / tables / comments / ...) are mat2doc:notYetPorted stubs.
+%   NONE of the stubs is on the open->save path.
 %
 %   VERIFY-M1-DOC-BASE (RESOLVED in P2-1): in python-docx Document extends
 %   ElementProxy (document.py 28, `class Document(ElementProxy)`), which
@@ -182,25 +184,74 @@ classdef Document < mat2doc.shared.ElementProxy
                 "tier) is not yet ported");
         end
 
-        function p = add_heading(obj, text, level) %#ok<INUSD,MANU,STOUT>
-            % ADD_HEADING STUB (document.py 90-101). Owner: P4 content tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_heading (owning WP: P4 content " + ...
-                "tier) is not yet ported");
+        function p = add_heading(obj, text, level)
+            % ADD_HEADING Return a heading paragraph newly added to the end of the
+            %   document (document.py 90-101). The heading contains `text` and its
+            %   paragraph style is determined by `level`: level 0 -> "Title";
+            %   level 1 (or omitted) -> "Heading 1"; otherwise "Heading {level}".
+            %   Raises mat2doc:ValueError if `level` is outside 0-9. UN-STUBBED at
+            %   P4-7b.
+            %
+            %   Python (document.py 98-101):
+            %     if not 0 <= level <= 9:
+            %         raise ValueError("level must be in range 0-9, got %d" % level)
+            %     style = "Title" if level == 0 else "Heading %d" % level
+            %     return self.add_paragraph(text, style)
+            %
+            %   H13 default fidelity: add_heading(text="", level=1). H1: `level` is
+            %   a DATA value (heading number used verbatim in "Heading %d" and the
+            %   0-9 bound check), NOT a collection index -- no +1/-1 shift. The
+            %   ValueError message is the VERBATIM Python string with id
+            %   mat2doc:ValueError.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_heading
+            arguments
+                obj
+                text  = ""   % Python default ""
+                level = 1    % Python default 1
+            end
+            if ~(0 <= level && level <= 9)   % Python: if not 0 <= level <= 9
+                error("mat2doc:ValueError", "%s", ...
+                    sprintf("level must be in range 0-9, got %d", level));
+            end
+            if level == 0                    % Python: "Title" if level == 0
+                style = "Title";
+            else                             % Python: else "Heading %d" % level
+                style = sprintf("Heading %d", level);
+            end
+            p = obj.add_paragraph(text, style);   % Python: return self.add_paragraph(text, style)
         end
 
         function p = add_page_break(obj) %#ok<MANU,STOUT>
-            % ADD_PAGE_BREAK STUB (document.py 103-107). Owner: P4 content tier.
+            % ADD_PAGE_BREAK STUB (document.py 103-107). Owner: post-P4 content
+            %   follow-up (out of P4-7b's named scope: add_heading + add_paragraph).
+            %   Faithful body: paragraph = self.add_paragraph();
+            %   paragraph.add_run().add_break(WD_BREAK.PAGE); return paragraph. All
+            %   deps are now LIVE (add_paragraph P4-7b, add_run + add_break P4-5b);
+            %   left stubbed only to stay within P4-7b's explicit scope. Clean
+            %   un-stub candidate for the next content WP. See audit VERIFY note.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_page_break (owning WP: P4 " + ...
-                "content tier) is not yet ported");
+                "mat2doc.document.Document.add_page_break (owning WP: post-P4 " + ...
+                "content follow-up; deps live) is not yet ported");
         end
 
-        function p = add_paragraph(obj, text, style) %#ok<INUSD,MANU,STOUT>
-            % ADD_PARAGRAPH STUB (document.py 109-119). Owner: P4 content tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_paragraph (owning WP: P4 " + ...
-                "content tier) is not yet ported");
+        function p = add_paragraph(obj, text, style)
+            % ADD_PARAGRAPH Return a paragraph newly added to the end of the
+            %   document (document.py 109-119), populated with `text` and given
+            %   paragraph style `style`. Delegates to the body BlockItemContainer.
+            %   UN-STUBBED at P4-7b.
+            %
+            %   Python: return self._body.add_paragraph(text, style).
+            %   H13 default fidelity: add_paragraph(text="", style=None) -> text="",
+            %   style=[]. Both defaults are forwarded unchanged to _body.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_paragraph
+            arguments
+                obj
+                text  = ""   % Python default ""
+                style = []   % Python default None
+            end
+            p = obj.body_().add_paragraph(text, style);   % Python: self._body.add_paragraph(text, style)
         end
 
         function shape = add_picture(obj, image_path_or_stream, width, height) %#ok<INUSD,MANU,STOUT>
@@ -239,17 +290,24 @@ classdef Document < mat2doc.shared.ElementProxy
         end
 
         function it = iter_inner_content(obj) %#ok<MANU,STOUT>
-            % ITER_INNER_CONTENT STUB (document.py 180-182). Owner: P4/P6 content tiers.
+            % ITER_INNER_CONTENT STUB (document.py 180-182). Owner: P6 table tier.
+            %   Delegates to self._body.iter_inner_content, itself stubbed at the
+            %   Table boundary (Paragraph is now live P4-7b; Table is P6).
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.iter_inner_content (owning WP: P4/P6 " + ...
-                "content tiers) is not yet ported");
+                "mat2doc.table.Table (owning WP: P6 table tier) required by " + ...
+                "mat2doc.document.Document.iter_inner_content");
         end
 
         function p = paragraphs(obj) %#ok<MANU,STOUT>
-            % PARAGRAPHS STUB (document.py 184-191). Owner: P4 content tier.
+            % PARAGRAPHS STUB (document.py 184-191). Owner: post-P4 content
+            %   follow-up (out of P4-7b's named scope). Faithful body:
+            %   return self._body.paragraphs -- and _body.paragraphs is now LIVE
+            %   (P4-7b). Left stubbed only to stay within P4-7b's explicit scope
+            %   (Document un-stubs = add_heading + add_paragraph). Clean un-stub
+            %   candidate; the paragraphs list is reachable now via body_().paragraphs.
             error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.paragraphs (owning WP: P4 content " + ...
-                "tier) is not yet ported");
+                "mat2doc.document.Document.paragraphs (owning WP: post-P4 content " + ...
+                "follow-up; deps live via _body.paragraphs) is not yet ported");
         end
 
         function s = sections(obj) %#ok<MANU,STOUT>

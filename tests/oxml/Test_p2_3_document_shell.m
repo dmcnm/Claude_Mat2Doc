@@ -87,11 +87,17 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         DOCXML_SIZE = 1548
         DOCXML_SHA  = "0e4dd503bc095219cd24e8312b372c588ca56bb834aacac53eafb7bf47836327"
 
-        % --- frozen matlab_only.json: the stub battery names (bar 6). P4-7a
-        %     un-stubbed Document.styles, so it drops out of this notYetPorted
-        %     battery (21 -> 20); it is re-pinned to its resolved behavior in
-        %     test_content_stubs_raise_notYetPorted (registry-flip stale-pins). ---
-        STUB_COUNT = 20
+        % --- frozen matlab_only.json: the stub battery names (bar 6). Registry-flip
+        %     stale-pins as the un-stubs land (each drops out of this notYetPorted
+        %     battery and is re-pinned to its resolved behavior in
+        %     test_content_stubs_raise_notYetPorted):
+        %       P4-7a un-stubbed Document.styles                    (21 -> 20)
+        %       P4-7b un-stubbed Document.add_paragraph/add_heading +
+        %             Body_.add_paragraph/Body_.paragraphs          (20 -> 16)
+        %     Document.add_page_break / Document.paragraphs / Body_.add_table /
+        %     Body_.tables / Body_.iter_inner_content and the P5/P6/P7/P8 adders
+        %     REMAIN genuinely stubbed. ---
+        STUB_COUNT = 16
     end
 
     methods (TestClassSetup)
@@ -287,16 +293,20 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % Edge / Regression (error path, P2 EXIT): every content-authoring stub
             % raises the IDENTIFIER mat2doc:notYetPorted (not a silent no-op). Covers
             % the Document tier, the canonical BlockItemContainer/Body_ tier, and
-            % CT_Body.add_section_break. REGISTRY-FLIP RE-PIN (P4-7a Gate-4):
-            % Document.styles was un-stubbed at P4-7a and now RESOLVES, so it is
-            % REMOVED from this notYetPorted battery (21 -> 20) and asserted resolved
-            % below. Every other content stub stays pinned (registry-flip stale-pins).
+            % CT_Body.add_section_break. REGISTRY-FLIP RE-PINS (the un-stub moves the
+            % behavior, so the pin moves with it):
+            %   * P4-7a: Document.styles un-stubbed -> REMOVED (asserted resolved below).
+            %   * P4-7b (M2 milestone WP): Document.add_paragraph / Document.add_heading
+            %     / Body_.add_paragraph / Body_.paragraphs un-stubbed -> REMOVED (all
+            %     asserted resolved below). (20 -> 16.)
+            % Document.add_page_break / Document.paragraphs (P4-7b VERIFY-1 scope --
+            % deps live but deliberately left stubbed for the next content WP),
+            % Body_.add_table / Body_.tables / Body_.iter_inner_content and the
+            % P5/P6/P7/P8 adders REMAIN genuinely pinned.
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
             calls = { ...
-                'Document.add_paragraph',      @() d.add_paragraph("x"); ...
-                'Document.add_heading',        @() d.add_heading("x", 1); ...
                 'Document.add_page_break',     @() d.add_page_break(); ...
                 'Document.add_table',          @() d.add_table(1, 1, []); ...
                 'Document.add_picture',        @() d.add_picture("x"); ...
@@ -309,14 +319,12 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes(); ...
                 'Document.iter_inner_content', @() d.iter_inner_content(); ...
-                'Body_.add_paragraph',         @() b.add_paragraph("x"); ...
                 'Body_.add_table',             @() b.add_table(1, 1, []); ...
-                'Body_.paragraphs',            @() b.paragraphs(); ...
                 'Body_.tables',                @() b.tables(); ...
                 'Body_.iter_inner_content',    @() b.iter_inner_content(); ...
                 'CT_Body.add_section_break',   @() ct.add_section_break()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 20 members (Document.styles un-stubbed at P4-7a)');
+                'the stub battery must cover exactly 16 members (Document.styles P4-7a + 4 adders P4-7b un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -332,6 +340,21 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % Document.styles now RESOLVES (un-stubbed at P4-7a).
             testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
                 'Document.styles RESOLVES to a Styles proxy (P4-7a un-stub)');
+
+            % The P4-7b (M2) adder un-stubs now RESOLVE end-to-end. Use fresh
+            % handles so these positive checks do not interfere with the stub loop's
+            % document (add_* mutates the body). add_paragraph/add_heading return a
+            % Paragraph; Body_.paragraphs returns a (possibly empty) Paragraph array.
+            dr = mat2doc.Document();
+            br = dr.body_();
+            testCase.verifyClass(dr.add_paragraph("x"), 'mat2doc.text.Paragraph', ...
+                'Document.add_paragraph RESOLVES to a Paragraph (P4-7b un-stub, M2)');
+            testCase.verifyClass(dr.add_heading("x", 1), 'mat2doc.text.Paragraph', ...
+                'Document.add_heading RESOLVES to a Paragraph (P4-7b un-stub, M2)');
+            testCase.verifyClass(br.add_paragraph("x"), 'mat2doc.text.Paragraph', ...
+                'Body_.add_paragraph RESOLVES to a Paragraph (P4-7b un-stub)');
+            testCase.verifyClass(br.paragraphs(), 'mat2doc.text.Paragraph', ...
+                'Body_.paragraphs RESOLVES to a Paragraph array (P4-7b un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

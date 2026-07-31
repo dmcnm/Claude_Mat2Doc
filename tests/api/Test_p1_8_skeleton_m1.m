@@ -378,20 +378,24 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             % Regression / Edge (stub-safety, validate_P1-8 Bar 4): a representative
             % feature-stub set each raises mat2doc:notYetPorted (identifier pinned),
             % NOT a silent no-op. Covers the still-wired stubs:
-            %   document.Document.add_paragraph / paragraphs
+            %   document.Document.paragraphs   (still stubbed -- P4-7b VERIFY-1 scope)
             %   DocumentPart.numbering_part
             %   Package.image_parts
             %
-            % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): Document.styles was un-stubbed at
-            % P4-7a and now RESOLVES (returns a Styles proxy over the real styles
-            % part); it moved from this notYetPorted set to the positive check below
-            % (the registry-flip stale-pins lesson -- the un-stub moved the behavior,
-            % so the pin moves with it).
+            % REGISTRY-FLIP RE-PINS (the un-stub moved the behavior, so the pin moves
+            % with it -- registry-flip stale-pins lesson):
+            %   * P4-7a: Document.styles was un-stubbed and now RESOLVES (a Styles
+            %     proxy over the real styles part) -> positive check below.
+            %   * P4-7b: Document.add_paragraph was un-stubbed (the M2 milestone WP)
+            %     and now RESOLVES (returns a Paragraph) -> REMOVED from the
+            %     notYetPorted set, positive check below. document.Document.paragraphs
+            %     STAYS stubbed (P4-7b left it in scope for the next content WP -- its
+            %     deps are live but it was not un-stubbed; audit VERIFY-1), so it
+            %     remains pinned here.
             pkg = mat2doc.package.Package.open(char(testCase.templatePath()));
             dp  = pkg.main_document_part();
             d   = dp.document();
             calls = { ...
-                @() d.add_paragraph(),  'document.Document.add_paragraph'; ...
                 @() d.paragraphs(),     'document.Document.paragraphs'; ...
                 @() dp.numbering_part(),'parts.DocumentPart.numbering_part'; ...
                 @() pkg.image_parts(),  'package.Package.image_parts'};
@@ -412,6 +416,11 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             % over the real styles part.
             testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
                 'Document.styles RESOLVES to a Styles over the real styles part (P4-7a)');
+
+            % Document.add_paragraph now RESOLVES (un-stubbed at P4-7b, the M2
+            % milestone WP) -> a Paragraph appended to the body.
+            testCase.verifyClass(d.add_paragraph(), 'mat2doc.text.Paragraph', ...
+                'Document.add_paragraph RESOLVES to a Paragraph (P4-7b un-stub, M2)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

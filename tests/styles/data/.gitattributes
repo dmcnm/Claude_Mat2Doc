@@ -7,6 +7,21 @@
 # binary.
 s0032_document.xml binary
 
-# (The s0031_probe_oracle.json oracle is value/serhex + byteproof SHAs and is
-#  read in binary mode; jsondecode is line-ending agnostic, so it needs no pin --
-#  s0028/s0030 precedent. Only the byte-exact XML fixture is pinned here.)
+# P4-7b (M2 milestone) byte-exact fixtures:
+# s0033_document.xml is the frozen python-docx 1.2.0 word/document.xml of the M2
+# milestone package (1865 B, SHA a71e5502...) -- Document(); add_heading(t0,0);
+# add_heading(t1,1); add_heading(t2,2); add_paragraph(p); save(). It carries the
+# Title/Heading1/Heading2 pStyle refs + the plain body paragraph and MUST be
+# checked out byte-for-byte (a CRLF translation would grow it and break the M2
+# milestone byte/SHA pin in Test_p4_7b_latent_m2). Pin it binary.
+s0033_document.xml binary
+
+# s0034_styles.xml is the frozen python-docx 1.2.0 word/styles.xml of the latent
+# WRITE-path proof (349578 B, SHA 3981d463...) -- the latent default_* / load_count
+# setters + add_lsdException + LatentStyle_ setters serialized. It MUST be checked
+# out byte-for-byte (the latent-mutation byte pin depends on it). Pin it binary.
+s0034_styles.xml binary
+
+# (The s0031/s0035 *_oracle.json oracles are value/serhex + byteproof SHAs and are
+#  read in binary mode; jsondecode is line-ending agnostic, so they need no pin --
+#  s0028/s0030 precedent. Only the byte-exact XML fixtures are pinned here.)

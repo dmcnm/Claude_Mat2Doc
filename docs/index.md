@@ -24,6 +24,19 @@ lands they are maintained by hand to the same shape (one section per symbol:
 syntax, description, example, ported-from).
 :::
 
+## ★ Milestones
+
+- **M1 — the round-trip spine (ACHIEVED).** `mat2doc.Document().save()` writes the
+  bundled template back **byte-identical** to python-docx and opens clean in real
+  Word. See the [document tier page](api/document.md).
+- **★ M2 — the hello-world Word document (ACHIEVED, P4-7b).** Authoring a title,
+  two headings and a body paragraph — `Document(); add_heading(_,0/1/2);
+  add_paragraph(); save()` — produces a `word/document.xml` **17/17 byte-identical**
+  to python-docx (only `document.xml` differs; `styles.xml` unchanged) that **opens
+  clean in real Word** with styles resolved by name. This completes the
+  `add_heading` / `add_paragraph` authoring path and **Phase 4**. See the
+  **[M2 milestone page](m2_milestone.md)**.
+
 ## Sections
 
 - **Foundation & utilities** — the shared length-unit value types (the
@@ -185,9 +198,18 @@ syntax, description, example, ported-from).
   `warnings.warn`** (`mat2doc:UserWarning` house convention on the deprecated by-id
   `getitem_` path), and the un-stub that makes `Paragraph.style`/`Run.style`/
   `get_style` resolve end-to-end (the style-by-name path byte-proven, the direct M2
-  `add_heading` precursor). **API/proxy tier — no registry row, no serialization
-  change → behavioral equivalence, byte-neutral (M1 17/17, 0 new D-numbers).
-  Styles API un-stubbed → latent styles (P4-7b) → M2 next.**
+  `add_heading` precursor). At **P4-7b** the tier is **completed** by the
+  **latent-styles API** — `mat2doc.styles.LatentStyles` (the `<w:latentStyles>`
+  defaults + the `getitem_`/`to_array`/`len_`/`add_latent_style` collection surface
+  and the `default_priority`/`default_to_*`/`load_count` writers) and
+  `mat2doc.styles.LatentStyle_` (`_LatentStyle`→`LatentStyle_`, a `<w:lsdException>`
+  override with the RAW tri-state `hidden`/`locked`/`quick_style`/`unhide_when_used`
+  and the H17 `delete_()` proxy-layer rename) — un-stubbing `Styles.latent_styles`;
+  the latent WRITE path is byte-proven (`s0034`, only `styles.xml` changes). **API/
+  proxy tier — no registry row, no serialization change → behavioral equivalence,
+  byte-neutral (M1 17/17, 0 new D-numbers). With latent styles live, P4-7b un-stubs
+  the `add_heading`/`add_paragraph` authoring path → ★ M2 ACHIEVED → Phase 4
+  COMPLETE.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
