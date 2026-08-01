@@ -1,0 +1,50 @@
+{
+  "descriptors": {
+    "tblPr_class": "CT_TblPr",
+    "tblGrid_class": "CT_TblGrid",
+    "col_count": "3",
+    "tr_count": "2",
+    "tr_classes": [
+      "CT_Row"
+    ]
+  },
+  "add_tr": {
+    "count_before": "2",
+    "added_class": "CT_Row",
+    "count_after": "3"
+  },
+  "iter_tcs": {
+    "count": "6",
+    "classes": [
+      "CT_Tc"
+    ],
+    "grid_offset_flatten": [
+      "0",
+      "1",
+      "2",
+      "0",
+      "1",
+      "2"
+    ]
+  },
+  "bidiVisual": {
+    "absent": "None",
+    "rtl_get": "True",
+    "rtl_bare": "True",
+    "rtl_has_val": "False",
+    "ltr_get": "False",
+    "ltr_val0": "True",
+    "none_get": "None",
+    "none_removed": "True"
+  },
+  "tblStyle": {
+    "default": "None",
+    "default_absent": "True",
+    "set_get": "TableGrid",
+    "set_bytes": "True",
+    "reset_get": "LightShading",
+    "reset_bytes": "True",
+    "none_get": "None",
+    "none_removed": "True"
+  }
+}

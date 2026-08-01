@@ -323,11 +323,22 @@ syntax, description, example, ported-from).
   (`references\s0063` — horizontal / vertical-bare-vMerge / block / into-existing-
   spans / width-sum + H4-skip / sdt-passenger / **nested-table** — frozen as the
   permanent table-merge oracle), handle-identity `_tr_idx`=`[0 1 2]`, all 9
-  invalid-span raises verbatim, **0 new D-numbers**. What remains: `CT_Tbl` + the
-  registry completion + the tbl un-defer sweep → **P6-3b**; the `Table`/`_Rows`/
-  `_Columns`/`_Cell` API → **P6-4a/b** + the table Word-COM sweep (the `s0063`
-  merged-cell fixtures COM-verified at P6-4b). See the
-  [table oxml page](api/oxml_table.md).
+  invalid-span raises verbatim, **0 new D-numbers**. **P6-3b** then landed the
+  **table root** `mat2doc.oxml.table.CT_Tbl` (the `<w:tbl>` root: the `new_tbl(rows,
+  cols, width)` **table constructor** — byte-identical across sizes incl. the
+  non-even-width H6 EMU-floor col-rounding, frozen 7/7 as the permanent
+  table-authoring oracle `references\s0065`; the `OneAndOnlyOne` `tblPr`/`tblGrid`;
+  `tr_lst`/`add_tr`; `bidiVisual_val` RTL→bare `<w:bidiVisual/>`; `col_count`;
+  row-major `iter_tcs`; `tblStyle_val`), completed the registry (`w:tbl`→`CT_Tbl`,
+  `w:bidiVisual`→`CT_OnOff`) and ran the **tbl un-defer sweep** — every prior
+  tag-based `w:tbl`→generic site (`CT_Body`/`CT_HdrFtr`/`CT_SectPr`/`CT_Tc`)
+  auto-upgrades to `CT_Tbl` and the P6-3a `CT_Tc` `trLstOfTbl_` shim resolves to the
+  real `self._tbl.tr_lst` (V2), the merge matrix re-proven **10/10 byte-identical**
+  after the swap, **0 new D-numbers**. **★ The table OXML LAYER is now COMPLETE —
+  all 14 `table.py` element classes ported, the registry complete.** What remains
+  in Phase 6 is the API tier: the `Table`/`_Rows`/`_Columns`/`_Cell` API →
+  **P6-4a/b** + the table Word-COM sweep (the `s0063` merged-cell + `s0065` new_tbl
+  fixtures COM-verified at P6-4b). See the [table oxml page](api/oxml_table.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

@@ -31,12 +31,14 @@ classdef CT_HdrFtr < mat2doc.oxml.BaseOxmlElement
 %   ===================== CT_Tbl TAG-BASED INCLUSION (P5-2b) =====================
 %   inner_content_elements is xpath("./w:p | ./w:tbl") -- a TAG-BASED child union,
 %   NOT isinstance dispatch (contrast Section.iter_inner_content, P5-3a, which
-%   DOES isinstance-dispatch and carries the table-branch debt). CT_Tbl is NOT yet
-%   ported/registered, so a <w:tbl> child resolves to a GENERIC XmlElement (the
-%   CT_Body.tbl_lst precedent, LIVE since P2-3 with w:tbl unregistered). The xpath
-%   still selects it by tag and INCLUDES it in the returned array (never dropped,
-%   never crashed) -- only its element CLASS is generic. So this class ports
-%   COMPLETE with ZERO stubs; no notYetPorted CT_Tbl branch belongs here.
+%   DOES isinstance-dispatch and carries the table-branch debt). CT_Tbl is now
+%   REGISTERED (P6-3b, w:tbl->CT_Tbl), so a <w:tbl> child resolves to a CT_Tbl (the
+%   un-defer sweep auto-upgraded this tag-based site; through P2-3..P6-2 it was a
+%   generic XmlElement -- the CT_Body.tbl_lst precedent). Because the xpath selects
+%   by TAG it always INCLUDED the node (never dropped, never crashed); registering
+%   CT_Tbl only flips the matched element's CLASS generic->CT_Tbl, no code change.
+%   So this class ports COMPLETE with ZERO stubs; no notYetPorted CT_Tbl branch
+%   belongs here.
 %
 %   Likewise the generated tbl descriptors (new_tbl_/insert_tbl_/add_tbl_/add_tbl)
 %   need ONLY the "w:tbl" nsptag string; add_tbl() produces a generic <w:tbl> that
@@ -91,7 +93,7 @@ classdef CT_HdrFtr < mat2doc.oxml.BaseOxmlElement
         function child = add_p(obj);             child = obj.add_p_(); end   % public adder (xmlchemy 340-352)
 
         % ============ generated ZeroOrMore descriptor members (tbl) ============
-        % CT_Tbl unregistered (P6): add_tbl()/tbl_lst return generic XmlElement.
+        % CT_Tbl registered (P6-3b): add_tbl()/tbl_lst return CT_Tbl.
         function lst = get.tbl_lst(obj);          lst = obj.getChildList(obj.TBL_TAG); end
         function child = new_tbl_(obj);           child = obj.newChild(obj.TBL_TAG); end
         function child = insert_tbl_(obj, child); child = obj.insertChildInSequence(child, obj.NO_SUCCESSORS); end
@@ -102,7 +104,7 @@ classdef CT_HdrFtr < mat2doc.oxml.BaseOxmlElement
         function elms = get.inner_content_elements(obj)
             % INNER_CONTENT_ELEMENTS All <w:p> and <w:tbl> elements in this header
             %   or footer, in document order (section.py 41-48). TAG-BASED child
-            %   union -- a <w:tbl> resolves to a generic XmlElement (CT_Tbl P6) and
+            %   union -- a <w:tbl> resolves to CT_Tbl (registered P6-3b) and
             %   is INCLUDED (H5). Elements shaded by nesting in a w:ins or other
             %   wrapper are NOT included. H9: materialized 1xN heterogeneous
             %   XmlElement array (Python returns a list); empty typed array when

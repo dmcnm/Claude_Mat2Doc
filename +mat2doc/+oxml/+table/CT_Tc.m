@@ -26,19 +26,18 @@ classdef CT_Tc < mat2doc.oxml.BaseOxmlElement
 %   creator is the _new_tbl OVERRIDE (raises NotImplementedError -- use
 %   CT_Tbl.new_tbl()).
 %
-%   =============== CT_Tbl BOUNDARY -- the generic-ancestor tr_lst shim (C2) =====
+%   =============== CT_Tbl BOUNDARY -- V2 RESOLVED at P6-3b ======================
 %   CT_Tc needs `self._tbl.tr_lst[...]` (the enclosing tbl's rows: merge :515,
-%   _tr_below :771-776, _tr_idx :779-781). CT_Tbl (w:tbl) is P6-3b -- NOT yet
-%   ported/registered -- so `_tbl` (table.py 733-736, `./ancestor::w:tbl
-%   [position()=1]`) resolves to a GENERIC XmlElement with NO tr_lst accessor.
-%   RESOLUTION (planaudit_2026-07-31 condition C2): CT_Tbl.tr_lst is EXACTLY
-%   findall("w:tr") in document order, and w:tr already dispatches to CT_Row
-%   (P6-2). So the private shim `trLstOfTbl_` returns the tbl ancestor's
-%   `xpath("./w:tr")` -- the identical CT_Row handle list. Byte-neutral,
-%   identity-safe (persistent, parent_-linked handles). ADJUDICATED/UPGRADED at
-%   P6-3b: when CT_Tbl registers, either swap to `tbl.tr_lst` or keep this shim
-%   (decided at P6-3b Gate-2). This is the ONE Tc->Tbl seam; `_tbl` itself is the
-%   plain generic ancestor element (used only to reach the rows).
+%   _tr_below :771-776, _tr_idx :779-781). At P6-3a CT_Tbl (w:tbl) was NOT yet
+%   registered, so `_tbl` (tbl_, table.py 733-736, `./ancestor::w:tbl
+%   [position()=1]`) resolved to a GENERIC XmlElement with no tr_lst accessor, and
+%   a private shim `trLstOfTbl_` reached the rows via `tbl.xpath("./w:tr")` (C2).
+%   V2 RESOLUTION (P6-3b): CT_Tbl is now ported/registered, so tbl_() dispatches to
+%   a real CT_Tbl and the three sites call `self._tbl.tr_lst` DIRECTLY (the shim is
+%   removed) -- the faithful 1:1 port of the Python. CT_Tbl.tr_lst == findall("w:tr")
+%   == the old shim's xpath("./w:tr") node-set (identical CT_Row handle list, H5
+%   identity preserved), so the merge byte-matrix stays byte-identical (re-run at
+%   P6-3b Gate-1).
 %
 %   ============================ H1 (0-based -> 1-based) landmines ===============
 %   Every index below is 0-based Python data mapped explicitly to 1-based MATLAB;
@@ -279,7 +278,7 @@ classdef CT_Tc < mat2doc.oxml.BaseOxmlElement
                 other_tc (1,1) mat2doc.oxml.table.CT_Tc
             end
             [top, left, height, width] = obj.span_dimensions_(other_tc);
-            trLst = obj.trLstOfTbl_();                         % CT_Tbl.tr_lst shim (C2)
+            trLst = obj.tbl_().tr_lst;                          % Python: self._tbl.tr_lst (V2: CT_Tbl live)
             top_tc = trLst(top + 1).tc_at_grid_offset(left);   % IDX: tr_lst[top]->(top+1); left RAW 0-based
             top_tc.grow_to_(width, height);
         end
@@ -571,23 +570,14 @@ classdef CT_Tc < mat2doc.oxml.BaseOxmlElement
         function tbl = tbl_(obj)
             % Python: return cast(CT_Tbl, self.xpath(
             %             "./ancestor::w:tbl[position()=1]")[0])
-            % CT_Tbl is P6-3b (unregistered) -> the nearest w:tbl ancestor is a
-            % GENERIC XmlElement, used only to reach the rows (see trLstOfTbl_).
+            % V2 (P6-3b): CT_Tbl (w:tbl) is now registered, so the nearest w:tbl
+            % ancestor dispatches to CT_Tbl -- its `.tr_lst` is used directly by
+            % merge/_tr_below/_tr_idx (the P6-3a generic-ancestor shim `trLstOfTbl_`
+            % is removed). CT_Tbl.tr_lst == findall("w:tr") == the old shim's
+            % xpath("./w:tr"): the identical CT_Row handle list, so the merge stays
+            % byte-identical (H5 identity preserved).
             res = obj.xpath("./ancestor::w:tbl[position()=1]");
-            tbl = res(1);   % IDX: xpath(...)[0] -> (1)
-        end
-
-        % ---- CT_Tbl.tr_lst SHIM (planaudit_2026-07-31 condition C2) ----
-        function trLst = trLstOfTbl_(obj)
-            % The `self._tbl.tr_lst` used by merge/_tr_below/_tr_idx. CT_Tbl.tr_lst
-            % (OneOrMore w:tr) is EXACTLY findall("w:tr") in document order; since
-            % CT_Tbl is not yet ported (P6-3b), reach the rows via the tbl
-            % ancestor's `xpath("./w:tr")` -- w:tr already dispatches CT_Row (P6-2),
-            % so this returns the identical CT_Row handle list (H5 persistent
-            % handles). Byte-neutral; adjudicated/upgraded at P6-3b when CT_Tbl
-            % registers (swap to tbl.tr_lst, or keep -- decided at P6-3b Gate-2).
-            tbl = obj.tbl_();
-            trLst = tbl.xpath("./w:tr");
+            tbl = res(1);   % IDX: xpath(...)[0] -> (1); a CT_Tbl (P6-3b)
         end
 
         % ---- _tc_above (table.py 738-741) ----
@@ -637,7 +627,7 @@ classdef CT_Tc < mat2doc.oxml.BaseOxmlElement
             %         tr_idx = tr_lst.index(self._tr)
             %         try: return tr_lst[tr_idx + 1]
             %         except IndexError: return None
-            trLst = obj.trLstOfTbl_();
+            trLst = obj.tbl_().tr_lst;   % Python: self._tbl.tr_lst (V2: CT_Tbl live)
             myTr = obj.tr_();
             i = find(trLst == myTr, 1);   % H5 handle identity; i-1 == 0-based tr_idx
             if isempty(i)   % list.index() ValueError (unreachable for a parented cell)
@@ -658,7 +648,7 @@ classdef CT_Tc < mat2doc.oxml.BaseOxmlElement
             % 0-based row index of this cell's row within the tbl (H1: find()-1).
             % H5: HANDLE identity -- on a uniform 3x3 grid a content-compare would
             % silently return row 1 and corrupt the whole walk. Probe: rows 0/1/2.
-            trLst = obj.trLstOfTbl_();
+            trLst = obj.tbl_().tr_lst;   % Python: self._tbl.tr_lst (V2: CT_Tbl live)
             myTr = obj.tr_();
             i = find(trLst == myTr, 1);   % handle identity
             if isempty(i)   % list.index() ValueError (unreachable for a parented cell)

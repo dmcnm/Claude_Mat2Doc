@@ -39,8 +39,8 @@ classdef Test_p5_2b_hdrftr_oxml < matlab.unittest.TestCase
 %       [] -- a 0-LENGTH typed partition, no boundary error at blocks(n+1:end) with
 %       n==numel); body-section ENDING in a tbl (docC S2 = [p, tbl|C-S2-T]).
 %     * (I) CT_HdrFtr.inner_content_elements (test_ct_hdrftr_inner_content): over a
-%       MIXED header (p + tbl + p) returns [CT_P, XmlElement(tbl), CT_P] in document
-%       order -- the tbl INCLUDED as a GENERIC XmlElement (CT_Tbl P6-unregistered),
+%       MIXED header (p + tbl + p) returns [CT_P, CT_Tbl, CT_P] in document
+%       order -- the tbl INCLUDED (now CT_Tbl, registered P6-3b; class re-pinned),
 %       never dropped (pin the classes + order). A <w:p> nested in <w:ins> is SHADED
 %       and EXCLUDED (the fixed two-branch CHILD xpath ./w:p|./w:tbl, not a descendant
 %       scan). Non-ASCII text (café-Ñ—end / 中文) UTF-8-exact. H5 two-read identity.
@@ -129,7 +129,7 @@ classdef Test_p5_2b_hdrftr_oxml < matlab.unittest.TestCase
         CT_HDRFTR = 'mat2doc.oxml.section.CT_HdrFtr'
         CT_SECTPR = 'mat2doc.oxml.section.CT_SectPr'
         CT_P      = 'mat2doc.oxml.text.CT_P'
-        GENERIC   = 'mat2doc.oxml.XmlElement'    % an unregistered <w:tbl> parses here
+        CT_TBL    = 'mat2doc.oxml.table.CT_Tbl'  % a <w:tbl> parses here (registered P6-3b)
 
         % --- frozen s0001 M1 word/document.xml byte reference (registry-neutrality) ---
         DOC_SIZE_M1 = 1548
@@ -181,8 +181,9 @@ classdef Test_p5_2b_hdrftr_oxml < matlab.unittest.TestCase
             % (I) Nominal + Edge + Regression (s0042 hdrftr): ICE over the 6 header
             % shapes -- root class, count, localname|text signatures, and the H5
             % two-read identity. The MIXED case pins the element CLASSES
-            % [CT_P, XmlElement(tbl), CT_P] (tbl INCLUDED as generic, in position);
-            % ins_shaded pins the w:ins EXCLUSION; nonascii pins UTF-8-exact text.
+            % [CT_P, CT_Tbl, CT_P] (tbl INCLUDED, now CT_Tbl after the P6-3b re-pin,
+            % in position); ins_shaded pins the w:ins EXCLUSION; nonascii pins
+            % UTF-8-exact text.
 
             % ---- empty: 0-length TYPED array (never [] / None) ----
             h = parseXml(hdr("", nsW()));
@@ -197,10 +198,10 @@ classdef Test_p5_2b_hdrftr_oxml < matlab.unittest.TestCase
             h = parseXml(hdr(tbl("T"), nsW()));
             ice = h.inner_content_elements;
             testCase.verifyEqual(sigRow(ice), "tbl|T", 'tbl_only signature');
-            testCase.verifyEqual(class(ice(1)), testCase.GENERIC, ...
-                'a lone <w:tbl> resolves to a GENERIC XmlElement (CT_Tbl P6-unregistered), still INCLUDED');
+            testCase.verifyEqual(class(ice(1)), testCase.CT_TBL, ...
+                'a lone <w:tbl> now resolves to CT_Tbl (registered P6-3b; registry-flip re-pin), still INCLUDED');
 
-            % ---- mixed: [CT_P, XmlElement(tbl), CT_P] in document order ----
+            % ---- mixed: [CT_P, CT_Tbl, CT_P] in document order ----
             h = parseXml(hdr(pp("H-P1") + tbl("H-T00") + pp("H-P2"), nsW()));
             ice = h.inner_content_elements;
             testCase.verifyEqual(numel(ice), 3, 'mixed -> 3 inner-content elements');
@@ -208,8 +209,8 @@ classdef Test_p5_2b_hdrftr_oxml < matlab.unittest.TestCase
                 'mixed signatures in document order (tbl INCLUDED in position)');
             testCase.verifyEqual( ...
                 {class(ice(1)), class(ice(2)), class(ice(3))}, ...
-                {testCase.CT_P, testCase.GENERIC, testCase.CT_P}, ...
-                'mixed classes: [CT_P, XmlElement(tbl generic), CT_P] -- tbl included as generic, never dropped');
+                {testCase.CT_P, testCase.CT_TBL, testCase.CT_P}, ...
+                'mixed classes: [CT_P, CT_Tbl, CT_P] -- tbl now CT_Tbl (P6-3b re-pin), still included in position, never dropped');
             % H5 two-read identity: two reads return the SAME live handles
             ice2 = h.inner_content_elements;
             testCase.verifyTrue(numel(ice) == numel(ice2) && all(ice == ice2), ...
