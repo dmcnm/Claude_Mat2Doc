@@ -1,0 +1,341 @@
+{
+  "geometry": {
+    "snip1": [
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "2",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "2",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "1",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "2",
+          "top": "1",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "1",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "2",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ]
+    ],
+    "snip2": [
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "2",
+          "top": "0",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "restart"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "1",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "2",
+          "top": "0",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "continue"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "1",
+          "bottom": "2",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "2",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "2",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ]
+    ],
+    "snip4": [
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "2",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "2",
+          "vMerge": "None"
+        },
+        {
+          "grid_offset": "2",
+          "left": "2",
+          "right": "3",
+          "top": "0",
+          "bottom": "1",
+          "grid_span": "1",
+          "vMerge": "None"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "1",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "restart"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "3",
+          "top": "1",
+          "bottom": "3",
+          "grid_span": "2",
+          "vMerge": "restart"
+        }
+      ],
+      [
+        {
+          "grid_offset": "0",
+          "left": "0",
+          "right": "1",
+          "top": "1",
+          "bottom": "3",
+          "grid_span": "1",
+          "vMerge": "continue"
+        },
+        {
+          "grid_offset": "1",
+          "left": "1",
+          "right": "3",
+          "top": "1",
+          "bottom": "3",
+          "grid_span": "2",
+          "vMerge": "continue"
+        }
+      ]
+    ]
+  },
+  "tr_below": {
+    "last_row_is_none": "True",
+    "row0_below_idx": "1"
+  },
+  "handle_id": {
+    "tr_idx": [
+      "0",
+      "1",
+      "2"
+    ]
+  },
+  "tc_getset": {
+    "default_grid_span": "1",
+    "default_vMerge": "None",
+    "default_width": "None",
+    "set3_grid_span": "3",
+    "set3_has_gridSpan": "True",
+    "set1_has_gridSpan": "False",
+    "restart_read": "restart",
+    "restart_bytes": "True",
+    "continue_read": "continue",
+    "continue_is_bare": "True",
+    "none_has_vMerge": "False",
+    "width_emu": "914400"
+  },
+  "tcpr": {
+    "default_grid_span": "1",
+    "default_vMerge_val": "None",
+    "default_width": "None",
+    "default_vAlign_val": "None",
+    "vAlign_parse_center": "CENTER",
+    "h11_child_order": [
+      "tcW",
+      "gridSpan",
+      "vMerge",
+      "vAlign"
+    ],
+    "h11_serialized": "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\n<w:tcPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:tcW w:type=\"dxa\" w:w=\"1440\"/><w:gridSpan w:val=\"2\"/><w:vMerge w:val=\"restart\"/><w:vAlign w:val=\"center\"/></w:tcPr>"
+  },
+  "row_unstub": {
+    "new_tc_class": "CT_Tc",
+    "at0_class": "CT_Tc",
+    "at2_class": "CT_Tc",
+    "at1": {
+      "raised": "True",
+      "kind": "ValueError",
+      "msg": "no `tc` element at grid_offset=1"
+    },
+    "add_tc_class": "CT_Tc"
+  },
+  "raises": [
+    {
+      "case": "snip1_00_10",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "snip2_00_01",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "snip4_00_10",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "snip5_01_10",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "snip6_00_11",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "snip2_01_02",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "requested span not rectangular"
+    },
+    {
+      "case": "swallow_notenough",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "not enough grid columns"
+    },
+    {
+      "case": "swallow_notrect",
+      "raised": "True",
+      "kind": "InvalidSpanError",
+      "msg": "span is not rectangular"
+    },
+    {
+      "case": "tr_above_topmost",
+      "raised": "True",
+      "kind": "ValueError",
+      "msg": "no tr above topmost tr in w:tbl"
+    }
+  ]
+}

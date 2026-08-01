@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.oxml.table — the table oxml layer (7 LEAF classes + the property containers CT_TblPr · CT_TblPrEx · CT_TrPr · CT_Row)"
+title: "mat2doc.oxml.table — the table oxml layer (7 LEAF classes + the property containers CT_TblPr · CT_TblPrEx · CT_TrPr · CT_Row + the cell MERGE engine CT_Tc · CT_TcPr)"
 ---
 
-# `mat2doc.oxml.table` — the table oxml layer (the 7 leaves + the property containers)
+# `mat2doc.oxml.table` — the table oxml layer (the 7 leaves + the property containers + the cell merge engine)
 
 Ported from python-docx v1.2.0 `src/docx/oxml/table.py` (in the NEW package
 `+mat2doc/+oxml/+table/`) — the **seven LEAF element classes** of the table
@@ -14,23 +14,29 @@ they require (`src/docx/oxml/__init__.py` :171, :174, :175, :181, :183, :185,
 :186).
 
 :::{note}
-**★ Tables tier — the leaves (P6-1) AND the property containers (P6-2) are done;
-the CT_Tc merge engine (P6-3a) is next.** **P6-1** (the first Phase-6 WP) ported
-the seven table *leaf* elements — attribute-only (or single-list) classes with no
-dependence on any other table `CT_*`. **P6-2** then added the **four property
-containers** that consume those leaves: `CT_TblPr` (table properties — alignment /
-autofit / style), `CT_TblPrEx` (property exceptions), `CT_TrPr` (row properties —
-grid skips / row height), and `CT_Row` (the `<w:tr>` row element). P6-2 is the
-**first NON-neutral table WP**: registering `w:tblPr` puts it on the **live**
-`word/styles.xml` parse path (the 100 `<w:tblPr>` nodes inside the shipped table
-styles now transit `CT_TblPr`), so it is a byte-critical registry-flip WP (the
-P4-6 pattern) — proven byte-neutral by the M1 17/17 `styles.xml` `02d71a68…`
-match. The remaining seven P6-2 tags (`w:tblStyle` / `w:tblPrEx` / `w:tr` /
-`w:trPr` / `w:gridAfter` / `w:gridBefore`) have zero occurrences in `default.docx`
-and never transit on M1. What remains: the **CT_Tc merge engine** (gridSpan /
-vMerge, the block-item-container seam) at **P6-3a — the hardest WP of the project,
-with its own dedicated pre-launch plan-audit**, `CT_TcPr` / `CT_Tbl` at **P6-3b**,
-and the `Table` / `_Rows` / `_Cell` API at **P6-4a / P6-4b**.
+**★ Tables tier — the leaves (P6-1), the property containers (P6-2) AND the cell
+MERGE engine (P6-3a) are done; `CT_Tbl` + the un-defer sweep (P6-3b) is next.**
+**P6-1** (the first Phase-6 WP) ported the seven table *leaf* elements —
+attribute-only (or single-list) classes with no dependence on any other table
+`CT_*`. **P6-2** added the **four property containers** that consume those leaves:
+`CT_TblPr` (table properties — alignment / autofit / style), `CT_TblPrEx`
+(property exceptions), `CT_TrPr` (row properties — grid skips / row height), and
+`CT_Row` (the `<w:tr>` row element). **P6-3a — the single hardest WP of the
+project, with its own dedicated pre-launch plan-audit** — then ported the
+**cell-merge engine** `CT_Tc` (`<w:tc>`) plus its cell-properties container
+`CT_TcPr` (`<w:tcPr>`): the destructive, byte-visible `merge` machinery
+(horizontal `gridSpan`, vertical `<w:vMerge>`, block spans, the rectangular-span
+`InvalidSpanError` validation, width summing and content consolidation) on top of
+the grid-geometry read tier. Both P6-2 and P6-3a are **NON-neutral** registry-flip
+WPs: `w:tblPr` (P6-2) and `w:tcPr` (P6-3a — the **595 + 595 `<w:tcPr>` nodes** in
+`word/styles.xml` + `stylesWithEffects.xml`, inside the shipped `<w:tblStylePr>`
+overrides) both ride the **live** `word/styles.xml` parse path (the P4-6 pattern),
+each proven byte-neutral by the M1 17/17 `styles.xml` `02d71a68…` match. `w:tc` /
+`w:gridSpan` (and every other P6-2 tag) have zero occurrences in `default.docx`
+and never transit on M1. What remains in Phase 6: `CT_Tbl` + the registry
+completion + the `w:tbl` un-defer sweep at **P6-3b**, then the `Table` / `_Rows` /
+`_Columns` API at **P6-4a** and `_Cell.merge` / `add_row` / `add_column` + the
+table Word-COM sweep at **P6-4b**.
 :::
 
 :::{note}
@@ -590,6 +596,242 @@ the target symbol + owning WP):
 
 ---
 
+# The P6-3a cell + MERGE engine — `CT_Tc` · `CT_TcPr`
+
+The two classes below are the **table-cell tier**: `CT_Tc` (`<w:tc>`), the
+**cell-merge engine — the single hardest WP of the port** — and `CT_TcPr`
+(`<w:tcPr>`), the cell-properties container it delegates to. `CT_Tc` holds a
+cell's optional `<w:tcPr>` plus its block-level content (`<w:p>` / `<w:tbl>` /
+`<w:sdt>`); on top of the tcPr delegators (`grid_span` / `vMerge` / `width`) and
+the grid-geometry read tier (`grid_offset` / `left` / `right` / `top` / `bottom`),
+it ports the destructive, **byte-visible** `merge` machinery. Registering `w:tcPr`
+puts P6-3a on the **live** `word/styles.xml` parse path (the 595 + 595 `<w:tcPr>`
+nodes inside the shipped `<w:tblStylePr>` overrides), proven byte-neutral by the M1
+17/17 `styles.xml` `02d71a68…` match; `w:tc` / `w:gridSpan` are absent from
+`default.docx`.
+
+(id-ct_tc)=
+## `CT_Tc` — the cell element and the merge engine (`<w:tc>`)
+
+**Syntax**
+
+```matlab
+tc = mat2doc.oxml.table.CT_Tc.new();   % <w:tc><w:p/></w:tc>  (a registered CT_Tc)
+tc.grid_span                            % 1   (no <w:tcPr>/<w:gridSpan>)
+tc.vMerge = "continue";                 % <w:tcPr><w:vMerge/></w:tcPr>  (BARE, see below)
+top = a.merge(b);                       % merge two corner cells; returns the top-left tc
+```
+
+**Description**
+
+The `<w:tc>` element — a table cell. Descriptors (`table.py` 432–434): `tcPr` is a
+`ZeroOrOne` with a **custom inserter** (`_insert_tcPr` = `self.insert(0, tcPr)` →
+`obj.insert(1, tcPr)`, H1) so `<w:tcPr>` is **always the first child** of the cell,
+before all content; `p` / `tbl` are `ZeroOrMore` (append at end), and `tbl`'s
+creator is the faithful `_new_tbl` **override that raises `NotImplementedError`**
+(python-docx itself refuses to build a bare `<w:tbl>` here — use
+`CT_Tbl.new_tbl()`).
+
+**The read tier — grid geometry (`table.py` 436–560).** All indices below are
+**0-based grid data**, kept RAW (the P6-2 grid convention; never shifted):
+
+- **`grid_span`** (get/set) — columns this cell spans (`1` when `<w:tcPr>` /
+  `<w:gridSpan>` is absent, H3); delegates to `CT_TcPr.grid_span`.
+- **`vMerge`** (get/set) — `./w:tcPr/w:vMerge/@w:val` (`"restart"` / `"continue"`)
+  or `[]` when absent; delegates to `CT_TcPr.vMerge_val`.
+- **`width`** (get/set) — the EMU `Length` in `./w:tcPr/w:tcW`, or `[]`; delegates
+  to `CT_TcPr.width`.
+- **`grid_offset`** — `grid_before + Σ(preceding-sibling `w:tc`.grid_span)`: the
+  0-based starting layout-grid column of this cell.
+- **`left`** = `grid_offset`; **`right`** = `grid_offset + grid_span` (exclusive).
+- **`top`** / **`bottom`** — the two **recursive** span extents (`top` walks up
+  through `<w:vMerge>` continuation cells to the restart cell's row index; `bottom`
+  walks down; a non-merged cell returns its own `_tr_idx` / `_tr_idx + 1`).
+
+:::{important}
+**★ V1 — `top` and `bottom` are zero-arg METHODS, not `Dependent` properties.**
+Both are **recursive** `@property` members upstream (`top → _tc_above.top`,
+`bottom → _tc_below.bottom`). MATLAB forbids **any** textual reference to a
+`Dependent` property's own name inside its getter — even on a *different* object of
+the class (`above.top` inside `get.top` raises *"Dependent properties don't store a
+value…"*). So they are ported as zero-arg methods; because MATLAB allows a
+method-call-without-parens, **`tc.top` / `tc.bottom` still read exactly like a
+property**, so every call site (`a.top`, `min(self.top, …)`, the future `_Cell`)
+is unchanged. Read-only upstream, byte-invisible — **NOT a D-number** (a
+MATLAB-language accommodation, ruled no-D at Gate-2, CONFIRMED at Gate-3). Every
+other `@property` member stays `Dependent`.
+:::
+
+(id-ct_tc-merge)=
+### The MERGE engine — `merge` semantics
+
+`merge(other_tc)` returns the **top-left `<w:tc>`** of a new rectangular span with
+`self` and `other_tc` as diagonal corners. It drives four private write-tier
+members — `_span_dimensions` → `_grow_to` → `_span_to_width` → `_swallow_next_tc`
+(with `_move_content_to` / `_remove_trailing_empty_p` / `_add_width_of` /
+`_remove`). The byte-visible semantics — each **byte-proven identical to
+python-docx v1.2.0** (see the P6-3a byte proof below):
+
+- **Horizontal merge (`gridSpan`).** Merging cells across one row grows the
+  left-most cell's `<w:gridSpan w:val="N"/>` and **removes** the swallowed cells to
+  its right; the surviving cell's content absorbs theirs. The `grid_span` setter is
+  **H4-strict**: it emits `<w:gridSpan>` only when the span is `> 1` — shrinking or
+  setting a span of 1 emits **no** `<w:gridSpan>` element at all.
+- **Vertical merge (`<w:vMerge>`) — the bare-`<w:vMerge/>` continuation.** The
+  top cell of a vertical span serializes as `<w:vMerge w:val="restart"/>`; every
+  **continuation** cell below it serializes as a **BARE `<w:vMerge/>`** — **no**
+  `@w:val`. The port **never** writes `w:val="continue"`: `_grow_to` assigns
+  `vMerge = "continue"` to continuation cells, and because `CT_VMerge.val` is an
+  `OptionalAttribute` whose default **is** `"continue"` (`ST_Merge.CONTINUE`), the
+  setter that sees `value == default` **deletes** `@w:val` (the D-delta-1 default
+  deletion) — producing the bare element. A horizontal-only top cell gets
+  `vMerge = None`, which removes any `<w:vMerge>`. **This is the sharpest byte risk
+  in the whole WP** (an engine that wrote `w:val="continue"` would diverge on
+  *every* vertical merge); it is byte-proven on the WRITE side at Gate-3.
+- **Block merge.** A rectangular block (e.g. 2×2) is the composition of the above:
+  the top row becomes a `gridSpan` run with `<w:vMerge w:val="restart"/>`, and each
+  lower row a matching `gridSpan` run of bare-`<w:vMerge/>` continuation cells.
+- **Rectangular-span validation (`InvalidSpanError`).** `_span_dimensions` rejects
+  a non-rectangular request — inverted-L (one shared edge, the opposite edges
+  differing) and tee-shaped (one corner straddling the other) — raising
+  `mat2doc:InvalidSpanError` with the **verbatim** message
+  `requested span not rectangular`. The swallow path raises two further verbatim
+  texts: `not enough grid columns` (no cell to the right to absorb) and
+  `span is not rectangular` (the next cell's `gridSpan` would overshoot the target
+  width). All extents are computed as `min`/`max` of the two corners' 0-based
+  `top`/`left`/`bottom`/`right`.
+- **Width summing (H4 falsy-zero).** When a swallowed cell has a width,
+  `_add_width_of` sets `self.width = Length(self.width + other.width)` (EMU sum,
+  re-emitted as dxa twips through `CT_TblWidth`). The gate replicates Python
+  **truthiness**: a `0`-EMU width (`Length(0)`, an int subclass) and `None` are both
+  **falsy**, so the add is **skipped** when either width is `[]` or its EMU value is
+  `0` — a merged cell whose neighbour is 0-wide keeps its own width unchanged, not
+  a `0 + w` sum.
+- **Content consolidation.** `_move_content_to` **moves** every block-level child
+  (`<w:p>` / `<w:tbl>` / `<w:sdt>` — an `<w:sdt>` rides along as a passenger) from a
+  swallowed cell into the top-left cell (an lxml element move via `append`), after
+  removing a trailing empty `<w:p>` on the target; each emptied cell is left with a
+  single restored `<w:p/>` (the required minimum block child), then **removed** from
+  the row. The move is a **snapshot** taken up front (H9): lxml's child iterator
+  captures the next-sibling pointer before each yield, so materialising
+  `iter_block_items()` into an array and moving each element is faithful to the lazy
+  generator even though the loop mutates `self`.
+
+:::{note}
+**★ V2 — the `tr_lst` generic-ancestor shim (re-adjudicated at P6-3b).** `merge`,
+`_tr_below` and `_tr_idx` need `self._tbl.tr_lst` — the enclosing table's rows.
+`CT_Tbl` (`w:tbl`) is **P6-3b** (not yet ported/registered), so `_tbl`
+(`./ancestor::w:tbl[position()=1]`) resolves to a **generic `XmlElement`** with no
+`tr_lst` accessor. `CT_Tbl.tr_lst` is exactly `findall("w:tr")` in document order,
+and `w:tr` already dispatches to `CT_Row` (P6-2), so the private shim
+`trLstOfTbl_` returns the tbl ancestor's `xpath("./w:tr")` — the **identical
+`CT_Row` handle list**. Byte-neutral, identity-safe (persistent, `parent_`-linked
+handles), and correct even for a **nested** table (the reverse-axis
+`position()=1` resolves to the *nearest* `w:tbl` ancestor). Re-adjudicated when
+`CT_Tbl` registers at P6-3b (swap to `tbl.tr_lst`, or keep the shim).
+:::
+
+:::{important}
+**Handle-identity (H5) throughout the merge walkers.** Every `is` comparison —
+`tr_lst.index(self._tr)` (`_tr_idx`), `top_tc is not self` (`_grow_to`),
+`other_tc is self` (`_move_content_to`), `next_tc is …` — uses MATLAB **handle
+identity** (`==` / `~=` / `find(arr == h, 1)`), **never `isequal` on content**. On
+a **uniform grid** (every row / cell byte-identical) an `isequal`-based match would
+silently return row 1 and corrupt the entire walk while passing every non-uniform
+fixture. The frozen probe: `_tr_idx` on the col-0 cell of each of the three
+byte-identical rows of a uniform 3×3 → `[0 1 2]`, never `[0 0 0]`.
+:::
+
+**Example**
+
+```matlab
+% grid_span default + the bare-<w:vMerge/> continuation byte behaviour
+tc = mat2doc.oxml.table.CT_Tc.new();          % <w:tc><w:p/></w:tc>
+disp(tc.grid_span);                            % 1  (no <w:tcPr>/<w:gridSpan>)
+tc.vMerge = "continue";                        % <w:tcPr><w:vMerge/></w:tcPr>...  (BARE, no @w:val)
+
+% a horizontal merge of a loose 1x2 table returns the top-left, grown cell
+xml = "<w:tbl " + mat2doc.oxml.nsdecls("w") + ">" + ...
+      "<w:tr><w:tc><w:p/></w:tc><w:tc><w:p/></w:tc></w:tr></w:tbl>";
+tbl   = mat2doc.oxml.parse_xml(xml);
+cells = tbl.xpath("./w:tr/w:tc");
+top   = cells(1).merge(cells(2));              % merge the two cells
+disp(top.grid_span);                           % 2   (<w:gridSpan w:val="2"/>, right cell removed)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/table.py::CT_Tc`*
+
+---
+
+(id-ct_tcpr)=
+## `CT_TcPr` — table-cell properties (`<w:tcPr>`): grid span · vMerge · width · vAlign
+
+**Syntax**
+
+```matlab
+tcPr = mat2doc.oxml.OxmlElement("w:tcPr");    % a CT_TcPr (registered)
+tcPr.grid_span                                 % 1   (no <w:gridSpan>)
+tcPr.grid_span = 2;                            % <w:gridSpan w:val="2"/>
+tcPr.vMerge_val = "continue";                  % <w:vMerge/>            (bare, D-delta-1)
+tcPr.vMerge_val = "restart";                   % <w:vMerge w:val="restart"/>
+```
+
+**Description**
+
+The `<w:tcPr>` element — a table cell's width (`<w:tcW>`), horizontal grid span
+(`<w:gridSpan>`), vertical-merge behaviour (`<w:vMerge>`) and vertical alignment
+(`<w:vAlign>`), over the 18-tag `_tag_seq` (`table.py` 795–814, transcribed
+VERBATIM into the Constant `TAG_SEQ`). The audit confirmed this class is
+**already minimal upstream** — exactly **4 `ZeroOrOne` descriptors + 4 accessor
+pairs**, with **no** borders/shading/margins accessors to defer (python-docx
+v1.2.0 never wrote them), so the whole class ports at P6-3a. The four descriptors
+ride the H11 successor slices — `tcW` (`_tag_seq[2:]` → `TAG_SEQ(3:end)`),
+`gridSpan` (`[3:]` → `(4:end)`), `vMerge` (`[5:]` → `(6:end)`), `vAlign`
+(`[12:]` → `(13:end)`) — each generated with the generic docx family (`get.x` /
+`get_or_add_x` / `new_x_` / `insert_x_` / `add_x_` / `remove_x_`). Four computed
+`@property` accessors sit on top:
+
+- **`grid_span`** (get/set) — `1` when `<w:gridSpan>` is absent (H3), else its
+  `.val` (a `CT_DecimalNumber`, registered by this WP). The setter **always
+  removes** `<w:gridSpan>` first, then writes `@w:val` **only `if value > 1`** (H4
+  strict): a span of 1 emits no element.
+- **`vMerge_val`** (get/set) — `[]` when `<w:vMerge>` is absent, else its `.val`
+  (the `CT_VMerge` `OptionalAttribute`, default `"continue"`). The setter always
+  removes `<w:vMerge>` first, then re-adds `if value is not None`. The
+  bare-`<w:vMerge/>` continuation falls out of this with **no special-casing**:
+  assigning `"continue"` (the default) makes the `CT_VMerge` setter **delete**
+  `@w:val` (D-delta-1) → a bare `<w:vMerge/>`; `"restart"` → `@w:val="restart"`;
+  `None` → the element removed.
+- **`width`** (get/set) — the EMU `Length` in `<w:tcW>`, or `[]`; the setter routes
+  through `get_or_add_tcW` (EMU → dxa twips inside `CT_TblWidth`).
+- **`vAlign_val`** (get/set) — `[]` when `<w:vAlign>` is absent, else its `.val`
+  (`WD_CELL_VERTICAL_ALIGNMENT`); the setter removes on `None`, else
+  `get_or_add_vAlign().val = value`.
+
+:::{note}
+**H11 child order — byte-critical.** `tcW` before `gridSpan` before `vMerge` before
+`vAlign`. The upstream swallow fixture `(w:tcW…, w:gridSpan…)` byte-pins
+tcW-before-gridSpan; a wrong successor slice would scramble the tcPr children and
+trigger Word repair / byte divergence. Gate-3 pinned the full serialized
+`<w:tcPr>` string **byte-identical** across both engines from a **scrambled-order**
+input set — an embedded byte proof of the `_tag_seq` slices.
+:::
+
+**Example**
+
+```matlab
+tcPr = mat2doc.oxml.OxmlElement("w:tcPr");
+tcPr.grid_span = 2;                              % <w:gridSpan w:val="2"/>
+disp(tcPr.grid_span);                            % 2
+tcPr.grid_span = 1;                              % H4 strict: removes <w:gridSpan> entirely
+disp(isempty(tcPr.gridSpan));                    % 1   (no <w:gridSpan> element)
+tcPr.vMerge_val = "continue";                    % <w:vMerge/>  (BARE, the ST_Merge default deleted)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/table.py::CT_TcPr`*
+
+---
+
 (id-table-byte-proof)=
 ## Byte proof — M1-neutral, and the leaf subtrees round-trip byte-identical
 
@@ -656,13 +898,61 @@ milestone sweep once the containers land; the full table Word-COM sweep (a plain
 grid **and** a merged-cell package) is booked at **P6-4b**.
 :::
 
+(id-table-byte-proof-p63a)=
+### P6-3a byte proof — the MERGE byte-matrix, frozen as the permanent table-merge oracle
+
+P6-3a's output is **destructive and byte-visible**, so its equivalence bar is the
+strictest of the tier: every merge scenario is compared as a **whole `w:tbl`
+subtree, byte-for-byte** against a python-docx v1.2.0 oracle frozen once. Because
+`w:tcPr` now transits `word/styles.xml` (595 nodes) + `word/stylesWithEffects.xml`
+(595 more, inside the `<w:tblStylePr>` overrides), the M1 byte gate is the second
+non-neutral escalation of the tier. **All legs byte-identical to python-docx, zero
+new D-numbers:**
+
+| leg | method | result |
+|---|---|---|
+| **★ M1 17/17** (styles.xml now transits CT_TcPr) | `mat2doc.Document().save()` vs `references\s0001` | L0 PASS + 16 XML L1 + 1 bin; `styles.xml` `02d71a68…bc30e384` / 349 458 B + `stylesWithEffects.xml` `463ae092…a5e93f15` / 438 131 B **unchanged** |
+| **★ THE MERGE BYTE-MATRIX** | 10 paired scenarios, source + merged frozen, full `w:tbl` subtree SHA-256 (`references\s0063`) | **10/10 byte-identical (L1)** |
+| full cell surface | `probe_diff` s0064 (geometry / get-set / H11 order / un-stub) | MATCH (exit 0) |
+| **★ bare `<w:vMerge/>` continuation** (sharpest byte risk) | m02 merged bytes: top `restart` + continuation **bare** | `w:val="continue"` **absent**; byte-identical |
+| **★ width sum + H4 falsy-zero** | m07 `1440+1440→2880`; m08 `1440 + 0 → 1440` (add skipped) | byte-identical both |
+| **★ nested-table merge** | m10 inner 2×2 merge, outer host unchanged | byte-identical (nearest-ancestor) |
+| **★ handle-identity** | uniform 3×3, `_tr_idx` per row | `[0 1 2]` (not `[0 0 0]`) |
+| 9 invalid-span raises | 6 L/tee + 2 swallow + `_tr_above`, verbatim | 9/9 verbatim messages |
+| targeted regression | 5 named classes, one R2024b session, foreground | 69/69, 0 flips |
+
+The matrix spans horizontal (`m01` gridSpan=2), vertical (`m02` restart +
+bare-`<w:vMerge/>`), block (`m03` 2×2), full-row (`m04` gridSpan=3 absorbing two
+cells), merges **into** a pre-existing horizontal (`m05`) and vertical (`m06`)
+span, width summing (`m07`) and its H4 falsy-zero skip (`m08`), multi-paragraph +
+`<w:sdt>`-passenger content consolidation (`m09`), and a **nested** table merge
+(`m10`). The merge chain is corroborated by three SHA cross-links —
+`m01.merged == m05.src`, `m02.merged == m06.src`, `m04.merged == m05.merged` — so
+the engine is path-independent and idempotent at the byte level. Frozen at
+`references\s0063\` (10 src + 10 merged parts, `manifest.json`, co-located
+`.gitattributes` `* binary`): **this IS the permanent table-merge byte oracle.**
+No merge byte diverged, so the STOP condition never fired — **zero new D-numbers**
+(the standing adopt-only deviations exercised are **D-001** own parser/serializer,
+**D-delta-1** the bare-`<w:vMerge/>` via the `CT_VMerge` default, and **D-zip-time**
+envelope only).
+
+:::{note}
+**Milestone flag (COM).** The frozen `s0063` **merged-cell** subtrees emit
+output-visible merge structure (`gridSpan`, `restart` + bare `<w:vMerge/>`, summed
+`tcW`, nested spans) but a full merged table is **not yet reachable end-to-end
+through a Mat2Doc package** — `_Cell.merge` / `CT_Tbl` are P6-3b / P6-4b. The
+frozen `s0063` fixtures — especially **m02** (bare-vMerge), **m03 / m06** (block)
+and **m10** (nested) — are routed to mso-office-verifier (the Word COM oracle) at
+the **P6-4b** table Word-COM sweep, once a merged table is buildable and saveable.
+:::
+
 ---
 
 (id-table-next)=
-## Leaves + property containers done — the CT_Tc merge engine (P6-3a) next
+## The merge engine is done — CT_Tbl + the un-defer sweep (P6-3b) next
 
-The table oxml **leaf** layer (P6-1) and the **property-container** tier (P6-2) are
-now both whole:
+The table oxml **leaf** layer (P6-1), the **property-container** tier (P6-2) and
+the **cell + merge engine** (P6-3a) are now whole:
 
 - **P6-1 leaves** — the width union (`CT_TblWidth`), the row-height leaf
   (`CT_Height`), the column grid (`CT_TblGrid` / `CT_TblGridCol`), the layout-mode
@@ -675,19 +965,32 @@ now both whole:
   parse path, proven byte-neutral by the M1 17/17 `02d71a68…` match), replicating
   the A2 `CT_Jc` cross-enum reuse and closing the `w:tblStyle` → `CT_String` and
   `w:gridAfter` / `w:gridBefore` → `CT_DecimalNumber` deferrals.
+- **P6-3a cell + merge engine** — `CT_Tc` (the `<w:tc>` cell and the destructive
+  `merge` machinery: horizontal `gridSpan`, vertical `restart` + the bare
+  `<w:vMerge/>` continuation, block spans, the `InvalidSpanError` rectangular-span
+  validation, H4 falsy-zero width summing, and snapshot-safe content
+  consolidation) and its properties container `CT_TcPr` (`grid_span` / `vMerge_val`
+  / `width` / `vAlign_val` over the H11-ordered `_tag_seq`). **The single hardest
+  WP of the project**, with its own dedicated pre-launch plan-audit; the **second
+  non-neutral** table WP (`w:tcPr` × 595 + 595 transits the live `styles.xml` +
+  `stylesWithEffects.xml` parse path, proven byte-neutral by the M1 17/17
+  `02d71a68…` match). It also un-stubs `CT_Row._new_tc` → `CT_Tc.new()` and the
+  `grid_span` step of `tc_at_grid_offset`.
 
-Both landed **byte-proven** on real + loose table subtrees with **zero new
-D-numbers**. What remains in **Phase 6**:
+All three landed **byte-proven** on real + loose table subtrees — the merge
+byte-matrix is **10/10 byte-identical** to python-docx v1.2.0 and frozen as the
+permanent table-merge oracle — with **zero new D-numbers**. What remains in
+**Phase 6**:
 
-- **P6-3a** — the **CT_Tc merge engine** (gridSpan / vMerge, the block-item
-  container seam). This is the **hardest WP of the project**; it gets its own
-  **dedicated pre-launch plan-audit** (risk-register #2), which also adjudicates
-  the Row ↔ Tc ↔ TcPr ↔ Tbl mutually-recursive dependency seam and un-stubs
-  `CT_Row._new_tc` + the `grid_span` step of `tc_at_grid_offset`.
-- **P6-3b** — `CT_TcPr` / `CT_Tbl` + the registry completion and the tbl
-  un-defer sweep (the tag-based `w:tbl`→generic sites auto-upgrade when
-  `w:tbl`→`CT_Tbl` registers).
-- **P6-4a / P6-4b** — the `Table` / `_Rows` / `_Columns` / `_Cell` API (which
+- **P6-3b** — `CT_Tbl` + the **registry completion** (`w:tbl` / `w:bidiVisual`)
+  and the **tbl un-defer sweep** (the tag-based `w:tbl`→generic sites on
+  `CT_Body` / `CT_HdrFtr` / `CT_SectPr` / `SectBlockElementIterator_` auto-upgrade
+  when `w:tbl`→`CT_Tbl` registers; re-pins `Test_p2_3_document_shell` /
+  `Test_p5_2b_hdrftr_oxml`). The `CT_Tc` `trLstOfTbl_` shim (V2) is re-adjudicated
+  at this WP's Gate-2.
+- **P6-4a** — the `Table` / `_Rows` / `_Columns` / `_Row` / `_Column` API (which
   discharges the P5-3a `Section.iter_inner_content` `w:tbl`→`Table` debt and the
-  `Document.add_table` / `tables` stubs), then `_Cell.merge` + `add_row` /
-  `add_column` and the table Word-COM sweep.
+  `Document.add_table` / `tables` stubs).
+- **P6-4b** — `_Cell.merge` + `add_row` / `add_column`, then the **table Word-COM
+  sweep** (a plain grid **and** a merged-cell package — where the frozen `s0063`
+  merged-cell fixtures are COM-verified).

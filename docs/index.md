@@ -306,10 +306,27 @@ syntax, description, example, ported-from).
   (`== "CENTER"`) or `.value`, never cross-class `==` (design.md §2, ruled no-D).
   P6-2 also closes the `w:tblStyle`→`CT_String` and `w:gridAfter`/`w:gridBefore`→
   `CT_DecimalNumber` deferrals; props round-trip **6/6 byte-identical**
-  (`references\s0062`, incl. the `w:jc val="both"` edge), **0 new D-numbers**. What
-  remains: the **CT_Tc merge engine** at **P6-3a** (the hardest WP, with its own
-  dedicated pre-launch plan-audit); `CT_TcPr`/`CT_Tbl` → P6-3b; the `Table`/`_Cell`
-  API → P6-4a/b + the table Word-COM sweep. See the
+  (`references\s0062`, incl. the `w:jc val="both"` edge), **0 new D-numbers**.
+  **P6-3a — the single hardest WP of the project (with its own dedicated pre-launch
+  plan-audit)** — then lands the **cell MERGE engine** `mat2doc.oxml.table.CT_Tc`
+  (the `<w:tc>` cell and the destructive `merge` machinery: horizontal `gridSpan`,
+  vertical `restart` + the **bare `<w:vMerge/>`** continuation, block spans, the
+  `InvalidSpanError` rectangular-span validation, **H4 falsy-zero** width summing,
+  and snapshot-safe content consolidation) plus its properties container `CT_TcPr`
+  (`grid_span`/`vMerge_val`/`width`/`vAlign_val` over the H11-ordered `_tag_seq`),
+  un-stubbing `CT_Row._new_tc`→`CT_Tc.new()` and the `grid_span` step of
+  `tc_at_grid_offset`. The **second NON-neutral** table WP: registering `w:tcPr`
+  puts the **595 + 595 `<w:tcPr>` nodes** in `word/styles.xml` +
+  `stylesWithEffects.xml` (inside the shipped `<w:tblStylePr>` overrides) on the
+  live parse path, proven byte-neutral by the M1 17/17 `styles.xml` `02d71a68…`
+  match. The **merge byte-matrix is 10/10 byte-identical** to python-docx v1.2.0
+  (`references\s0063` — horizontal / vertical-bare-vMerge / block / into-existing-
+  spans / width-sum + H4-skip / sdt-passenger / **nested-table** — frozen as the
+  permanent table-merge oracle), handle-identity `_tr_idx`=`[0 1 2]`, all 9
+  invalid-span raises verbatim, **0 new D-numbers**. What remains: `CT_Tbl` + the
+  registry completion + the tbl un-defer sweep → **P6-3b**; the `Table`/`_Rows`/
+  `_Columns`/`_Cell` API → **P6-4a/b** + the table Word-COM sweep (the `s0063`
+  merged-cell fixtures COM-verified at P6-4b). See the
   [table oxml page](api/oxml_table.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
