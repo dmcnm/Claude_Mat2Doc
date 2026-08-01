@@ -65,6 +65,7 @@ project:
     - title: Images tier (Phase 7)
       children:
         - file: api/image_core.md
+        - file: api/image_formats.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
