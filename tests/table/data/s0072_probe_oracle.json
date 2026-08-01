@@ -1,0 +1,82 @@
+{
+  "table_props": {
+    "default": {
+      "alignment": "None",
+      "autofit": "True",
+      "table_direction": "None",
+      "column_count": "3",
+      "rows_len": "2",
+      "columns_len": "3",
+      "style_name": "Normal Table",
+      "table_is_self": "True",
+      "rows_cached": "True",
+      "columns_cached": "True"
+    },
+    "after_set": {
+      "alignment": "CENTER",
+      "autofit": "False",
+      "table_direction": "True",
+      "style_name": "My Table Style"
+    },
+    "after_none": {
+      "alignment": "None",
+      "table_direction": "None"
+    }
+  },
+  "columns": {
+    "len": "3",
+    "iter_widths": [
+      "1828800",
+      "1828800",
+      "1828800"
+    ],
+    "iter_indices": [
+      "0",
+      "1",
+      "2"
+    ],
+    "getitem0_width": "1828800",
+    "getitem_neg1_index": "2",
+    "col0_table_is_t": "True",
+    "cols_table_is_t": "True",
+    "err_oor_pos": "column index [3] is out of range",
+    "err_oor_neg": "column index [-9] is out of range",
+    "set_width_readback": "1371600",
+    "set_none_readback": "None"
+  },
+  "rows": {
+    "len": "2",
+    "iter_heights": [
+      "None",
+      "None"
+    ],
+    "iter_indices": [
+      "0",
+      "1"
+    ],
+    "getitem0_grid_cols_after": "0",
+    "getitem0_grid_cols_before": "0",
+    "getitem0_height_rule": "None",
+    "getitem_neg1_index": "1",
+    "row0_table_is_t": "True",
+    "rows_table_is_t": "True",
+    "slice_1_2_indices": [
+      "1"
+    ],
+    "err_oor_pos": "list index out of range",
+    "err_oor_neg": "list index out of range",
+    "set_height_readback": "254000",
+    "set_height_rule_readback": "EXACTLY",
+    "set_height_none_readback": "None"
+  },
+  "iter_inner_content": {
+    "doc_types": [
+      "Table",
+      "Paragraph"
+    ],
+    "section_types": [
+      "Table",
+      "Paragraph"
+    ]
+  }
+}

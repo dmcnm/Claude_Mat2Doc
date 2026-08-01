@@ -291,11 +291,33 @@ classdef Document < mat2doc.shared.ElementProxy
             section = mat2doc.section.Section(new_sectPr, obj.part_);  % Python: return Section(new_sectPr, self._part)
         end
 
-        function table = add_table(obj, rows, cols, style) %#ok<INUSD,MANU,STOUT>
-            % ADD_TABLE STUB (document.py 150-158). Owner: P6 table tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_table (owning WP: P6 table tier) " + ...
-                "is not yet ported");
+        function table = add_table(obj, rows, cols, style)
+            % ADD_TABLE Add a table having `rows` rows and `cols` columns, its width
+            %   spanning the space between the last section's margins (document.py
+            %   71-79). `style` may be a table style object or name; [] (None) makes
+            %   the table inherit the document default table style. UN-STUBBED at
+            %   P6-4a (the first end-to-end public table-authoring path). Delegates
+            %   the geometry to _Body.add_table with the computed _block_width, then
+            %   applies the style.
+            %
+            %   Python (document.py 77-79):
+            %     table = self._body.add_table(rows, cols, self._block_width)
+            %     table.style = style
+            %     return table
+            %
+            %   H13 default fidelity: style defaults [] (Python None); table.style =
+            %   [] resolves to get_style_id([], TABLE) -> [] -> tblStyle_val removal
+            %   (byte-neutral on a fresh table with no <w:tblStyle>).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_table
+            arguments
+                obj
+                rows
+                cols
+                style = []   % Python default None
+            end
+            table = obj.body_().add_table(rows, cols, obj.block_width_());  % Python: self._body.add_table(rows, cols, self._block_width)
+            table.style = style;                                            % Python: table.style = style
         end
 
         function c = comments(obj) %#ok<MANU,STOUT>
@@ -312,13 +334,15 @@ classdef Document < mat2doc.shared.ElementProxy
                 "tier) is not yet ported");
         end
 
-        function it = iter_inner_content(obj) %#ok<MANU,STOUT>
-            % ITER_INNER_CONTENT STUB (document.py 180-182). Owner: P6 table tier.
-            %   Delegates to self._body.iter_inner_content, itself stubbed at the
-            %   Table boundary (Paragraph is now live P4-7b; Table is P6).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Table (owning WP: P6 table tier) required by " + ...
-                "mat2doc.document.Document.iter_inner_content");
+        function items = iter_inner_content(obj)
+            % ITER_INNER_CONTENT Each Paragraph or Table in this document, in
+            %   document order (document.py 101-103). UN-STUBBED at P6-4a (Table is
+            %   now live; _Body.iter_inner_content is live via BlockItemContainer).
+            %   Python: return self._body.iter_inner_content(). Returns a 1xN CELL
+            %   array (heterogeneous Paragraph | Table), delegated verbatim.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.iter_inner_content
+            items = obj.body_().iter_inner_content();   % Python: return self._body.iter_inner_content()
         end
 
         function p = paragraphs(obj) %#ok<MANU,STOUT>
