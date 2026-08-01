@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.oxml.table — the table oxml layer (7 LEAF classes + the property containers CT_TblPr · CT_TblPrEx · CT_TrPr · CT_Row + the cell MERGE engine CT_Tc · CT_TcPr)"
+title: "mat2doc.oxml.table — the COMPLETE table oxml layer (7 LEAF classes + the property containers CT_TblPr · CT_TblPrEx · CT_TrPr · CT_Row + the cell MERGE engine CT_Tc · CT_TcPr + the table root CT_Tbl)"
 ---
 
-# `mat2doc.oxml.table` — the table oxml layer (the 7 leaves + the property containers + the cell merge engine)
+# `mat2doc.oxml.table` — the table oxml layer, COMPLETE (the 7 leaves + the property containers + the cell merge engine + the table root)
 
 Ported from python-docx v1.2.0 `src/docx/oxml/table.py` (in the NEW package
 `+mat2doc/+oxml/+table/`) — the **seven LEAF element classes** of the table
@@ -14,8 +14,11 @@ they require (`src/docx/oxml/__init__.py` :171, :174, :175, :181, :183, :185,
 :186).
 
 :::{note}
-**★ Tables tier — the leaves (P6-1), the property containers (P6-2) AND the cell
-MERGE engine (P6-3a) are done; `CT_Tbl` + the un-defer sweep (P6-3b) is next.**
+**★ Tables tier — the table oxml layer is COMPLETE. The leaves (P6-1), the
+property containers (P6-2), the cell MERGE engine (P6-3a) AND the table root
+`CT_Tbl` + the un-defer sweep (P6-3b) are all done — all 14 `table.py` element
+classes ported, the registry complete. The `Table` / `_Rows` / `_Columns` API
+(P6-4a) → `_Cell.merge` + the table Word-COM sweep (P6-4b) are next.**
 **P6-1** (the first Phase-6 WP) ported the seven table *leaf* elements —
 attribute-only (or single-list) classes with no dependence on any other table
 `CT_*`. **P6-2** added the **four property containers** that consume those leaves:
@@ -33,10 +36,13 @@ WPs: `w:tblPr` (P6-2) and `w:tcPr` (P6-3a — the **595 + 595 `<w:tcPr>` nodes**
 overrides) both ride the **live** `word/styles.xml` parse path (the P4-6 pattern),
 each proven byte-neutral by the M1 17/17 `styles.xml` `02d71a68…` match. `w:tc` /
 `w:gridSpan` (and every other P6-2 tag) have zero occurrences in `default.docx`
-and never transit on M1. What remains in Phase 6: `CT_Tbl` + the registry
-completion + the `w:tbl` un-defer sweep at **P6-3b**, then the `Table` / `_Rows` /
-`_Columns` API at **P6-4a** and `_Cell.merge` / `add_row` / `add_column` + the
-table Word-COM sweep at **P6-4b**.
+and never transit on M1. **P6-3b** then ported the table root `CT_Tbl` (the `new_tbl` constructor + the
+whole-table `bidiVisual_val` / `tblStyle_val` / `col_count` / `iter_tcs`
+accessors), completed the registry (`w:tbl` / `w:bidiVisual`) and ran the `w:tbl`
+un-defer sweep — **completing the table oxml layer** (all 14 `table.py` classes).
+What remains in Phase 6 is the API tier: the `Table` / `_Rows` / `_Columns` API at
+**P6-4a**, then `_Cell.merge` / `add_row` / `add_column` + the table Word-COM sweep
+at **P6-4b**.
 :::
 
 :::{note}
@@ -718,17 +724,18 @@ python-docx v1.2.0** (see the P6-3a byte proof below):
   generator even though the loop mutates `self`.
 
 :::{note}
-**★ V2 — the `tr_lst` generic-ancestor shim (re-adjudicated at P6-3b).** `merge`,
+**★ V2 — the `tr_lst` generic-ancestor shim, RESOLVED at P6-3b.** `merge`,
 `_tr_below` and `_tr_idx` need `self._tbl.tr_lst` — the enclosing table's rows.
-`CT_Tbl` (`w:tbl`) is **P6-3b** (not yet ported/registered), so `_tbl`
-(`./ancestor::w:tbl[position()=1]`) resolves to a **generic `XmlElement`** with no
-`tr_lst` accessor. `CT_Tbl.tr_lst` is exactly `findall("w:tr")` in document order,
-and `w:tr` already dispatches to `CT_Row` (P6-2), so the private shim
-`trLstOfTbl_` returns the tbl ancestor's `xpath("./w:tr")` — the **identical
-`CT_Row` handle list**. Byte-neutral, identity-safe (persistent, `parent_`-linked
-handles), and correct even for a **nested** table (the reverse-axis
-`position()=1` resolves to the *nearest* `w:tbl` ancestor). Re-adjudicated when
-`CT_Tbl` registers at P6-3b (swap to `tbl.tr_lst`, or keep the shim).
+Through P6-3a `CT_Tbl` (`w:tbl`) was unregistered, so `_tbl`
+(`./ancestor::w:tbl[position()=1]`) resolved to a **generic `XmlElement`** with no
+`tr_lst` accessor, and a private shim `trLstOfTbl_` reached the rows via the tbl
+ancestor's `xpath("./w:tr")` — the **identical `CT_Row` handle list** that
+`CT_Tbl.tr_lst` (`findall("w:tr")`, `w:tr`→`CT_Row` since P6-2) yields. **P6-3b
+registers `w:tbl`→`CT_Tbl`, so the shim is REMOVED** and the three consumers now
+call the faithful 1:1 `self._tbl.tr_lst` directly — byte/identity-neutral, correct
+even for a **nested** table (`position()=1` resolves the *nearest* `w:tbl`
+ancestor). See [the un-defer sweep](#id-table-undefer); the merge byte-matrix stays
+**10/10 byte-identical** after the swap.
 :::
 
 :::{important}
@@ -948,11 +955,210 @@ the **P6-4b** table Word-COM sweep, once a merged table is buildable and saveabl
 
 ---
 
-(id-table-next)=
-## The merge engine is done — CT_Tbl + the un-defer sweep (P6-3b) next
+# The P6-3b table root — `CT_Tbl` + the un-defer sweep (completes the table oxml layer)
 
-The table oxml **leaf** layer (P6-1), the **property-container** tier (P6-2) and
-the **cell + merge engine** (P6-3a) are now whole:
+The class below is the **`<w:tbl>` root** of the table object model — the element
+registered for `w:tbl` at P6-3b (`oxml/__init__.py:173`) that ties the whole tier
+together. It holds the OneAndOnlyOne `<w:tblPr>` (table properties) and
+`<w:tblGrid>` (column grid) plus its `<w:tr>` rows (`CT_Row`, P6-2), carries the
+whole-table accessors (`bidiVisual_val` direction, `tblStyle_val` id, `col_count`,
+`iter_tcs`) and — most importantly — the table **constructor** `new_tbl(rows, cols,
+width)` that emits the initial `<w:tbl>` XML the API tier
+(`BlockItemContainer.add_table`, P6-4a) calls. Registering `w:tbl` also runs the
+**un-defer sweep**: every previously-generic `<w:tbl>` site auto-upgrades to
+`CT_Tbl`, and the P6-3a `CT_Tc` `trLstOfTbl_` shim resolves to the real
+`CT_Tbl.tr_lst`. This is the **last table-registry row** — the table oxml layer is
+now complete.
+
+(id-ct_tbl)=
+## `CT_Tbl` — the table root and the `new_tbl` constructor (`<w:tbl>`)
+
+**Syntax**
+
+```matlab
+tbl = mat2doc.oxml.table.CT_Tbl.new_tbl(2, 3, mat2doc.shared.Inches(6)); % a 2×3 table
+tbl.col_count                              % 3
+tbl.tblPr                                  % OneAndOnlyOne <w:tblPr> (CT_TblPr)
+tbl.tblGrid                                % OneAndOnlyOne <w:tblGrid> (CT_TblGrid)
+tbl.tr_lst                                 % 1×2 CT_Row array (document order)
+tbl.tblStyle_val = "TableGrid";            % <w:tblStyle w:val="TableGrid"/>
+cells = tbl.iter_tcs;                      % 1×6 CT_Tc array (row-major)
+```
+
+**Description**
+
+The `<w:tbl>` element — the table root, registered for `w:tbl` (this WP). Two
+`OneAndOnlyOne` descriptors (`table.py` 152–153): `tblPr` (`<w:tblPr>`, required)
+and `tblGrid` (`<w:tblGrid>`, required) — each generated as a **getter only**
+(`getRequiredChild`, xmlchemy 499–505), so reading either when the child is absent
+raises `mat2doc:InvalidXmlError` (verbatim `required '<w:tblPr>' child element not
+present …`), never a default. One `ZeroOrMore` descriptor (`tr`, `table.py` 154)
+generates the docx member set `tr_lst` / `new_tr_` / `insert_tr_` / `add_tr_` **and
+the public `add_tr`** (the D-delta-4 public adder) — no bare `tr` getter, no
+get-or-add, no remover; `tr` has no `_new_tr` override, so `new_tr_` uses the
+default creator (`OxmlElement("w:tr")` → `CT_Row` via the registry). Child order is
+**`tblPr`, `tblGrid`, `tr*`** (H11).
+
+(id-ct_tbl-new_tbl)=
+**★ The `new_tbl` constructor (`table.py` 191–197) — the table-authoring
+foundation, byte-critical.** `new_tbl(rows, cols, width)` = `parse_xml(_tbl_xml(…))`.
+The four private builders (`_tbl_xml` / `_tblGrid_xml` / `_trs_xml` / `_tcs_xml`,
+`table.py` 219–256, ported verbatim as `tbl_xml_` / `tblGrid_xml_` / `trs_xml_` /
+`tcs_xml_`) emit a **specific pre-parse `<w:tbl>` string** that must be
+byte-identical to python-docx before parse. The emitted `<w:tblPr>` carries **only**
+`<w:tblW w:type="auto" w:w="0"/>` + `<w:tblLook … w:val="04A0"/>` — **no
+`<w:tblStyle>`**; the `"TableGrid"` style is applied *later* by the API tier
+(`Table.style`, P6-4a), not by `new_tbl` (VERIFY-1, confirmed at Gate-2/3). The
+per-column width is `col_width = Emu(width // cols)` — **Python floor division** (H6:
+`//` → `floor`), `Emu(0)` when `cols == 0` — and `col_width.twips` is formatted as a
+Python `int` via `pyStr(…, "int")` (H14, never `num2str`/`sprintf('%g')`). Because
+the parser drops the pretty-print whitespace (`remove_blank_text`) and the shared
+serializer is byte-proven, an identical pre-parse string yields identical
+post-parse bytes: Gate-3 froze the construction **byte-identical across 7 sizes**
+(`references\s0065`), incl. the headline `new_tbl(2,3,Inches(6))` → **835 B**
+`10211e87…` and the **non-even-width** `new_tbl(2,7,Inches(6.5))` where
+`5943600 // 7 = 849085` EMU → twips **1337** (the H6 EMU-floor col-rounding spot),
+plus the `cols==0` → `Emu(0)` and negative-floor edges.
+
+**The whole-table accessors:**
+
+- **`col_count`** (read-only, `table.py` 175–178) — `numel(tblGrid.gridCol_lst)`,
+  the number of grid columns.
+- **`iter_tcs`** (`table.py` 180–189) — each `<w:tc>` **left-to-right,
+  top-to-bottom** (each cell of row 1, then row 2, …). Python is a **generator**
+  (H9); the port materialises a `1×N` heterogeneous `CT_Tc` array — laziness is
+  unobservable because callers do not mutate the tree during iteration. Row-major
+  order is Gate-3-pinned (a fresh 2×3 → 6 cells, `grid_offset` flatten
+  `[0,1,2,0,1,2]`).
+- **`bidiVisual_val`** (get/set, `table.py` 156–173) — the table's RTL/LTR
+  direction via `./w:tblPr/w:bidiVisual/@w:val` (a logical) or `[]` (H3). The setter
+  takes a `WD_TABLE_DIRECTION` member; because `BaseEnum` subclasses `int`
+  (`bool(LTR)=bool(0)=False`, `bool(RTL)=bool(1)=True`, H4), it is ported as
+  `logical(double(value.value) ~= 0)` (H10 per-site `.value`). **The byte
+  consequence via the `CT_OnOff.val` True default (D-delta-1):** `RTL` (True ==
+  default) **removes** `@w:val` → a **bare `<w:bidiVisual/>`**; `LTR` (False) writes
+  `<w:bidiVisual w:val="0"/>`; `[]` removes the element — faithful to python-docx
+  (the port never writes `w:val="1"`), byte-pinned at Gate-3 (VERIFY-2).
+- **`tblStyle_val`** (get/set, `table.py` 199–217) — `./w:tblPr/w:tblStyle/@w:val`
+  (a `CT_String`) or `[]`. The setter calls `tblPr._remove_tblStyle()`
+  **unconditionally first**, then short-circuits on `[]`, else assigns through the
+  **private** `_add_tblStyle` adder (`add_tblStyle_`, **not** `get_or_add`) — order
+  and adder kept verbatim.
+
+**Example**
+
+```matlab
+tbl = mat2doc.oxml.table.CT_Tbl.new_tbl(2, 3, mat2doc.shared.Inches(6));
+disp(tbl.col_count);                       % 3
+disp(isempty(tbl.tblStyle_val));           % 1   (fresh new_tbl emits NO <w:tblStyle>)
+tbl.tblStyle_val = "TableGrid";            % <w:tblStyle w:val="TableGrid"/>
+tbl.bidiVisual_val = mat2doc.enum.table.WD_TABLE_DIRECTION.RTL;  % BARE <w:bidiVisual/>
+cells = tbl.iter_tcs;                      % 1×6 CT_Tc (row-major)
+row = tbl.add_tr();                        % appends a 4th (empty) <w:tr> (a CT_Row)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/oxml/table.py::CT_Tbl`*
+
+---
+
+(id-table-undefer)=
+## The un-defer sweep — registering `w:tbl`→`CT_Tbl` auto-upgrades every prior generic-`<w:tbl>` site
+
+Every WP before P6-3b that read or returned a `<w:tbl>` did so through a **tag-based**
+xpath / `findall`, because `w:tbl` was unregistered and resolved to a generic
+`XmlElement`. Registering `w:tbl`→`CT_Tbl` upgrades the runtime **class** of every
+parsed `<w:tbl>` node — the returned node-set is unchanged (tag selection is
+class-agnostic), so **no consumer needs a code change**; only the element class of a
+`<w:tbl>` match flips generic→`CT_Tbl`:
+
+- **`CT_Body.tbl_lst` / `inner_content_elements`** (P2-3) — `getChildList("w:tbl")`
+  / `xpath("./w:p | ./w:tbl")`; a body `<w:tbl>` now materialises as `CT_Tbl`.
+- **`CT_HdrFtr.inner_content_elements`** (P5-2b) — the same `./w:p | ./w:tbl` tag
+  union; a header/footer `<w:tbl>` now materialises as `CT_Tbl`.
+- **`CT_SectPr.iter_inner_content` / `SectBlockElementIterator_`** (P5-2b) — the
+  section block-element partition is entirely xpath/tag-based; a section `<w:tbl>`
+  auto-upgrades, order/boundary logic unchanged.
+- **`CT_Tc._tbl` / `tbl_lst`** (P6-3a) — the merge engine's ancestor `<w:tbl>` (and
+  a cell's nested `<w:tbl>` children) now resolve to `CT_Tbl`.
+
+:::{important}
+**★ V2 — the `CT_Tc` `trLstOfTbl_` shim is RESOLVED here.** Through P6-3a, `CT_Tc`'s
+`merge` / `_tr_below` / `_tr_idx` reached the enclosing table's rows through a
+**generic-ancestor shim** `trLstOfTbl_` = `tbl.xpath("./w:tr")`, because
+`self._tbl` (`./ancestor::w:tbl[position()=1]`) was a generic `XmlElement` with no
+`tr_lst` accessor. **P6-3b registers `w:tbl`→`CT_Tbl`, so the shim is REMOVED:** the
+three consumers now call the faithful 1:1 `self._tbl.tr_lst` directly. The
+equivalence is exact — `CT_Tbl.tr_lst` is `getChildList("w:tr")` =
+`findall(qn("w:tr"))`, the identical document-ordered `CT_Row` handle list the shim
+returned (H5 identity preserved), and the reverse-axis `position()=1` still resolves
+the **nearest** `w:tbl` ancestor for a nested table. Gate-3 re-ran the whole P6-3a
+merge byte-matrix with the swap live — **10/10 byte-identical**, incl. `m10` (nested
+inner merge) proving the nearest-ancestor resolution is un-perturbed.
+:::
+
+:::{note}
+**The proxy layer does NOT flip.** `Section.iter_inner_content` and
+`BlockItemContainer.add_table` / `tables` / `iter_inner_content` still raise
+`mat2doc:notYetPorted` at the **Table proxy** (P6-4a) boundary — they are keyed on
+the **absence of the `Table` proxy**, not on the `<w:tbl>` element class, so
+registering `CT_Tbl` leaves them untouched. **Two Gate-4 re-pins** (owner P2-3 /
+P5-2b, the registry-flip stale-pin pattern): `Test_p2_3_document_shell` and
+`Test_p5_2b_hdrftr_oxml` each pinned a parsed `<w:tbl>` to the exact class
+`mat2doc.oxml.XmlElement` and now see `mat2doc.oxml.table.CT_Tbl` — 3 assertions in
+2 methods, the complete flip set.
+:::
+
+**M1-neutral.** `default.docx` has **no `<w:tbl>` root** (the `styles.xml` table
+*style* definitions use `tblPr`/`tcPr`, not a `w:tbl` root), so nothing transits
+`CT_Tbl` on the M1 parse path; `mat2doc.Document().save()` stays **17/17
+byte-identical** (`styles.xml` `02d71a68…`, `document.xml` `0e4dd503…` unchanged).
+
+---
+
+(id-table-byte-proof-p63b)=
+### P6-3b byte proof — the `new_tbl` authoring oracle (7/7) + the merge matrix re-proven (10/10) after the shim swap
+
+P6-3b is **registry-adding but M1-neutral**; its byte bar is the `new_tbl`
+construction oracle plus a re-prove of the P6-3a merge matrix with the V2 shim→
+`CT_Tbl` swap live. **All legs byte-identical to python-docx v1.2.0, zero new
+D-numbers:**
+
+| leg | method | result |
+|---|---|---|
+| **★ M1 17/17** (registering w:tbl/bidiVisual neutral) | `pkgcompare compare` `mat2doc.Document().save()` vs `references\s0001` | L0 PASS + 16 XML L1 + 1 bin; `styles.xml` `02d71a68…` / `document.xml` `0e4dd503…` **unchanged** |
+| **★ THE new_tbl BYTE ORACLE** | 7 sizes, serialized `<w:tbl>` bytes (`references\s0065`) | **7/7 byte-identical (L1)** |
+| **★ merge-after-swap re-prove** | s0063 10-case merge byte-matrix re-run with `trLstOfTbl_`→`self._tbl.tr_lst` | **10/10 byte-identical (L1)** incl. `m10` nested nearest-ancestor |
+| full CT_Tbl surface | `probe_diff` s0066 (descriptors / add_tr / iter_tcs row-major / bidiVisual / tblStyle) | MATCH (exit 0) |
+| un-defer auto-upgrade | Body/HdrFtr/OxmlElement parse-class probe | all → `CT_Tbl` |
+| targeted regression | 6 named classes, one R2024b session, foreground | 83 total, 81 pass, 2 EXPECTED flips, 0 unexpected |
+
+The 7 `new_tbl` fixtures span `1×1`, the headline `2×3`/`Inches(6)` (`10211e87…`),
+raw-EMU `3×2`, larger `5×4`, the **non-even** `2×7`/`Inches(6.5)` (`5943600//7=849085`
+EMU, the H6 EMU-floor col-rounding), the `cols==0`→`Emu(0)` branch, and the
+negative-floor edge — frozen at `references\s0065\` (`.gitattributes` `* binary`) as
+**the permanent table-authoring byte oracle the API tier (P6-4a `add_table`) depends
+on**. No byte diverged anywhere, so the NEW-D STOP condition never fired. The
+standing adopt-only deviations exercised are **D-001** (own parser/serializer),
+**D-delta-1** (the bare `<w:bidiVisual/>` via the `CT_OnOff` True default), and
+**D-zip-time** (envelope only).
+
+:::{note}
+**Milestone flag (COM).** A full authored/merged table is **not yet reachable
+end-to-end through a Mat2Doc package** — `BlockItemContainer.add_table` /
+`_Cell.merge` are P6-4a / P6-4b. The frozen `s0065` `new_tbl` fixtures and the
+P6-3a `s0063` merged-cell fixtures remain routed to **mso-office-verifier** (the
+Word COM oracle) at the **P6-4a / P6-4b** table Word-COM sweep, once a table is
+buildable and saveable end-to-end. This oxml-layer WP introduces no COM scenario.
+:::
+
+---
+
+(id-table-complete)=
+## ★ The table OXML LAYER is COMPLETE — all 14 `table.py` classes ported
+
+With `CT_Tbl` registered and the un-defer sweep run, **every one of the 14
+`oxml/table.py` element classes is ported** and the table registry is complete (no
+more table rows). The four tiers:
 
 - **P6-1 leaves** — the width union (`CT_TblWidth`), the row-height leaf
   (`CT_Height`), the column grid (`CT_TblGrid` / `CT_TblGridCol`), the layout-mode
@@ -977,20 +1183,30 @@ the **cell + merge engine** (P6-3a) are now whole:
   `02d71a68…` match). It also un-stubs `CT_Row._new_tc` → `CT_Tc.new()` and the
   `grid_span` step of `tc_at_grid_offset`.
 
-All three landed **byte-proven** on real + loose table subtrees — the merge
-byte-matrix is **10/10 byte-identical** to python-docx v1.2.0 and frozen as the
-permanent table-merge oracle — with **zero new D-numbers**. What remains in
-**Phase 6**:
+- **P6-3b table root** — `CT_Tbl` (the `<w:tbl>` root: the `new_tbl(rows, cols,
+  width)` **table constructor** with its verbatim `_tbl_xml`/`_tblGrid_xml`/
+  `_trs_xml`/`_tcs_xml` builders and the H6 EMU-floor col-rounding; the
+  `OneAndOnlyOne` `tblPr`/`tblGrid` getters; `tr_lst`/`add_tr`; `bidiVisual_val`
+  RTL→bare `<w:bidiVisual/>`; `col_count`; row-major `iter_tcs`; `tblStyle_val`) +
+  the **registry completion** (`w:tbl`→`CT_Tbl`, `w:bidiVisual`→`CT_OnOff`) and the
+  **tbl un-defer sweep** — every prior tag-based `w:tbl`→generic site on `CT_Body` /
+  `CT_HdrFtr` / `CT_SectPr` / `SectBlockElementIterator_` / `CT_Tc` auto-upgrades to
+  `CT_Tbl`, and the P6-3a `CT_Tc` `trLstOfTbl_` generic-ancestor shim is **resolved**
+  to the real `self._tbl.tr_lst` (V2). Byte-neutral (M1 17/17), the `new_tbl`
+  construction **7/7 byte-identical** and the merge matrix **10/10 byte-identical**
+  after the swap.
 
-- **P6-3b** — `CT_Tbl` + the **registry completion** (`w:tbl` / `w:bidiVisual`)
-  and the **tbl un-defer sweep** (the tag-based `w:tbl`→generic sites on
-  `CT_Body` / `CT_HdrFtr` / `CT_SectPr` / `SectBlockElementIterator_` auto-upgrade
-  when `w:tbl`→`CT_Tbl` registers; re-pins `Test_p2_3_document_shell` /
-  `Test_p5_2b_hdrftr_oxml`). The `CT_Tc` `trLstOfTbl_` shim (V2) is re-adjudicated
-  at this WP's Gate-2.
-- **P6-4a** — the `Table` / `_Rows` / `_Columns` / `_Row` / `_Column` API (which
-  discharges the P5-3a `Section.iter_inner_content` `w:tbl`→`Table` debt and the
-  `Document.add_table` / `tables` stubs).
-- **P6-4b** — `_Cell.merge` + `add_row` / `add_column`, then the **table Word-COM
-  sweep** (a plain grid **and** a merged-cell package — where the frozen `s0063`
-  merged-cell fixtures are COM-verified).
+All four landed **byte-proven** on real + loose table subtrees — the merge
+byte-matrix is **10/10 byte-identical** to python-docx v1.2.0 and frozen as the
+permanent table-merge oracle, the `new_tbl` construction **7/7 byte-identical** and
+frozen as the permanent table-authoring oracle — with **zero new D-numbers** across
+the entire table oxml tier. The registry is complete (no more table rows). What
+remains in **Phase 6** is the **API/proxy tier**:
+
+- **P6-4a** — the `Table` / `_Rows` / `_Columns` / `_Row` / `_Column` API (the table
+  proxy surface reading `CT_Tbl` / `CT_Row` / `CT_Tc`), which discharges the P5-3a
+  `Section.iter_inner_content` `w:tbl`→`Table` debt and the `Document.add_table` /
+  `tables` stubs.
+- **P6-4b** (FINAL P6) — `_Cell.merge` + `add_row` / `add_column`, then the **table
+  Word-COM sweep** (a plain grid **and** a merged-cell package — where the frozen
+  `s0063` merged-cell fixtures and the `s0065` `new_tbl` fixtures are COM-verified).

@@ -34,13 +34,14 @@ classdef CT_Body < mat2doc.oxml.BaseOxmlElement
 %   add_table live, but the wiring is correct now. sectPr has successors=()
 %   (append at end -> it is the sentinel, always last).
 %
-%   FORWARD DEPS (out of scope, resolve generic): CT_P (P4), CT_Tbl (P6),
-%   CT_SectPr (P5) are NOT registered yet. The ZeroOrMore/ZeroOrOne descriptors
-%   create children via OxmlElement (newChild), which falls back to a generic
-%   XmlElement for these unregistered tags (P1-3b behavior). So add_p()/add_tbl()/
-%   get_or_add_sectPr() produce/return generic w:p/w:tbl/w:sectPr elements that
-%   still serialize correctly and insert in the right sequence -- only the element
-%   CLASS is generic. The descriptors need ONLY the nsptag strings, all present.
+%   FORMER FORWARD DEPS (now ALL registered): CT_P (P4), CT_SectPr (P5) and
+%   CT_Tbl (P6-3b, the tbl un-defer sweep) are all registered. The
+%   ZeroOrMore/ZeroOrOne descriptors create children via OxmlElement (newChild),
+%   which now resolves these tags to their real classes. So add_p()/add_tbl()/
+%   get_or_add_sectPr() produce/return CT_P/CT_Tbl/CT_SectPr elements that
+%   serialize correctly and insert in the right sequence -- registering each CT
+%   flipped only the created element's CLASS, no code change here. The descriptors
+%   need ONLY the nsptag strings, all present.
 %
 %   LIVE (P2-3 + P5-3a):
 %     every descriptor member (all pure oxml, no proxy forward dep),

@@ -1,0 +1,70 @@
+{
+  "schema": "p6-3b-new-tbl-bytes/1",
+  "wp": "Mat2Doc P6-3b",
+  "source": "python-docx v1.2.0 (e454546) / lxml 5.3.0",
+  "fixtures": [
+    {
+      "name": "new_1x1_in3",
+      "rows": 1,
+      "cols": 1,
+      "width_emu": 2743200,
+      "col_count": 1,
+      "size": 436,
+      "sha256": "174f948738f4d3022a5d651d65feda5e6b84d07533950889fa89e201bac957a7"
+    },
+    {
+      "name": "new_2x3_in6",
+      "rows": 2,
+      "cols": 3,
+      "width_emu": 5486400,
+      "col_count": 3,
+      "size": 835,
+      "sha256": "10211e8749896d41feffb3ce6c0739ea42c1e304e7fd7a0d72a0e8023a918258"
+    },
+    {
+      "name": "new_3x2_emu1e6",
+      "rows": 3,
+      "cols": 2,
+      "width_emu": 1000000,
+      "col_count": 2,
+      "size": 817,
+      "sha256": "757af432b791f78279a186b92d574e1d950a65235e755258588d235e66811720"
+    },
+    {
+      "name": "new_5x4_in6p5",
+      "rows": 5,
+      "cols": 4,
+      "width_emu": 5943600,
+      "col_count": 4,
+      "size": 1849,
+      "sha256": "f579d563d866932cb822c528fa9875a2d6594daf8c461defb84af52e5bf04b3b"
+    },
+    {
+      "name": "new_2x7_in6p5",
+      "rows": 2,
+      "cols": 7,
+      "width_emu": 5943600,
+      "col_count": 7,
+      "size": 1471,
+      "sha256": "b42b003268431e87aadac4c3ca6c4fcdc9aa15651daaa4916d77c0869014f274"
+    },
+    {
+      "name": "new_1x0_in1",
+      "rows": 1,
+      "cols": 0,
+      "width_emu": 914400,
+      "col_count": 0,
+      "size": 351,
+      "sha256": "c47e76edbcbc1097dbc2287083ed27929a396e336a76569522fc6252ea4d07bc"
+    },
+    {
+      "name": "new_2x3_emuneg",
+      "rows": 2,
+      "cols": 3,
+      "width_emu": -1000,
+      "col_count": 3,
+      "size": 817,
+      "sha256": "bae4f89be4c40075878f0fe6808400668acb4c324d661ac0aca34e6fed38dda5"
+    }
+  ]
+}

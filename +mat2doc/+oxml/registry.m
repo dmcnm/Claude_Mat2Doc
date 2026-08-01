@@ -303,10 +303,12 @@ map = registerElementCls_(map, "w:type",            "mat2doc.oxml.section.CT_Sec
 % -- the M1 path. Flip-neutral: ZERO existing exact-class XmlElement pins target
 % -- these 7 tags (checked); the deferred-generic gridAfter/gridBefore were never
 % -- pinned generic (0 occurrences to pin).
+map = registerElementCls_(map, "w:bidiVisual", "mat2doc.oxml.shared.CT_OnOff");         % __init__.py:168 (P6-3b; CT_Tbl.bidiVisual_val dep, closes P6-1 deferral)
 map = registerElementCls_(map, "w:gridAfter",  "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:169 (P6-2; closes P4-6 deferral)
 map = registerElementCls_(map, "w:gridBefore", "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:170 (P6-2; closes P4-6 deferral)
 map = registerElementCls_(map, "w:gridCol",   "mat2doc.oxml.table.CT_TblGridCol");    % __init__.py:171 (P6-1)
 map = registerElementCls_(map, "w:gridSpan",  "mat2doc.oxml.shared.CT_DecimalNumber"); % __init__.py:172 (P6-3a; CT_TcPr.grid_span dep, closes P4-6 deferral)
+map = registerElementCls_(map, "w:tbl",       "mat2doc.oxml.table.CT_Tbl");           % __init__.py:173 (P6-3b; completes the table oxml registry)
 map = registerElementCls_(map, "w:tblGrid",   "mat2doc.oxml.table.CT_TblGrid");       % __init__.py:174 (P6-1)
 map = registerElementCls_(map, "w:tblLayout", "mat2doc.oxml.table.CT_TblLayoutType"); % __init__.py:175 (P6-1)
 map = registerElementCls_(map, "w:tblPr",     "mat2doc.oxml.table.CT_TblPr");         % __init__.py:176 (P6-2)

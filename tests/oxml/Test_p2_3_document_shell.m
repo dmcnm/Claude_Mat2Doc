@@ -276,7 +276,8 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % whichever class is registered at the time. As of P4-2, w:p->CT_P is now
             % registered, so add_p() returns a mat2doc.oxml.text.CT_P (this test's own
             % prior comment predicted the flip when "P4" landed -- P4-2 IS "P4"). w:tbl
-            % (CT_Tbl is P6) remains UNregistered -> generic mat2doc.oxml.XmlElement;
+            % FLIPPED to CT_Tbl at P6-3b (registry-flip lesson; the pin below was
+            % re-pinned at Gate-4 from XmlElement -> CT_Tbl when w:tbl was registered);
             % w:sectPr FLIPPED to CT_SectPr at P5-2a (registry-flip lesson; the pin
             % below was re-pinned at Gate-4 from XmlElement -> CT_SectPr). The class
             % difference is byte-neutral (identical serialization + insertion order)
@@ -288,8 +289,8 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             cTbl  = body.add_tbl();
             testCase.verifyEqual(class(cP), 'mat2doc.oxml.text.CT_P', ...
                 'created w:p now resolves to CT_P (registered in P4-2)');
-            testCase.verifyEqual(class(cTbl), 'mat2doc.oxml.XmlElement', ...
-                'created w:tbl resolves to generic XmlElement (CT_Tbl is P6, unregistered)');
+            testCase.verifyEqual(class(cTbl), 'mat2doc.oxml.table.CT_Tbl', ...
+                'created w:tbl now resolves to CT_Tbl (registered in P6-3b; byte-neutral class flip)');
             testCase.verifyEqual(class(cSect), 'mat2doc.oxml.section.CT_SectPr', ...
                 'created w:sectPr now resolves to CT_SectPr (registered in P5-2a; byte-neutral class flip)');
         end
