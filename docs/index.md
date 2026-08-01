@@ -380,6 +380,28 @@ syntax, description, example, ported-from).
   mixed-merge packages all open silently with merges honored and text intact —
   `com_verify_P6_tables.md`). **Zero new D-numbers across all of Phase 6.** Next:
   **Phase 7** (images / drawing / inline pictures).
+- **Images tier (Phase 7)** — **Phase 7 begins** (images / drawing / inline
+  pictures). The **image core** page opens it: the format-agnostic
+  `mat2doc.image.Image` value object (`from_blob`/`from_file`, the `sha1` /
+  `ext` `@lazyproperty` pair, `content_type` + `px_width`/`px_height` +
+  `horz_dpi`/`vert_dpi` pure header-delegation, native `width`/`height` as a
+  `Length`, and `scaled_dimensions`), the `ImageHeaderFactory_` `SIGNATURES`
+  dispatch (8 rows, first-match-wins), `BaseImageHeader`, the `StreamReader` /
+  `BytesIO` byte-read primitives, the five constants tables
+  (`MIME_TYPE`/`JPEG_MARKER_CODE`/`PNG_CHUNK_TYPE`/`TIFF_FLD`/`TIFF_TAG`), and
+  `mat2doc.opc.sha1_hexdigest`. **★ A re-port from Mat2Ppt's `+image`** — docx
+  `image/` is the HOME of these parsers (python-pptx has none; it uses PIL, and
+  Mat2Ppt's `+image` was itself the docx port), re-homed with three transforms
+  (namespace → `mat2doc.shared`, inline None-idiom, and **WMF-exclusion**: the
+  pptx-only WMF/EMF/`pil_dpi`/`int_dpi` seams are NOT ported) and the dpi kept as
+  **docx math, not PIL** (that reversion bites the format parsers at P7-1b/P7-2).
+  The Gate-2 **F-1** fix re-homes `Image.ext` onto a CPython-`os.path.splitext`
+  helper (`splitext_ext`, not `fileparts`). **Pure-parsing WP — no registry row,
+  nothing on the open/save path → M1 17/17, 0 new D-numbers.** Next:
+  P7-1b (png/gif/bmp — the first PIL→docx dpi reversion) → P7-2 (tiff then jpeg —
+  the jpeg→tiff dependency-inversion) → P7-3 (drawing/`InlineShape`) → P7-4
+  (`add_picture` wiring + picture COM). See the
+  [image core page](api/image_core.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
