@@ -402,6 +402,25 @@ syntax, description, example, ported-from).
   the jpeg→tiff dependency-inversion) → P7-3 (drawing/`InlineShape`) → P7-4
   (`add_picture` wiring + picture COM). See the
   [image core page](api/image_core.md).
+- **Images tier — PNG / GIF / BMP parsers (P7-1b)** — the first three
+  `BaseImageHeader` subclasses, un-stubbing the P7-1a `Png`/`Gif`/`Bmp`
+  placeholders so the recognized-format factory dispatch and the **raw header
+  parse** (`Image.from_blob(real_png)` reads px/dpi from the bytes) go
+  end-to-end. `Png` walks the PNG chunk stream (IHDR dimensions, pHYs dpi) via
+  seven module-private chunk helpers (`PngParser_`/`Chunks_`/`ChunkParser_`/
+  `ChunkFactory_`/`Chunk_`/`IHDRChunk_`/`pHYsChunk_`); `Gif` reads the Logical
+  Screen Descriptor and sets **dpi unconditionally 72**; `Bmp` reads the
+  BITMAPINFOHEADER and derives dpi from px-per-metre. **★ The first PIL→docx dpi
+  reversion** — the docx formula `int(round(px_per_meter * 0.0254))` with
+  `px_per_meter == 0 → 96` (not PIL's 72), rounded **half-to-even** (`pyRound`,
+  not MATLAB `round()`). The tie discriminators are the reversion guard
+  (7500→190 and 17500→444 floor-even, where MATLAB `round()` gives 191/445;
+  0→96 and 2500→64 where PIL gives 72/63) — Mat2Doc matches **python-docx, not
+  PIL**. Proven value-identical to `Image.from_file` across a 17-file corpus.
+  **Pure-parsing → M1 17/17, 0 new D-numbers** (the Mat2Ppt `D-bmp-dpi` PIL
+  contract fully reverted). Next: **P7-2 — TIFF then JPEG** (TIFF first, the
+  jpeg→tiff dependency-inversion). See the
+  [image format-parsers page](api/image_formats.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

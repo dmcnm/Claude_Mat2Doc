@@ -10,3 +10,20 @@
 # probe.json is the frozen s0083 value oracle (195 probes); JSON is line-ending
 # agnostic -- pin LF only, no binary translation needed (matches references/s0083).
 probe.json text eol=lf
+
+# ---- Mat2Doc P7-1b (PNG/GIF/BMP header parsers) frozen Gate-4 fixtures ----
+# The 6 real docx test images below are the sha1 END-TO-END equivalence blobs for
+# Test_p7_1b_png_gif_bmp (150-dpi.png 0531f61e..., monty-truth.png 79769f1e...,
+# python-icon.png e4bf438f..., python-powered.png b0a1e6cf..., python.bmp
+# 438d5cf4..., sonic.gif 328eefd6...); ANY byte translation on the master checkout
+# would flip the sha1 pin and the px/dpi/EMU/ext core equivalence. Copied verbatim
+# from python-docx 1.2.0 tests/test_files/. (300-dpi.png is already pinned above.)
+150-dpi.png binary
+monty-truth.png binary
+python-icon.png binary
+python-powered.png binary
+python.bmp binary
+sonic.gif binary
+# s0084_probe.json is the frozen s0084 value oracle (143 probes); JSON is
+# line-ending agnostic -- pin LF only (matches references/s0084).
+s0084_probe.json text eol=lf
