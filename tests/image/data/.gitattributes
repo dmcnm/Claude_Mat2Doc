@@ -59,3 +59,31 @@ s0085_types_mm.tif binary
 # s0085_probe.json is the frozen s0085 value oracle (191 probes); JSON is
 # line-ending agnostic -- pin LF only (matches references/s0085).
 s0085_probe.json text eol=lf
+
+# ---- Mat2Doc P7-2b (JPEG header parser) frozen Gate-4 fixtures ----
+# Three REAL docx JPEGs (sha1 END-TO-END equivalence blobs for Test_p7_2b_jpeg:
+# jfif-iguana.jpg c3d98686..., python-icon.jpeg 1be010ea..., exif-420-dpi.jpg
+# 04c3cadf...) copied verbatim from python-docx 1.2.0 tests/test_files/, PLUS the
+# 7 validator-crafted JPEGs (s0086_*.jpg -- the frozen Gate-3 App0/App1-via-Tiff
+# dpi-branch corpus) and 2 raw APP1 segments (s0086_*.bin -- the exif/non-exif
+# marker-level dpi pins), binary-pinned byte-identical to references/s0086/blobs/*;
+# each carries the same sha1 the probe.json oracle pins. ANY byte translation on
+# the master checkout would flip the sha1 pins and the px/dpi/EMU equivalence.
+# (300-dpi.jpg is already pinned above -- P7-1a block.)
+# (Byte-fixture .gitattributes lesson: co-locate a `* binary` pin or the checkout
+#  mangles them -- JPEG/APP1 bytes contain 0x0D/0x0A that CRLF xlate would eat.)
+jfif-iguana.jpg binary
+python-icon.jpeg binary
+exif-420-dpi.jpg binary
+s0086_jfif_inch.jpg binary
+s0086_jfif_cm.jpg binary
+s0086_jfif_cm_tie.jpg binary
+s0086_jfif_aspect.jpg binary
+s0086_exif_xres300.jpg binary
+s0086_exif_cm.jpg binary
+s0086_exif_asym.jpg binary
+s0086_exif_app1_x300.bin binary
+s0086_nonexif_app1.bin binary
+# s0086_probe.json is the frozen s0086 value oracle (170 probes); JSON is
+# line-ending agnostic -- pin LF only (matches references/s0086).
+s0086_probe.json text eol=lf

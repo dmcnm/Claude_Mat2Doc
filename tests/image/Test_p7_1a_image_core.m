@@ -491,11 +491,12 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_factory_dispatch_to_stubs(testCase)
-            % Edge (RE-PINNED at P7-1b then P7-2a, 2026-08-01): the 8 SIGNATURES
-            % rows dispatch a recognized signature to its format parser. At P7-1a
-            % all 6 parsers were notYetPorted stubs; P7-1b un-stubs PNG/GIF/BMP and
-            % P7-2a un-stubs TIFF, so those rows now dispatch to the REAL parsers
-            % (only Jfif/Exif stay notYetPorted, P7-2b jpeg).
+            % Edge (RE-PINNED at P7-1b, P7-2a, then P7-2b, 2026-08-01): the 8
+            % SIGNATURES rows dispatch a recognized signature to its format parser.
+            % At P7-1a all 6 parsers were notYetPorted stubs; P7-1b un-stubs
+            % PNG/GIF/BMP, P7-2a un-stubs TIFF, and P7-2b un-stubs JFIF/Exif -- so
+            % EVERY row now dispatches to a REAL parser (the image-parser tier is
+            % COMPLETE; NO notYetPorted stub remains).
             % Expected behaviour per row on the crafted signature-only blob:
             %   * PNG/BMP -> the real parser hits EOF on the all-zeros blob ->
             %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted).
@@ -506,9 +507,14 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
             %     a bogus IFD (entry_count 19789/18761 from the 'MM'/'II' bytes) and
             %     runs past the 32-byte signature-only blob ->
             %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted). (P7-2a re-pin item 1.)
-            %   * JFIF/Exif -> still mat2doc:notYetPorted (P7-2b jpeg).
+            %   * JFIF/Exif -> RE-PINNED at P7-2b: the real Jfif/Exif parsers now
+            %     dispatch through JfifMarkers_.from_stream; on the signature-only
+            %     blob the marker walk finds SOI+APP0/APP1 then scans past the
+            %     16-byte segment into all-zero bytes with no further FF marker (no
+            %     SOS), so MarkerFinder_ hits EOF -> mat2doc:Exception
+            %     "unexpected end of file" (NOT notYetPorted). (P7-2b re-pin item 1.)
             % kind: 'eof' expects UnexpectedEndOfFileError; 'parse' expects a
-            % successful Image return; 'nyp' expects notYetPorted.
+            % successful Image return; 'exc' expects mat2doc:Exception (JPEG EOF).
             cases = { ...
                 'PNG',     [137 80 78 71 13 10 26 10, zeros(1, 24)],        'eof'; ...
                 'GIF87',   [double('GIF87a'), zeros(1, 26)],                'parse'; ...
@@ -516,8 +522,8 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
                 'BMP',     [double('BM'), zeros(1, 30)],                    'eof'; ...
                 'TIFF_MM', [77 77 0 42, zeros(1, 28)],                      'eof'; ...
                 'TIFF_II', [73 73 42 0, zeros(1, 28)],                      'eof'; ...
-                'JFIF',    [255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)], 'nyp'; ...
-                'Exif',    [255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)], 'nyp'};
+                'JFIF',    [255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)], 'exc'; ...
+                'Exif',    [255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)], 'exc'};
             for k = 1:size(cases, 1)
                 lbl  = cases{k, 1};
                 blob = uint8(cases{k, 2});
@@ -542,33 +548,47 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
                         testCase.verifyEqual(caught.identifier, 'mat2doc:UnexpectedEndOfFileError', ...
                             sprintf(['%s must dispatch to the REAL parser (P7-1b) which hits ' ...
                             'EOF on the signature-only blob'], lbl));
-                    case 'nyp'
+                    case 'exc'
+                        % P7-2b: JFIF/Exif now dispatch to the REAL parser; the
+                        % signature-only blob has no SOS, so the marker walk hits
+                        % EOF -> mat2doc:Exception (NOT notYetPorted).
                         testCase.assertNotEmpty(caught, ...
-                            sprintf('%s signature must dispatch (to a stub)', lbl));
-                        testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
-                            sprintf('%s must still dispatch to a notYetPorted stub (P7-2 boundary)', lbl));
+                            sprintf('%s must dispatch to the real JPEG parser and hit EOF', lbl));
+                        testCase.verifyEqual(caught.identifier, 'mat2doc:Exception', ...
+                            sprintf(['%s must dispatch to the REAL Jfif/Exif parser (P7-2b) which ' ...
+                            'hits EOF on the SOS-less signature blob (NOT notYetPorted)'], lbl));
+                        testCase.verifyEqual(caught.message, 'unexpected end of file', ...
+                            sprintf('%s EOF message must be verbatim "unexpected end of file"', lbl));
                 end
             end
         end
 
         function test_parser_stubs_raise_notyetported_directly(testCase)
-            % Edge (RE-PINNED at P7-1b then P7-2a, 2026-08-01): direct format-parser
-            % calls on a 4-byte garbage stream. P7-1b un-stubbed Png/Gif/Bmp and
-            % P7-2a un-stubbed Tiff, so they no longer raise notYetPorted -- they
-            % run the real parser:
+            % ★ ALL-6-PARSERS-LIVE guard (REPURPOSED at P7-2b, 2026-08-01). The
+            % original premise of this test -- that some format parsers were still
+            % notYetPorted stubs -- is now OBSOLETE: P7-1b un-stubbed Png/Gif/Bmp,
+            % P7-2a un-stubbed Tiff, and P7-2b un-stubbed Jfif/Exif. This test now
+            % asserts every one of the 6 format parsers is LIVE -- i.e. NO direct
+            % from_stream call raises mat2doc:notYetPorted anymore (the image-parser
+            % tier is COMPLETE). Each is exercised on a 4-byte garbage stream and
+            % pinned to its REAL corrupt-input error class:
             %   * Png/Bmp -> mat2doc:UnexpectedEndOfFileError (real parser hits EOF).
             %   * Gif -> MATLAB:badsubscript (seek(6) past EOF, read(4) empty,
             %     bytes_(1) bad subscript -- an incidental corrupt-input error class,
             %     unreachable via a well-formed factory dispatch; audit section 6.2).
-            %   * Tiff -> RE-PINNED at P7-2a: endian II, TiffParser_.parse's
-            %     read_long(4) seeks past the 4-byte stream -> EOF ->
-            %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted). (P7-2a re-pin item 2.)
-            %   * Jfif/Exif -> still mat2doc:notYetPorted (P7-2b jpeg).
+            %   * Tiff -> mat2doc:UnexpectedEndOfFileError (endian II, read_long(4)
+            %     seeks past the 4-byte stream -> EOF). (P7-2a.)
+            %   * Jfif/Exif -> RE-PINNED at P7-2b: JfifMarkers_.from_stream scans a
+            %     stream with no 0xFF marker byte -> MarkerFinder_ hits EOF ->
+            %     mat2doc:Exception "unexpected end of file" (NOT notYetPorted).
+            %     (P7-2b re-pin item 2.)
+            % Every expId is asserted != mat2doc:notYetPorted below -- the explicit
+            % ALL-6-LIVE guard: a regression that re-stubs any parser goes RED here.
             stream = @() mat2doc.image.BytesIO(uint8([0 0 0 0]));
             stubs = { ...
                 'Png',  @() mat2doc.image.Png.from_stream(stream()),  'mat2doc:UnexpectedEndOfFileError'; ...
-                'Jfif', @() mat2doc.image.Jfif.from_stream(stream()), 'mat2doc:notYetPorted'; ...
-                'Exif', @() mat2doc.image.Exif.from_stream(stream()), 'mat2doc:notYetPorted'; ...
+                'Jfif', @() mat2doc.image.Jfif.from_stream(stream()), 'mat2doc:Exception'; ...
+                'Exif', @() mat2doc.image.Exif.from_stream(stream()), 'mat2doc:Exception'; ...
                 'Gif',  @() mat2doc.image.Gif.from_stream(stream()),  'MATLAB:badsubscript'; ...
                 'Tiff', @() mat2doc.image.Tiff.from_stream(stream()), 'mat2doc:UnexpectedEndOfFileError'; ...
                 'Bmp',  @() mat2doc.image.Bmp.from_stream(stream()),  'mat2doc:UnexpectedEndOfFileError'};
@@ -584,7 +604,10 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
                 end
                 testCase.assertNotEmpty(caught, sprintf('%s parser must raise', lbl));
                 testCase.verifyEqual(caught.identifier, expId, ...
-                    sprintf('%s direct call must raise %s (P7-1b re-pin)', lbl, expId));
+                    sprintf('%s direct call must raise %s (P7-2b: all 6 parsers live)', lbl, expId));
+                % ★ explicit ALL-6-LIVE guard: no parser may be a notYetPorted stub.
+                testCase.verifyNotEqual(caught.identifier, 'mat2doc:notYetPorted', ...
+                    sprintf('%s must NOT be a notYetPorted stub (image-parser tier COMPLETE)', lbl));
             end
         end
 

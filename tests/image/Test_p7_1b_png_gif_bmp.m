@@ -308,8 +308,10 @@ classdef Test_p7_1b_png_gif_bmp < matlab.unittest.TestCase
         function test_factory_dispatch_real_parsers(testCase)
             % Edge: the P7-1a factory now dispatches PNG/GIF/BMP signatures to the
             % REAL parsers (Image.from_blob returns a parsed Image with the right
-            % px/dpi), while the Jfif/Exif/Tiff signatures STILL raise
-            % mat2doc:notYetPorted (the P7-2 boundary).
+            % px/dpi). The TIFF rows were re-pinned to the real Tiff parser at P7-2a
+            % (mat2doc:UnexpectedEndOfFileError); the Jfif/Exif rows RE-PINNED at
+            % P7-2b to their real parsers (mat2doc:Exception EOF on the SOS-less
+            % signature blob) -- NO notYetPorted stub remains (tier COMPLETE).
             here = fileparts(mfilename('fullpath'));
 
             % PNG blob -> Png parses (300-dpi.png -> 860x579 @ 300).
@@ -330,13 +332,18 @@ classdef Test_p7_1b_png_gif_bmp < matlab.unittest.TestCase
             testCase.verifyEqual(double(bmpImg.px_width), 211, 'BMP dispatch parsed px_width');
             testCase.verifyEqual(double(bmpImg.horz_dpi), 96, 'BMP dispatch dpi 96 (reverted)');
 
-            % Jfif / Exif signatures STILL notYetPorted (P7-2b jpeg).
+            % Jfif / Exif signatures -- RE-PINNED at P7-2b: the real Jfif/Exif
+            % parsers (un-stubbed) dispatch through JfifMarkers_.from_stream; the
+            % SOS-less signature-only blob makes the marker walk scan past the APP0/
+            % APP1 segment into all-zero bytes with no further FF marker, so
+            % MarkerFinder_ hits EOF -> mat2doc:Exception "unexpected end of file"
+            % (was notYetPorted at P7-1b).
             jfif = uint8([255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)]);
             exif = uint8([255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)]);
             verifyRaises(testCase, @() mat2doc.image.Image.from_blob(jfif), ...
-                'mat2doc:notYetPorted', 'JFIF still notYetPorted (P7-2b)');
+                'mat2doc:Exception', 'JFIF now dispatches to the real Jfif parser (P7-2b)');
             verifyRaises(testCase, @() mat2doc.image.Image.from_blob(exif), ...
-                'mat2doc:notYetPorted', 'Exif still notYetPorted (P7-2b)');
+                'mat2doc:Exception', 'Exif now dispatches to the real Exif parser (P7-2b)');
 
             % TIFF_MM/TIFF_II signatures -- RE-PINNED at P7-2a: the real Tiff parser
             % (un-stubbed) reads a bogus IFD (entry_count 19789/18761 from the
