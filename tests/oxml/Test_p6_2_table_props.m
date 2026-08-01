@@ -461,34 +461,36 @@ classdef Test_p6_2_table_props < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_ct_row_tc_boundary(testCase)
-            % Edge (P6-3a boundary): _new_tc / add_tc / add_tc_ raise
-            % mat2doc:notYetPorted (CT_Tc.new is P6-3a); tc_at_grid_offset raises
-            % mat2doc:notYetPorted at the grid_span dependency (never mis-walks);
-            % the fast paths (offset==grid_before -> first cell; empty row ->
-            % mat2doc:ValueError verbatim) work now.
+            % P6-3a UN-STUB (the four by-design flips): CT_Tc + w:tc are now live,
+            % so _new_tc / add_tc / add_tc_ create real CT_Tc cells and
+            % tc_at_grid_offset walks grid_span. These four assertions FLIPPED from
+            % mat2doc:notYetPorted (P6-2 boundary guards) to live behavior at
+            % P6-3a. (Gate-4 will re-home these in the P6-3a test class.)
             r = mat2doc.oxml.OxmlElement("w:tr");
 
-            % _new_tc / add_tc / add_tc_ -> notYetPorted (P6-3a)
-            testCase.verifyError(@() r.new_tc_(), 'mat2doc:notYetPorted', ...
-                'CT_Row.new_tc_ raises notYetPorted (CT_Tc.new is P6-3a)');
-            testCase.verifyError(@() r.add_tc(), 'mat2doc:notYetPorted', ...
-                'CT_Row.add_tc raises notYetPorted (routes through _new_tc)');
-            testCase.verifyError(@() r.add_tc_(), 'mat2doc:notYetPorted', ...
-                'CT_Row.add_tc_ raises notYetPorted');
+            % _new_tc / add_tc / add_tc_ -> real CT_Tc (routes through CT_Tc.new())
+            tcN = r.new_tc_();
+            testCase.verifyClass(tcN, 'mat2doc.oxml.table.CT_Tc', ...
+                'CT_Row.new_tc_ returns a CT_Tc (un-stubbed at P6-3a)');
+            tcA = r.add_tc();
+            testCase.verifyClass(tcA, 'mat2doc.oxml.table.CT_Tc', ...
+                'CT_Row.add_tc adds+returns a CT_Tc (routes through _new_tc)');
+            tcA2 = r.add_tc_();
+            testCase.verifyClass(tcA2, 'mat2doc.oxml.table.CT_Tc', ...
+                'CT_Row.add_tc_ adds+returns a CT_Tc');
 
-            % tc_at_grid_offset fast path: offset==grid_before(0) returns the FIRST
-            % tc WITHOUT touching grid_span (works now, generic tc ok)
+            % tc_at_grid_offset fast path: offset==grid_before(0) returns the FIRST tc
             row1 = parse("<w:tr " + nsW() + "><w:tc/></w:tr>");
             tc0 = row1.tc_at_grid_offset(0);
             testCase.verifyEqual(string(tc0.local_part), "tc", ...
-                'tc_at_grid_offset(0) returns the first tc (fast path, no grid_span)');
+                'tc_at_grid_offset(0) returns the first tc (fast path)');
 
-            % tc_at_grid_offset that MUST walk grid_span (offset>grid_before, tc not
-            % yet CT_Tc) -> notYetPorted at exactly the dependency point (P6-3a)
-            testCase.verifyError(@() row1.tc_at_grid_offset(1), 'mat2doc:notYetPorted', ...
-                'tc_at_grid_offset(1) raises notYetPorted at grid_span (P6-3a)');
+            % tc_at_grid_offset that WALKS grid_span now runs (tc is a live CT_Tc):
+            % the single span-1 cell is stepped over, offset 1 not found -> ValueError
+            testCase.verifyError(@() row1.tc_at_grid_offset(1), 'mat2doc:ValueError', ...
+                'tc_at_grid_offset(1) walks grid_span then raises ValueError (no tc at offset 1)');
 
-            % empty row, any offset -> mat2doc:ValueError (fast path, no grid_span)
+            % empty row, any offset -> mat2doc:ValueError verbatim
             emptyRow = mat2doc.oxml.OxmlElement("w:tr");
             testCase.verifyError(@() emptyRow.tc_at_grid_offset(5), 'mat2doc:ValueError', ...
                 'tc_at_grid_offset on an empty row raises mat2doc:ValueError');

@@ -28,27 +28,18 @@ classdef CT_Row < mat2doc.oxml.BaseOxmlElement
 %   tc is ZeroOrMore with successors=() -> NO_SUCCESSORS (append at end) -- BUT
 %   its creator is the _new_tc OVERRIDE (see CT_Tc BOUNDARY).
 %
-%   =============== CT_Tc BOUNDARY -- split at the grid_span dependency ===========
-%   CT_Tc (w:tc) lands at P6-3a (NOT yet ported/registered), so <w:tc> children
-%   resolve to GENERIC XmlElement here. The parts of CT_Row that do NOT need CT_Tc
-%   are ported LIVE (grid_after/grid_before via trPr, tr_idx, trHeight_*, the
-%   inserters, tc_lst). The two CT_Tc-dependent members are handled per design.md
-%   section 4 (clean stub naming the target symbol + owning WP):
-%     * _new_tc (table.py 142-143) = `return CT_Tc.new()`. CT_Tc.new is P6-3a, so
-%       new_tc_ raises mat2doc:notYetPorted (owner P6-3a). The tc ZeroOrMore
-%       adders (add_tc_ / add_tc) route through new_tc_ (the _new_tc override
-%       WINS over the generic creator, xmlchemy _add_to_class), so they raise too
-%       -- FAITHFUL: Python's add_tc also goes through _new_tc -> CT_Tc.new().
+%   =============== CT_Tc BOUNDARY -- UN-STUBBED at P6-3a =========================
+%   CT_Tc (w:tc) is now ported/registered (P6-3a), so <w:tc> children resolve to
+%   CT_Tc and the two previously-deferred members run LIVE:
+%     * _new_tc (table.py 142-143) = `return CT_Tc.new()`. new_tc_ now delegates to
+%       mat2doc.oxml.table.CT_Tc.new(). The tc ZeroOrMore adders (add_tc_ / add_tc)
+%       route through new_tc_ (the _new_tc override WINS over the generic creator,
+%       xmlchemy _add_to_class), so they too now create real CT_Tc cells --
+%       FAITHFUL: Python's add_tc also goes through _new_tc -> CT_Tc.new().
 %     * tc_at_grid_offset (table.py 79-98) walks tc_lst summing `tc.grid_span`
-%       (a CT_Tc accessor) to find the cell at an exact grid offset. Ported
-%       FAITHFULLY (verbatim body), with the grid_span access GUARDED: when a tc
-%       is not yet a CT_Tc (grid_span unavailable), it raises mat2doc:notYetPorted
-%       (owner P6-3a) at exactly that dependency point -- so it does NOT silently
-%       mis-walk. The fast paths that never reach grid_span (grid_offset ==
-%       grid_before -> the first cell; grid_offset < grid_before -> ValueError)
-%       already work now. Once CT_Tc registers at P6-3a the isa guard passes and
-%       the method runs verbatim with NO rework (the "works once CT_Tc registers,
-%       tag-based, no full stub" path the brief prefers).
+%       (a CT_Tc accessor, now live). The P6-2 isa notYetPorted guard is removed;
+%       the walk runs verbatim. (The four by-design P6-2 stub-battery throws in
+%       Test_p6_2_table_props::test_ct_row_tc_boundary flip LIVE at this WP.)
 %
 %   ===================== @property members (table.py 63-130) ====================
 %   grid_after / grid_before (read-only): 0 when trPr absent, else trPr.grid_after
@@ -158,11 +149,13 @@ classdef CT_Row < mat2doc.oxml.BaseOxmlElement
 
         % ============ tc (ZeroOrMore, successors=(); creator is the _new_tc OVERRIDE) ============
         function lst = get.tc_lst(obj);           lst = obj.getChildList("w:tc"); end
-        function child = new_tc_(obj) %#ok<STOUT,MANU>
-            % OVERRIDE (table.py 142-143): return CT_Tc.new(). CT_Tc.new lands at
-            % P6-3a; clean stub per design.md section 4 (name the target + WP).
-            error("mat2doc:notYetPorted", ...
-                "CT_Row._new_tc requires mat2doc.oxml.table.CT_Tc.new (owner P6-3a: src/docx/oxml/table.py::CT_Tc)");
+        function child = new_tc_(obj) %#ok<MANU>
+            % OVERRIDE (table.py 142-143): return CT_Tc.new(). UN-STUBBED at P6-3a
+            % (CT_Tc + w:tc registration are now live). add_tc_ / add_tc route
+            % through this override (the _new_tc creator WINS over the generic
+            % adder, xmlchemy _add_to_class), exactly as Python's add_tc reaches
+            % CT_Tc.new() via _new_tc.
+            child = mat2doc.oxml.table.CT_Tc.new();
         end
         function child = insert_tc_(obj, child); child = obj.insertChildInSequence(child, obj.NO_SUCCESSORS); end
         function child = add_tc_(obj, varargin)
@@ -201,14 +194,13 @@ classdef CT_Row < mat2doc.oxml.BaseOxmlElement
             value = trPr.grid_before;
         end
 
-        % ---- tc_at_grid_offset (table.py 79-98) -- CT_Tc-guarded (see header) ----
+        % ---- tc_at_grid_offset (table.py 79-98) -- UN-STUBBED at P6-3a ----
         function tc = tc_at_grid_offset(obj, grid_offset)
             % TC_AT_GRID_OFFSET The `w:tc` in this row starting at exact grid_offset.
-            %   Ported VERBATIM from table.py 79-98. `tc.grid_span` is a CT_Tc
-            %   accessor (P6-3a): the isa guard raises mat2doc:notYetPorted at that
-            %   dependency (never silently mis-walks); the offset==grid_before and
-            %   offset<grid_before paths work now. Once CT_Tc registers the guard
-            %   passes and the walk runs unchanged.
+            %   Ported VERBATIM from table.py 79-98. UN-STUBBED at P6-3a: `tc` is now
+            %   a CT_Tc (w:tc registered) so `tc.grid_span` runs -- the P6-2 isa
+            %   notYetPorted guard is removed and the grid_span walk runs
+            %   unchanged. H1: grid_offset is 0-based GRID data, kept RAW.
             arguments
                 obj (1,1) mat2doc.oxml.table.CT_Row
                 grid_offset (1,1) double
@@ -224,11 +216,7 @@ classdef CT_Row < mat2doc.oxml.BaseOxmlElement
                 if remaining_offset == 0   % Python: arrived; this is the tc
                     return
                 end
-                % Python: remaining_offset -= tc.grid_span  (CT_Tc accessor, P6-3a)
-                if ~isa(tc, "mat2doc.oxml.table.CT_Tc")
-                    error("mat2doc:notYetPorted", ...
-                        "CT_Row.tc_at_grid_offset requires mat2doc.oxml.table.CT_Tc.grid_span (owner P6-3a: src/docx/oxml/table.py::CT_Tc)");
-                end
+                % Python: remaining_offset -= tc.grid_span  (CT_Tc accessor, now live)
                 remaining_offset = remaining_offset - tc.grid_span;
             end
             % Python: raise ValueError(f"no `tc` element at grid_offset={grid_offset}")
