@@ -27,3 +27,35 @@ sonic.gif binary
 # s0084_probe.json is the frozen s0084 value oracle (143 probes); JSON is
 # line-ending agnostic -- pin LF only (matches references/s0084).
 s0084_probe.json text eol=lf
+
+# ---- Mat2Doc P7-2a (TIFF header parser) frozen Gate-4 fixtures ----
+# Two REAL docx TIFFs (sha1 END-TO-END equivalence blobs for Test_p7_2a_tiff:
+# 72-dpi.tiff ced06dc0..., little-endian.tif b3ea5989...) copied verbatim from
+# python-docx 1.2.0 tests/test_files/, PLUS the 16 validator-crafted TIFF blobs
+# (s0085_*.tif -- the frozen Gate-3 dpi-branch + den0 corpus, binary-pinned
+# byte-identical to references/s0085/blobs/*.tif; each carries the same sha1 the
+# probe.json oracle pins). ANY byte translation on the master checkout would flip
+# the sha1 pins and the px/dpi/EMU/den0 equivalence.
+# (Byte-fixture .gitattributes lesson: co-locate a `* binary` pin or the checkout
+#  mangles them -- crafted TIFFs contain 0x0D/0x0A bytes that CRLF xlate would eat.)
+72-dpi.tiff binary
+little-endian.tif binary
+s0085_aspect_ii.tif binary
+s0085_big_ii.tif binary
+s0085_cm_ii.tif binary
+s0085_den0_ii.tif binary
+s0085_den0_mm.tif binary
+s0085_inch_ii.tif binary
+s0085_inch_mm.tif binary
+s0085_multiunit_ii.tif binary
+s0085_nores_ii.tif binary
+s0085_nounit_ii.tif binary
+s0085_pxnone_ii.tif binary
+s0085_tie2_ii.tif binary
+s0085_tie_cm_ii.tif binary
+s0085_tie_ii.tif binary
+s0085_types_ii.tif binary
+s0085_types_mm.tif binary
+# s0085_probe.json is the frozen s0085 value oracle (191 probes); JSON is
+# line-ending agnostic -- pin LF only (matches references/s0085).
+s0085_probe.json text eol=lf

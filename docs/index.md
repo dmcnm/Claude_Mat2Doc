@@ -421,6 +421,26 @@ syntax, description, example, ported-from).
   contract fully reverted). Next: **P7-2 — TIFF then JPEG** (TIFF first, the
   jpeg→tiff dependency-inversion). See the
   [image format-parsers page](api/image_formats.md).
+- **Images tier — TIFF parser (P7-2a)** — the fourth `BaseImageHeader` subclass,
+  un-stubbing the P7-1a `Tiff` placeholder so the recognized-format factory
+  dispatch and the raw IFD parse go end-to-end. `Tiff` walks the main **Image
+  File Directory** in both byte orders (`MM` big-endian / `II` little-endian) via
+  `TiffParser_` + the `IfdEntries_` / `IfdParser_` / `IfdEntryFactory_` family and
+  the four typed entry classes (`Ascii`/`Short`/`Long`/`Rational` `IfdEntry_`),
+  reading px_width/px_height from ImageWidth/ImageLength and per-axis dpi from
+  X/YResolution + ResolutionUnit. **★ The second PIL→docx dpi reversion** — the
+  docx `_dpi` formula (unit default inches, `unit == 1 → 72`, cm → ×2.54,
+  `int(round(res × units_per_inch))` half-to-even) with **NO `int_dpi` [1, 2048]
+  clamp** (reverted from Mat2Ppt's PIL CLASS-T, so a dpi > 2048 is uncapped). The
+  four guards: the `int_dpi`-clamp reversal (3000/5000 uncapped), the half-to-even
+  ties, the F-1 multi-value-unit silent-False comparison, and **`D-tiff-den0`** (a
+  zero-denominator rational → `mat2doc:ZeroDivisionError`, an error-path match to
+  python-docx with **no new D-number** — the pptx `D-tiff-den0` ledger row does
+  **not** transfer to docx). Proven value-identical to `Image.from_file` (`s0085`
+  probe 191/191, 16 crafted blobs byte-identical). **Pure-parsing → M1 17/17, 0
+  new D-numbers.** Next: **P7-2b — JPEG** (`Jfif` + `Exif`; the Exif dpi reads the
+  APP1/Exif segment as a TIFF via the just-ported `Tiff`). See the
+  [image format-parsers page](api/image_formats.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

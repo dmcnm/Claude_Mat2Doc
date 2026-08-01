@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.image (format parsers) — PNG / GIF / BMP header parsers (P7-1b — the first PIL→docx dpi reversion)"
+title: "mat2doc.image (format parsers) — PNG / GIF / BMP / TIFF header parsers (the PIL→docx dpi reversion)"
 ---
 
-# `mat2doc.image` (format parsers) — PNG / GIF / BMP
+# `mat2doc.image` (format parsers) — PNG / GIF / BMP / TIFF
 
 Ported from python-docx v1.2.0 `src/docx/image/png.py` (`Png` + the seven
 chunk helpers), `src/docx/image/gif.py` (`Gif`) and `src/docx/image/bmp.py`
@@ -14,9 +14,10 @@ dispatch and the **raw header parse** (`Image.from_blob(real_png)` reads px/dpi
 straight from the bytes) are now end-to-end live — no more seeded test-double.
 
 `ImageHeaderFactory_` (P7-1a) resolves its dispatch targets as
-`@mat2doc.image.{Png,Gif,Bmp}.from_stream` **at call time**, so it now routes to
-the real parsers with **no factory edit**. `Jfif`/`Exif`/`Tiff` remain
-`notYetPorted` until P7-2.
+`@mat2doc.image.{Png,Gif,Bmp,Tiff}.from_stream` **at call time**, so it routes to
+the real parsers with **no factory edit**. **P7-2a un-stubs `Tiff`** (below — the
+IFD parser, the second PIL→docx dpi reversion, and the `D-tiff-den0`
+re-litigation); `Jfif`/`Exif` remain `notYetPorted` until **P7-2b**.
 
 :::{important}
 **★ The dpi is docx math, NOT Mat2Ppt's PIL re-oracling — this is the reversion the whole WP turns on.**
@@ -222,26 +223,185 @@ fprintf('BMP: %dx%d dpi %d/%d %s width_EMU=%d\n', img.px_width, img.px_height, .
 
 ---
 
-## ★ PNG / GIF / BMP done — TIFF then JPEG (P7-2) next
+(id-tiff)=
+## `Tiff` — TIFF header parser (IFD walk, MM/II endian, the second dpi reversion)
 
-P7-1b lands the first three format parsers and the **first PIL→docx dpi
-reversion**, proven value-identical to python-docx `Image.from_file` across a
-17-file corpus (real `test_files` + crafted tie cases) — every field
-(`content_type`, `ext`, `px_width`, `px_height`, `horz_dpi`, `vert_dpi`,
-`width`/`height` EMU, `sha1`) exact. It is a **pure-parsing** WP (no oxml, no
-`parts`, nothing on the save path), so **M1 stays 17/17 byte-identical** and
-there are **zero new D-numbers** — the Mat2Ppt `D-bmp-dpi` PIL contract is
-reverted, and the docx math carries no deviation.
+**Syntax**
 
-Next: **P7-2 — TIFF first, then JPEG.** The planned jpeg-then-tiff order is
-**dependency-inverted**: `jpeg.py:11` imports `Tiff`, and
-`_App1Marker._tiff_from_exif_segment` (`jpeg.py:384-391`) calls
-`Tiff.from_stream` — so **TIFF ports first**. Both revert their dpi to docx
-math: `Tiff._dpi` is **per-axis** (tag-absent → 72, `unit == 1` → 72, cm → ×2.54)
-and the Exif dpi comes straight from the embedded TIFF parse. The `D-tiff-den0`
-corner (a zero-denominator resolution rational) is **re-litigated** against the
-docx oracle at the TIFF WP. Then **P7-3** (`oxml/drawing` + `InlineShape`) and
-**P7-4** (`add_picture` wiring + `ImagePart` + the picture Word-COM sweep).
+```matlab
+header = mat2doc.image.Tiff.from_stream(stream);   % a Tiff (BaseImageHeader subclass)
+ct = header.content_type;                          % "image/tiff"
+e  = header.default_ext;                            % "tiff"
+```
+
+**Description**
+
+`Tiff` (`tiff.py:6-34`) is the `BaseImageHeader` subclass for TIFF, in **both**
+byte orders. `content_type` is unconditionally `image/tiff` and `default_ext` is
+always `"tiff"`. `from_stream` delegates the parse to the private `TiffParser_`,
+which detects endianness from the two-byte header indicator (**`MM`** →
+big-endian, else **little-endian** — the raw stream is read before it is wrapped
+in a `StreamReader`), reads the IFD0 offset (`read_long(4)`), and walks the main
+**Image File Directory**:
+
+- **px_width / px_height** from the **ImageWidth** (256) / **ImageLength** (257)
+  tags — **`None` (`[]`) when absent** (the expected case for a TIFF embedded in
+  an Exif JPEG, where the dimensions come from the JPEG SOF marker instead);
+- **horz_dpi / vert_dpi** from the **XResolution** (282) / **YResolution** (283)
+  rationals combined with the **ResolutionUnit** (296) tag (see the dpi reversion
+  below).
+
+`Tiff` is also the **embedded parser for the Exif (APP1) segment** of an Exif
+JPEG: at **P7-2b** the JPEG `Exif` marker calls `Tiff.from_stream` on the exif
+segment — the docx Exif dpi has no separate algorithm, it is exactly this same
+`_dpi` over the standard resolution tags.
+
+The IFD machinery ports as a factory plus a small class family (underscore
+rotation, design.md §2):
+
+| MATLAB helper | python-docx | role |
+|---|---|---|
+| `TiffParser_` | `_TiffParser` | owns the `IfdEntries_`; exposes `px_width`/`px_height`/`horz_dpi`/`vert_dpi` + the private `_dpi`; detects MM/II endian |
+| `IfdEntries_` | `_IfdEntries` | the `{tag → value}` mapping (last-wins duplicate resolution, key-only lookup, H11); `contains_`/`getitem_`/`get` |
+| `IfdParser_` | `_IfdParser` | walks the IFD: entry-count short at `offset`, then each 12-byte entry at `offset + 2 + idx*12` |
+| `IfdEntryFactory_` | `_IfdEntryFactory` | `switch` on the field-type short: ASCII→`AsciiIfdEntry_`, SHORT→`ShortIfdEntry_`, LONG→`LongIfdEntry_`, RATIONAL→`RationalIfdEntry_`, else base `IfdEntry_` (mirrors the `.get(field_type, _IfdEntry)` default, H10) |
+| `IfdEntry_` | `_IfdEntry` | base + default entry (`"UNIMPLEMENTED FIELD TYPE"`); holds `tag`/`value` |
+| `AsciiIfdEntry_` | `_AsciiIfdEntry` | NUL-terminated ASCII string (`read_str(value_count-1, …)` — the terminator arithmetic is Python's own, **not** an H1 shift) |
+| `ShortIfdEntry_` / `LongIfdEntry_` | `_ShortIfdEntry` / `_LongIfdEntry` | a single inline SHORT / LONG int (multi-value → the verbatim `NOT IMPLEMENTED` placeholder) |
+| `RationalIfdEntry_` | `_RationalIfdEntry` | a numerator/denominator rational read as the float quotient (**den == 0 guarded**, below) |
+
+Every IFD **byte offset is 0-based** (`offset + 2 + idx*12`, bases `0`/`4`/`8`) —
+the only `+1` is the MATLAB cell index (`entries{idx+1}`). The generator
+`iter_entries` is realized eagerly into a cell array (H9); the `{e.tag: e.value}`
+dict comprehension becomes a key-only rebuild loop with last-wins overwrite (H11).
+
+:::{important}
+**★ The TIFF dpi is docx math, NOT Mat2Ppt's PIL re-oracling — the second (and
+last format-parser) reversion, the one that turns on the `int_dpi` clamp.**
+
+Mat2Ppt's `_TiffParser._dpi` was a **PIL mirror** (CLASS-T): a joint xres/yres
+guard, an `int_dpi` **[1, 2048] clamp** downstream, and a CLASS-E `ifd_entries`
+accessor feeding App1Marker's PIL exif dpi. **All of that is stripped.**
+`TiffParser_._dpi` ports `tiff.py:88-108` **verbatim** — computed **per axis**
+(`horz_dpi` reads XResolution, `vert_dpi` reads YResolution):
+
+$$\texttt{\_dpi}(tag) \;=\; \begin{cases}
+72 & tag \notin \text{ifd\_entries} \\[2pt]
+72 & \text{unit} = 1 \text{ (aspect ratio only)} \\[2pt]
+\texttt{int(round(dots} \times \texttt{units\_per\_inch))} & \text{otherwise}
+\end{cases}$$
+
+where `resolution_unit` defaults to **2 (inches)**, `units_per_inch = 1` for
+`unit == 2` else `2.54` (so `unit == 3`, cm, multiplies by 2.54), and
+`int(round(...))` is CPython **round-half-to-even** (`pyRound`, banker's) then
+truncate-toward-zero (`fix`) — **H6/H14**, exactly as the PNG/BMP `_dpi`.
+
+The reversion turns on **four guards**, each frozen as a permanent Gate-4 pin
+(reference `s0085`, 16 crafted TIFF blobs byte-identical both sides):
+
+1. **The `int_dpi`-clamp reversal — a dpi > 2048 is returned UNCAPPED.** The PIL
+   `[1, 2048]` clamp lived in pptx `parts/image.py`; **docx has none**, so a
+   3000-dpi X-resolution returns **3000**, a 5000-dpi Y-resolution returns
+   **5000** (a carried clamp would have produced 2048 on both). The uncapped
+   value threads through `Inches(px/dpi)` into the EMU width unchanged.
+2. **Half-to-even ties** — the decisive floor-**even** exact ties round **down**:
+   `381/2 = 190.5 → 190`, `385/2 = 192.5 → 192`, `509/2 = 254.5 → 254` (a native
+   MATLAB `round()` gives 191/193/255); the cm factor produces the same ties
+   (`75 × 2.54 = 190.5 → 190`). `pyRound`, not `round()`.
+3. **The F-1 multi-value-`RESOLUTION_UNIT` silent-False guard.** A `RESOLUTION_UNIT`
+   entry with `count > 1` makes `ifd_entries.get(RESOLUTION_UNIT, 2)` the
+   multi-value SHORT **placeholder string** (non-scalar / non-numeric). In Python
+   `<placeholder> == 1` / `== 2` returns **False silently** → docx falls through
+   to `units_per_inch = 2.54` and **RETURNS** a dpi (`X_RES = 100 → 254`). A
+   token-verbatim MATLAB `==` would **throw** `MATLAB:string:ComparisonNotDefined`,
+   so both comparison sites are guarded with `isnumeric && isscalar` — evaluating
+   as False exactly where Python does (scalar `1` → 72; scalar `2` → ×1;
+   everything else — scalar `3`, an invalid unit, or a multi-value placeholder →
+   ×2.54). Error **only** where Python errors; no error where Python does not.
+4. **`D-tiff-den0` — a zero-denominator rational is an error-path match, NO new
+   D-number.** `RationalIfdEntry_._parse_value` computes `numerator / denominator`
+   (true division, kept as a double). python-docx on a TIFF whose XResolution
+   rational has `denominator == 0` raises **`ZeroDivisionError: "division by
+   zero"`** at parse time, propagating out through `Image.from_file` (nothing
+   catches it). MATLAB `n/0` silently yields `Inf`, so a guard at the division
+   site raises **`mat2doc:ZeroDivisionError`** with the verbatim CPython message —
+   matching the docx propagation path exactly. This is an **error-path match**
+   (no output is produced on this path in either implementation, so there is
+   nothing to deviate), not a value/byte divergence: **zero new D-number**. **The
+   pptx `D-tiff-den0` ledger row does NOT transfer** — its rationale was the
+   `int_dpi`-clamp seam (Inf → 2048), which docx does not have.
+
+The Mat2Ppt PIL `_dpi` contract (its CLASS-T resolved-by-fix) is fully reverted;
+the docx math carries **zero deviation** (Mat2Doc matches python-docx exactly,
+not PIL). Proven
+value-identical to `Image.from_file` across the whole reachable surface —
+`probe_diff s0085` **191/191** value-identical, both endians, all four
+resolution-unit branches, uncapped > 2048, both tie directions, the F-1
+multi-value unit, and the den0 error-path.
+:::
+
+**Example** (crafted little-endian TIFFs — the dpi reversion guards, executed
+end-to-end through `Image.from_blob`):
+
+```matlab
+le16 = @(n) uint8([bitand(n,255), bitand(bitshift(n,-8),255)]);
+le32 = @(n) uint8([bitand(n,255), bitand(bitshift(n,-8),255), ...
+                   bitand(bitshift(n,-16),255), bitand(bitshift(n,-24),255)]);
+ent  = @(tag,typ,v4) [le16(tag), le16(typ), le32(1), v4];      % count always 1
+% Minimal "II" TIFF: 40x30, 5 IFD entries; the two rationals live at bytes 74/82.
+mkTiff = @(xn,xd,yn,yd,unit) [ ...
+    uint8('II'), le16(42), le32(8), ...                        % header, IFD0 @ byte 8
+    le16(5), ...                                               % 5 directory entries
+    ent(256,3,[le16(40) le16(0)]), ent(257,3,[le16(30) le16(0)]), ... % ImageWidth/Length SHORT
+    ent(282,5,le32(74)), ent(283,5,le32(82)), ...             % X/YResolution RATIONAL @74/@82
+    ent(296,3,[le16(unit) le16(0)]), le32(0), ...             % ResolutionUnit SHORT + next-IFD=0
+    le32(xn), le32(xd), le32(yn), le32(yd)];                  % the two rationals
+
+show = @(xn,xd,yn,yd,unit) mat2doc.image.Image.from_blob(mkTiff(xn,xd,yn,yd,unit));
+a = show(300,1, 300,1, 2);  disp([a.horz_dpi a.vert_dpi]);  % 300  300   inch (unit 2), x1
+b = show(100,1, 100,1, 3);  disp([b.horz_dpi b.vert_dpi]);  % 254  254   cm (unit 3), x2.54
+c = show(3000,1,5000,1, 2); disp([c.horz_dpi c.vert_dpi]);  % 3000 5000  UNCAPPED (no [1,2048] clamp)
+d = show(381,2, 381,2, 2);  disp([d.horz_dpi d.vert_dpi]);  % 190  190   190.5 half-to-even (round()->191)
+e = show(300,1, 300,1, 1);  disp([e.horz_dpi e.vert_dpi]);  % 72   72    unit 1 = aspect ratio only
+
+fprintf('TIFF: %dx%d dpi %d/%d %s\n', a.px_width, a.px_height, ...
+        a.horz_dpi, a.vert_dpi, a.content_type);
+% TIFF: 40x30 dpi 300/300 image/tiff
+
+% D-tiff-den0: a 0-denominator XResolution rational -> ZeroDivisionError (error-path
+% match to python-docx; no new D-number).
+try
+    mat2doc.image.Image.from_blob(mkTiff(300,0, 300,1, 2));
+catch err
+    disp(err.identifier);            % mat2doc:ZeroDivisionError
+end
+```
+
+*Ported from python-docx v1.2.0: `src/docx/image/tiff.py::Tiff`*
+
+---
+
+## ★ TIFF done — JPEG (P7-2b) next
+
+P7-2a un-stubs the fourth `BaseImageHeader` subclass and lands the **second (and
+last format-parser) PIL→docx dpi reversion** — the one that turns on the
+`int_dpi` clamp. `Tiff` parses the main IFD (both endians, the four typed entry
+classes) and derives per-axis dpi from the X/YResolution + ResolutionUnit tags,
+proven value-identical to python-docx `Image.from_file` across the `s0085` corpus
+(`probe_diff` 191/191, 16 crafted blobs byte-identical, plus the two shipped
+`72-dpi.tiff` / `little-endian.tif`). It is a **pure-parsing** WP (no oxml, no
+`parts`, nothing on the save path), so **M1 stays 17/17 byte-identical** and there
+are **zero new D-numbers** — the `int_dpi`-clamp reversal is proven (3000/5000
+uncapped), the half-to-even ties and the F-1 multi-value unit are locked, and
+`D-tiff-den0` is an error-path match that carries **no ledger row** into docx.
+
+Next: **P7-2b — JPEG (`Jfif` + `Exif`).** The `Exif` dpi reads the APP1/Exif
+segment **as a TIFF** via the just-ported `Tiff.from_stream` (the docx dpi, now
+available) — the dependency inversion that put TIFF first is now discharged. The
+JPEG marker walk (`_JfifMarkers` / `_MarkerFinder` / `_MarkerParser` / the SOF /
+APP0 / APP1 markers) is the watch item, in particular the App1/Exif marker
+parsing. Then **P7-3** (`oxml/drawing` + `InlineShape` — the P7 registry-adding
+WP) and **P7-4** (`add_picture` wiring + `ImagePart` + the picture Word-COM sweep).
 
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.
