@@ -339,6 +339,27 @@ syntax, description, example, ported-from).
   in Phase 6 is the API tier: the `Table`/`_Rows`/`_Columns`/`_Cell` API →
   **P6-4a/b** + the table Word-COM sweep (the `s0063` merged-cell + `s0065` new_tbl
   fixtures COM-verified at P6-4b). See the [table oxml page](api/oxml_table.md).
+  **P6-4a** then opens the **table API/proxy tier**: `mat2doc.table.Table` (the
+  `<w:tbl>` proxy — `alignment` [**★ A2 cross-enum** — returns a
+  `WD_PARAGRAPH_ALIGNMENT` member, compare by name `== "CENTER"` or `.value`,
+  never cross-class `==`], `autofit`, `style`, `table_direction`, the
+  `@lazyproperty`-cached `rows`/`columns`, `_column_count`; `add_row`/`add_column`
+  → P6-4b), the row/column collections `_Rows`→`Rows_` / `_Columns`→`Columns_`
+  (the **0-based** `getitem_` int/negative/slice, `to_array`, `len_`) and the
+  single-row/column proxies `_Row`→`Row_` / `_Column`→`Column_`
+  (width/height/height_rule/grid_cols_*/`_index`; `.cells` → P6-4b), all FLAG-3
+  trailing-underscore renames. It **un-stubs the table-authoring path** —
+  `Document.add_table(rows, cols, style=None)` (style 3rd, width = `_block_width`)
+  vs `BlockItemContainer.add_table(rows, cols, width)` (width 3rd, the signature
+  difference) + the three `iter_inner_content` sites + **`Section.iter_inner_content`
+  `w:tbl`→`Table`** (the P5-3a **C2 debt discharged**) — with **no registry rows**,
+  so `Document().save()` stays M1 17/17. **★ The FIRST end-to-end table is now
+  byte-proven** — `document.add_table(2, 3)` → `word/document.xml` byte-identical
+  to python-docx (`a1eda043…`, `styles.xml` unchanged; with a style →
+  `<w:tblStyle>` + `styles.xml` gains the style), **0 new D-numbers**. The **table
+  READ/authoring API is live**; `_Cell.merge` + add_row/add_column + the table
+  Word-COM sweep (**P6-4b**) close Phase 6. See the
+  [table API page](api/table_api.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

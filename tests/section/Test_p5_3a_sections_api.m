@@ -35,9 +35,9 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
 %       FIRST section and getitem_(-1) is the LAST (the TabStops 0-based
 %       convention); out-of-range -> mat2doc:IndexError "list index out of range";
 %       a zero slice step -> mat2doc:ValueError "slice step cannot be zero".
-%     * iter_inner_content w:tbl guard (test_iter_inner_content): a <w:tbl> block
-%       raises mat2doc:notYetPorted (owner P6-4a) and is NEVER silently dropped; a
-%       <w:p> resolves to a Paragraph.
+%     * iter_inner_content w:tbl branch (test_iter_inner_content): a <w:tbl> block
+%       resolves to a Table (P6-4a un-stub re-pin; was notYetPorted at P5-3a) and is
+%       NEVER silently dropped; a <w:p> resolves to a Paragraph.
 %     * P5-3b hdr/ftr members (test_p5_3b_members_resolve_to_proxies): all SIX
 %       header/footer members RESOLVE to the right Header_/Footer_ proxy
 %       (registry-flip re-pin at P5-3b Gate-4; they were notYetPorted at P5-3a).
@@ -323,8 +323,8 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
 
         function test_iter_inner_content(testCase)
             % Nominal + Edge (section.py 157-163): a <w:p> block resolves to a
-            % Paragraph (value: non-ASCII text survives); a <w:tbl> block RAISES
-            % mat2doc:notYetPorted (owner P6-4a) and is NEVER silently dropped.
+            % Paragraph (value: non-ASCII text survives); a <w:tbl> block resolves to
+            % a Table (P6-4a un-stub) and is NEVER silently dropped.
             % --- CT_P -> Paragraph (value) ---
             d = mat2doc.Document();
             d.add_paragraph("IIC-caf" + string(char(233)));   % "IIC-café" (U+00E9)
@@ -336,20 +336,24 @@ classdef Test_p5_3a_sections_api < matlab.unittest.TestCase
             testCase.verifyEqual(string(items{1}.text), "IIC-caf" + string(char(233)), ...
                 'Paragraph text survives non-ASCII (é)');
 
-            % --- w:tbl -> mat2doc:notYetPorted (P6-4a); NEVER silently dropped ---
-            % A body carrying a <w:tbl> before the sentinel <w:sectPr>; the tbl is a
-            % preceding-sibling of the body sectPr so the iterator INCLUDES it (as a
-            % generic XmlElement), and Section wraps it via the Table branch -> raise.
+            % --- w:tbl -> a Table (P6-4a un-stub); NEVER silently dropped ---
+            % REGISTRY-FLIP RE-PIN (P6-4a Gate-4): the w:tbl branch previously raised
+            % mat2doc:notYetPorted (owner P6-4a). P6-4a un-stubbed it, so a <w:tbl>
+            % preceding the body sentinel <w:sectPr> is now wrapped as a
+            % mat2doc.table.Table (the C2 debt discharged) instead of raising. The
+            % full Table surface lives in tests\table\Test_p6_4a_table_api.m; this
+            % stays a lightweight positive pin so the P5-3a class no longer falsely
+            % asserts the tbl branch is a stub.
             xml = "<w:document xmlns:w=""" + testCase.W + """><w:body>" + ...
                 "<w:tbl/><w:sectPr/></w:body></w:document>";
             root = mat2doc.oxml.parse_xml(uint8(unicode2native(char(xml), "UTF-8")));
             sectPr = root.xpath("./w:body/w:sectPr");
             secT = mat2doc.section.Section(sectPr(1), []);   % document_part unused on the tbl path
-            ME = captureError(@() secT.iter_inner_content());
-            testCase.verifyEqual(string(ME.identifier), "mat2doc:notYetPorted", ...
-                'w:tbl in iter_inner_content -> mat2doc:notYetPorted (P6-4a), NOT a silent drop');
-            testCase.verifyTrue(contains(string(ME.message), "Table"), ...
-                'notYetPorted message names the Table dependency');
+            tblItems = secT.iter_inner_content();
+            testCase.verifyEqual(numel(tblItems), 1, ...
+                'the w:tbl preceding the body sectPr is INCLUDED (never silently dropped)');
+            testCase.verifyClass(tblItems{1}, 'mat2doc.table.Table', ...
+                'w:tbl in iter_inner_content -> a Table (P6-4a un-stub; C2 discharged)');
         end
 
         % =============================================================== %

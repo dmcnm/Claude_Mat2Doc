@@ -111,26 +111,53 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             end
         end
 
-        function t = add_table(obj, rows, cols, width) %#ok<INUSD,MANU,STOUT>
-            % ADD_TABLE STUB (blkcntnr.py 61-72). Owner: P6 table tier.
-            %   Faithful body: tbl = CT_Tbl.new_tbl(rows, cols, width);
-            %   self._element._insert_tbl(tbl); return Table(tbl, self). The
-            %   CT_Body._insert_tbl (insert_tbl_) is LIVE (P2-3), but CT_Tbl.new_tbl
-            %   and the Table proxy are P6; stubbed at the class boundary.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.oxml.table.CT_Tbl.new_tbl / mat2doc.table.Table (owning " + ...
-                "WP: P6 table tier) required by mat2doc.BlockItemContainer.add_table");
+        function t = add_table(obj, rows, cols, width)
+            % ADD_TABLE Return a table of `width` having `rows` rows and `cols`
+            %   columns, appended at the end of this container's content
+            %   (blkcntnr.py 61-72). `width` is evenly distributed between the
+            %   columns. UN-STUBBED at P6-4a -- the FIRST end-to-end table
+            %   authoring path (CT_Tbl.new_tbl byte-proven P6-3b; CT_Body._insert_tbl
+            %   live P2-3; the Table proxy is now live P6-4a).
+            %
+            %   Python (blkcntnr.py 68-72):
+            %     from docx.table import Table
+            %     tbl = CT_Tbl.new_tbl(rows, cols, width)
+            %     self._element._insert_tbl(tbl)
+            %     return Table(tbl, self)
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.add_table
+            tbl = mat2doc.oxml.table.CT_Tbl.new_tbl(rows, cols, width);  % Python: CT_Tbl.new_tbl(...)
+            obj.element_().insert_tbl_(tbl);                             % Python: self._element._insert_tbl(tbl) (C3 seam)
+            t = mat2doc.table.Table(tbl, obj);                          % Python: return Table(tbl, self)
         end
 
-        function it = iter_inner_content(obj) %#ok<MANU,STOUT>
-            % ITER_INNER_CONTENT STUB (blkcntnr.py 74-79). Owner: P6 table tier.
-            %   Faithful body iterates self._element.inner_content_elements (LIVE)
-            %   yielding Paragraph(element, self) or Table(element, self). Paragraph
-            %   is now LIVE (P4-7b) but Table is P6, so this heterogeneous iterator
-            %   still stubs at the Table boundary.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Table (owning WP: P6 table tier) " + ...
-                "required by mat2doc.BlockItemContainer.iter_inner_content");
+        function items = iter_inner_content(obj)
+            % ITER_INNER_CONTENT Each Paragraph or Table in this container in
+            %   document order (blkcntnr.py 74-79). UN-STUBBED at P6-4a (Table is
+            %   now live). Returns a 1xN CELL array (heterogeneous Paragraph | Table
+            %   share no matlab.mixin.Heterogeneous base -- the cell preserves
+            %   document order, mirroring Paragraph/Section.iter_inner_content).
+            %
+            %   Python (blkcntnr.py 78-79):
+            %     for element in self._element.inner_content_elements:
+            %         yield (Paragraph(element, self) if isinstance(element, CT_P)
+            %                else Table(element, self))
+            %   H9: the Python generator is materialized (no tree mutation during
+            %   iteration). H10: isinstance -> isa on the ported CT_P class name.
+            %   CT_Body.inner_content_elements (xpath ./w:p|./w:tbl, LIVE) is already
+            %   in document order (H1).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.iter_inner_content
+            elements = obj.element_().inner_content_elements;   % C3 seam; LIVE xpath list
+            items = cell(1, numel(elements));
+            for k = 1:numel(elements)
+                element = elements(k);
+                if isa(element, "mat2doc.oxml.text.CT_P")   % Python: isinstance(element, CT_P)
+                    items{k} = mat2doc.text.Paragraph(element, obj);   % Python: Paragraph(element, self)
+                else
+                    items{k} = mat2doc.table.Table(element, obj);      % Python: Table(element, self)
+                end
+            end
         end
 
         function ps = paragraphs(obj)

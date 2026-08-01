@@ -97,10 +97,14 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %       P5-1  un-stubbed Document.settings                  (16 -> 15)
         %       P5-3a un-stubbed Document.add_section / Document.sections /
         %             CT_Body.add_section_break                     (15 -> 12)
-        %     Document.add_page_break / Document.paragraphs / Body_.add_table /
-        %     Body_.tables / Body_.iter_inner_content and the P6/P7/P8 adders
+        %       P6-4a un-stubbed Document.add_table /
+        %             Document.iter_inner_content / Body_.add_table /
+        %             Body_.iter_inner_content                      (12 -> 8)
+        %     Document.add_page_break / Document.add_picture / Document.add_comment /
+        %     Document.paragraphs / Document.tables / Document.comments /
+        %     Document.inline_shapes / Body_.tables and the P6/P7/P8 adders
         %     REMAIN genuinely stubbed. ---
-        STUB_COUNT = 12
+        STUB_COUNT = 8
     end
 
     methods (TestClassSetup)
@@ -310,28 +314,29 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             %   * P5-3a: Document.add_section / Document.sections /
             %     CT_Body.add_section_break un-stubbed -> REMOVED (all asserted
             %     resolved below). (15 -> 12.)
-            % Document.add_page_break / Document.paragraphs (P4-7b VERIFY-1 scope --
-            % deps live but deliberately left stubbed for the next content WP),
-            % Body_.add_table / Body_.tables / Body_.iter_inner_content and the
-            % P6/P7/P8 adders REMAIN genuinely pinned.
+            %   * P6-4a: Document.add_table / Document.iter_inner_content /
+            %     Body_.add_table / Body_.iter_inner_content un-stubbed -> REMOVED
+            %     (all asserted resolved below -- add_table returns a Table;
+            %     iter_inner_content returns a cell). (12 -> 8.)
+            % Document.add_page_break / Document.add_picture / Document.add_comment /
+            % Document.paragraphs / Document.tables / Document.comments /
+            % Document.inline_shapes / Body_.tables REMAIN genuinely pinned (deps not
+            % all live and/or deliberately left stubbed for the next content WP; the
+            % P6/P7/P8 adders land later).
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
             calls = { ...
                 'Document.add_page_break',     @() d.add_page_break(); ...
-                'Document.add_table',          @() d.add_table(1, 1, []); ...
                 'Document.add_picture',        @() d.add_picture("x"); ...
                 'Document.add_comment',        @() d.add_comment([], "t", "a", "i"); ...
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes(); ...
-                'Document.iter_inner_content', @() d.iter_inner_content(); ...
-                'Body_.add_table',             @() b.add_table(1, 1, []); ...
-                'Body_.tables',                @() b.tables(); ...
-                'Body_.iter_inner_content',    @() b.iter_inner_content()};
+                'Body_.tables',                @() b.tables()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 12 members (Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a un-stubbed)');
+                'the stub battery must cover exactly 8 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -378,6 +383,25 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             % standalone CT_Body from parseBody() (untouched by the stub loop).
             testCase.verifyClass(ct.add_section_break(), 'mat2doc.oxml.section.CT_SectPr', ...
                 'CT_Body.add_section_break RESOLVES to a CT_SectPr (P5-3a un-stub)');
+
+            % The P6-4a table un-stubs now RESOLVE (registry-flip re-pins:
+            % Document.add_table / Document.iter_inner_content / Body_.add_table /
+            % Body_.iter_inner_content moved out of the notYetPorted battery to their
+            % resolved behavior). Use FRESH handles so add_table's body mutation does
+            % not perturb the others. Document.add_table(rows,cols,style=[]) and
+            % BlockItemContainer.add_table(rows,cols,width) both return a Table;
+            % iter_inner_content returns a (heterogeneous Paragraph|Table) cell.
+            dt = mat2doc.Document();
+            bt = dt.body_();
+            testCase.verifyClass(dt.add_table(1, 1, []), 'mat2doc.table.Table', ...
+                'Document.add_table RESOLVES to a Table (P6-4a un-stub)');
+            testCase.verifyClass(dt.iter_inner_content(), 'cell', ...
+                'Document.iter_inner_content RESOLVES to a cell array (P6-4a un-stub)');
+            bt2 = mat2doc.Document().body_();
+            testCase.verifyClass(bt2.add_table(1, 1, mat2doc.shared.Inches(1)), 'mat2doc.table.Table', ...
+                'Body_.add_table RESOLVES to a Table (P6-4a un-stub)');
+            testCase.verifyClass(bt.iter_inner_content(), 'cell', ...
+                'Body_.iter_inner_content RESOLVES to a cell array (P6-4a un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

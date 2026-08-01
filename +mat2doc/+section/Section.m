@@ -55,10 +55,11 @@ classdef Section < handle
 %   ============================ C2 (iter_inner_content) =========================
 %   iter_inner_content yields Paragraph | Table over CT_SectPr.iter_inner_content
 %   (P5-2b, LIVE -- a heterogeneous XmlElement array: CT_P for <w:p> + generic
-%   XmlElement for <w:tbl>). The CT_P -> Paragraph wrapping is ported FULLY; the
-%   non-CT_P (w:tbl -> Table) branch RAISES mat2doc:notYetPorted (owner P6-4a)
-%   because Table is P6 -- a w:tbl is NEVER silently dropped. H9: the Python
-%   generator is materialized (no tree mutation during iteration).
+%   XmlElement for <w:tbl>). The CT_P -> Paragraph AND the non-CT_P (w:tbl ->
+%   Table) branches are BOTH ported FULLY. UN-STUBBED at P6-4a (Table now live);
+%   the C2 debt (the tbl branch formerly raised mat2doc:notYetPorted owner P6-4a)
+%   is discharged -- a w:tbl is NEVER silently dropped. H9: the Python generator
+%   is materialized (no tree mutation during iteration).
 %
 %   H3 (None): inline isequal(x, []) (established Mat2Doc None idiom). H5
 %   (identity): each getitem access mints a FRESH Section/Paragraph view; the
@@ -257,12 +258,13 @@ classdef Section < handle
             %                else Table(element, self))
             %   CT_SectPr.iter_inner_content (P5-2b, LIVE) yields a heterogeneous
             %   XmlElement array: CT_P for <w:p>, generic XmlElement for <w:tbl>.
-            %   The CT_P -> Paragraph wrapping is ported FULLY. The non-CT_P branch
-            %   (a <w:tbl> -> Table) RAISES mat2doc:notYetPorted (owner P6-4a) --
-            %   Table is P6 (not ported); a <w:tbl> is NEVER silently dropped (C2).
-            %   H9: the Python generator is materialized (no tree mutation during
-            %   iteration, so laziness is unobservable). H10: isinstance -> isa on
-            %   the ported CT_P class name.
+            %   The CT_P -> Paragraph wrapping and the non-CT_P (<w:tbl> -> Table)
+            %   branch are BOTH ported FULLY. UN-STUBBED at P6-4a (Table is now
+            %   live); the C2 debt (the tbl branch previously raised
+            %   mat2doc:notYetPorted owner P6-4a) is discharged. H9: the Python
+            %   generator is materialized (no tree mutation during iteration, so
+            %   laziness is unobservable). H10: isinstance -> isa on the ported CT_P
+            %   class name.
             %
             %   Ported from python-docx v1.2.0: src/docx/section.py::Section.iter_inner_content
             elements = obj.sectPr_.iter_inner_content();   % heterogeneous XmlElement array
@@ -272,10 +274,7 @@ classdef Section < handle
                 if isa(element, "mat2doc.oxml.text.CT_P")   % Python: isinstance(element, CT_P)
                     items{k} = mat2doc.text.Paragraph(element, obj);   % Python: Paragraph(element, self)
                 else
-                    % Python: Table(element, self) -- Table is P6 (C2 stub).
-                    error("mat2doc:notYetPorted", "%s", ...
-                        "mat2doc.table.Table (owning WP: P6-4a) required by " + ...
-                        "mat2doc.section.Section.iter_inner_content (w:tbl branch)");
+                    items{k} = mat2doc.table.Table(element, obj);      % Python: Table(element, self)
                 end
             end
         end
