@@ -67,13 +67,35 @@ classdef Row_ < mat2doc.shared.Parented
             obj.element_ = tr;
         end
 
-        function c = cells(obj) %#ok<MANU,STOUT>
-            % CELLS STUB (table.py 395-438). Owner: P6-4b (_Cell).
-            %   Faithful body walks self._tr.tc_lst yielding a _Cell per layout-grid
-            %   cell (handling grid spans and vertical merges). The whole body
-            %   constructs _Cell objects, so it defers to P6-4b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Row_.cells");
+        function c = cells(obj)
+            % CELLS The Cell_ sequence for this row (table.py 395-438). UN-STUBBED
+            %   at P6-4b. Walks self._tr.tc_lst, generating a Cell_ per layout-grid
+            %   cell: a horizontal span (gridSpan) yields the SAME Cell_ handle once
+            %   per spanned grid column (H5 identity), and a vertical-merge
+            %   CONTINUATION cell (vMerge="continue") delegates to the cell in the
+            %   prior row (its _tc_above) so the returned cell holds the span's
+            %   actual content. Word allows a row to start late / end early, so only
+            %   cells actually present are returned (length may differ per row).
+            %
+            %   Python (table.py 410-438): two nested generators --
+            %     def iter_tc_cells(tc):
+            %         if tc.vMerge == "continue":
+            %             yield from iter_tc_cells(tc._tc_above); return
+            %         cell = _Cell(tc, self.table)
+            %         for _ in range(tc.grid_span): yield cell
+            %     def _iter_row_cells():
+            %         for tc in self._tr.tc_lst: yield from iter_tc_cells(tc)
+            %     return tuple(_iter_row_cells())
+            %   H9: the generators are materialized (no tree mutation while reading).
+            %   iter_tc_cells is ported as the private recursive helper
+            %   iter_tc_cells_ below (parent = self.table, table.py 429).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::_Row.cells
+            c = mat2doc.table.Cell_.empty(1, 0);
+            tcs = obj.tr_.tc_lst;                    % Python: for tc in self._tr.tc_lst
+            for i = 1:numel(tcs)
+                c = [c, obj.iter_tc_cells_(tcs(i))]; %#ok<AGROW> % Python: yield from iter_tc_cells(tc)
+            end
         end
 
         function value = get.grid_cols_after(obj)
@@ -122,6 +144,35 @@ classdef Row_ < mat2doc.shared.Parented
             %   Python: return self._tr.tr_idx (already 0-based, H1). Underscore
             %   rotation: _index -> index_ (public method).
             value = obj.tr_.tr_idx;   % Python: return self._tr.tr_idx
+        end
+    end
+
+    methods (Access = private)
+        function cells = iter_tc_cells_(obj, tc)
+            % ITER_TC_CELLS_ A Cell_ for each layout-grid cell in `tc` (table.py
+            %   410-431 -- the inner generator of _Row.cells, ported as a private
+            %   recursive helper). A horizontal span yields the SAME Cell_ handle
+            %   once per grid column (H5). A vertical-merge continuation cell
+            %   (vMerge="continue") delegates recursively to the guaranteed-same-
+            %   width cell directly above (tc._tc_above), so its content resolves to
+            %   the span's root cell.
+            %
+            %   Python (table.py 410-431):
+            %     if tc.vMerge == "continue":
+            %         yield from iter_tc_cells(tc._tc_above); return
+            %     cell = _Cell(tc, self.table)
+            %     for _ in range(tc.grid_span): yield cell
+            %   H5: the loop yields the ONE `cell` handle grid_span times (identity
+            %   across the span). self.table is the owning Table (table.py 429).
+            if isequal(tc.vMerge, "continue")   % Python: if tc.vMerge == "continue"
+                cells = obj.iter_tc_cells_(tc.tc_above_());   % yield from iter_tc_cells(tc._tc_above)
+                return
+            end
+            cell = mat2doc.table.Cell_(tc, obj.table);   % Python: cell = _Cell(tc, self.table)
+            cells = mat2doc.table.Cell_.empty(1, 0);
+            for k = 1:tc.grid_span   % Python: for _ in range(tc.grid_span): yield cell
+                cells(k) = cell;     % SAME handle at each grid position (H5)
+            end
         end
     end
 end

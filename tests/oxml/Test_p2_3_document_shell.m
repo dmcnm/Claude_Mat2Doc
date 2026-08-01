@@ -100,11 +100,14 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %       P6-4a un-stubbed Document.add_table /
         %             Document.iter_inner_content / Body_.add_table /
         %             Body_.iter_inner_content                      (12 -> 8)
+        %       P6-4b un-stubbed Body_.tables (inherited BlockItemContainer.tables,
+        %             the required dependency of _Cell.tables)      (8  -> 7)
         %     Document.add_page_break / Document.add_picture / Document.add_comment /
         %     Document.paragraphs / Document.tables / Document.comments /
-        %     Document.inline_shapes / Body_.tables and the P6/P7/P8 adders
-        %     REMAIN genuinely stubbed. ---
-        STUB_COUNT = 8
+        %     Document.inline_shapes and the P6/P7/P8 adders REMAIN genuinely stubbed.
+        %     (Document.tables is its OWN separate stub -- out of the P6-4b 8-member
+        %     scope -- and stays pinned below.) ---
+        STUB_COUNT = 7
     end
 
     methods (TestClassSetup)
@@ -320,9 +323,12 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             %     iter_inner_content returns a cell). (12 -> 8.)
             % Document.add_page_break / Document.add_picture / Document.add_comment /
             % Document.paragraphs / Document.tables / Document.comments /
-            % Document.inline_shapes / Body_.tables REMAIN genuinely pinned (deps not
-            % all live and/or deliberately left stubbed for the next content WP; the
-            % P6/P7/P8 adders land later).
+            % Document.inline_shapes REMAIN genuinely pinned (deps not all live and/or
+            % deliberately left stubbed for the next content WP; the P6/P7/P8 adders
+            % land later). P6-4b RE-PIN: Body_.tables (inherited
+            % BlockItemContainer.tables) is now LIVE -> DROPPED from the battery (8->7)
+            % and asserted resolved below; Document.tables is its OWN stub (out of the
+            % P6-4b scope) and stays pinned here.
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
@@ -333,10 +339,9 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
                 'Document.comments',           @() d.comments(); ...
-                'Document.inline_shapes',      @() d.inline_shapes(); ...
-                'Body_.tables',                @() b.tables()};
+                'Document.inline_shapes',      @() d.inline_shapes()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 8 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a un-stubbed)');
+                'the stub battery must cover exactly 7 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -402,6 +407,18 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Body_.add_table RESOLVES to a Table (P6-4a un-stub)');
             testCase.verifyClass(bt.iter_inner_content(), 'cell', ...
                 'Body_.iter_inner_content RESOLVES to a cell array (P6-4a un-stub)');
+
+            % The P6-4b Body_.tables un-stub now RESOLVES (registry-flip re-pin:
+            % inherited BlockItemContainer.tables went live as the required dependency
+            % of _Cell.tables; Body_.tables moved out of the notYetPorted battery). A
+            % body with one table yields a 1-element Table array; Document.tables (its
+            % OWN separate stub) is verified to STILL raise, in the battery above.
+            bd = mat2doc.Document();
+            bd.add_table(2, 2);
+            testCase.verifyClass(bd.body_().tables(), 'mat2doc.table.Table', ...
+                'Body_.tables RESOLVES to a Table array (P6-4b un-stub, was mat2doc:notYetPorted)');
+            testCase.verifyEqual(numel(bd.body_().tables()), 1, ...
+                'Body_.tables returns the one table added to the body');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

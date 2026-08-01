@@ -58,7 +58,7 @@ project:
         - file: api/oxml_section.md
         - file: api/section_api.md
         - file: api/headers_footers.md
-    - title: Tables tier (Phase 6)
+    - title: Tables tier (Phase 6 — COMPLETE)
       children:
         - file: api/oxml_table.md
         - file: api/table_api.md

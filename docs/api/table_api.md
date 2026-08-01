@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.table — the Table/_Rows/_Columns/_Row/_Column API tier (Table · the row/column collections · the add_table authoring path — the FIRST end-to-end table)"
+title: "mat2doc.table — the Table/_Rows/_Columns/_Row/_Column/_Cell API tier (Table · the row/column collections · the cell · the add_table/add_row/add_column authoring path · cell merge — the COMPLETE table tier)"
 ---
 
-# `mat2doc.table` — the Table / row / column API tier (`Table` + `_Rows`/`_Columns` + `_Row`/`_Column` + the `add_table` authoring path)
+# `mat2doc.table` — the Table / row / column / cell API tier (`Table` + `_Rows`/`_Columns` + `_Row`/`_Column` + `_Cell` + the `add_table`/`add_row`/`add_column`/`merge` authoring path)
 
 Ported from python-docx v1.2.0 `src/docx/table.py::Table` /
 `::_Columns` / `::_Column` / `::_Rows` / `::_Row` (in the NEW package
@@ -30,7 +30,25 @@ parity on the `add_table` authoring path (the constructed `word/document.xml` is
 byte oracle — `CT_Tbl.new_tbl` was byte-proven at P6-3b) — so it is
 **byte-neutral** (`Document().save()` stays M1 17/17, **zero new D-numbers**). The
 **table READ/authoring API is now live**; `_Cell.merge` + `add_row` / `add_column`
-+ the table Word-COM sweep (**P6-4b**) close Phase 6.
++ the table Word-COM sweep (**P6-4b**) closed Phase 6 (see the next note).
+:::
+
+:::{important}
+**★ PHASE 6 COMPLETE** — the full table tier (oxml 14 classes +
+`Table`/`_Rows`/`_Columns`/`_Row`/`_Column`/`_Cell` API +
+`add_table`/`add_row`/`add_column`/`merge`) is **byte-proven end-to-end and
+COM-verified**. **P6-4b** lands the last piece — `_Cell` (with `.merge`),
+`Table.add_row`/`add_column`, and `_Row.cells`/`_Column.cells` (the cells grid
+walk) — un-stubbing the 8 P6-4a table stubs plus the required
+`BlockItemContainer.tables`. Every cell-authoring path (content, `add_paragraph`,
+nested `add_table`, `add_row`/`add_column`) and the **full cell-merge matrix**
+(horizontal `gridSpan`, vertical/block `vMerge`, merge-then-set-text, the 3×3
+mixed merge) is **byte-identical to python-docx v1.2.0** (Gate-3 `s0073`–`s0082`,
+each part-level 17/17 L1) and **COM-verified in real Microsoft Word** (Word
+16.0.20228 — all five table packages open silently, merges honored, cell text
+intact, clean round-trip; `com_verify_P6_tables.md`). **Zero new D-numbers across
+all of Phase 6.** See the [`_Cell`](#id-cell) and
+[cell-merge authoring path](#id-cell-merge) sections below.
 :::
 
 :::{note}
@@ -224,11 +242,13 @@ compares against a `WD_TABLE_DIRECTION` member, the same by-name/`.value` idiom
 applies.
 
 (id-table-p6-4b)=
-**The P6-4b boundary — the cell/mutator members raise a clean stub.** The members
-that need `_Cell` (P6-4b) or are the table mutators raise `mat2doc:notYetPorted`
-naming their owner: `add_column`, `add_row` (the mutators), `cell`,
-`column_cells`, `row_cells`, `_cells` (`cells_()`). `_Cell` itself is NOT ported
-in this WP.
+**★ The P6-4b cell/mutator members are now LIVE.** The eight members that needed
+`_Cell` are all un-stubbed at P6-4b: `add_row` / `add_column` (the mutators — each
+returns a `Row_` / `Column_` over the new `<w:tr>` / `<w:gridCol>`), `cell(row,
+col)` (the grid-address accessor → a `Cell_`), `row_cells(row)` / `column_cells(col)`
+(one row's / column's cells), and `_cells` (`cells_()`, the full row-major grid).
+`_Cell` itself lands here (`Cell_.m`); the grid accessors and merge are documented
+in the [`_Cell`](#id-cell) and [cell-merge](#id-cell-merge) sections below.
 
 **Example**
 
@@ -364,20 +384,20 @@ parented proxies over a single `<w:tr>` / `<w:gridCol>`. Both are
 |---|---|---|---|---|
 | `Column_` | `width` | get/set | `_gridCol.w` | `Length \| []` (H6 EMU, H3 tri-state — `[]`-assign removes `@w:w`) |
 | `Column_` | `_index` (`index_()`) | method | `_gridCol.gridCol_idx` | 0-based grid data (H1); public method (upstream reads it) |
-| `Column_` | `cells` | — | **STUB → P6-4b** | needs `_Cell` |
+| `Column_` | `cells` | method (RO) | `Table._cells` column stride | **LIVE @ P6-4b** — `1×N` `Cell_` (the column's cells top→bottom; see [cells grid walk](#id-cell-merge)) |
 | `Row_` | `height` | get/set | `_tr.trHeight_val` | `Length \| []` (H6/H3) |
 | `Row_` | `height_rule` | get/set | `_tr.trHeight_hRule` | `WD_ROW_HEIGHT_RULE \| []` (H10/H3) |
 | `Row_` | `grid_cols_after` | get (RO) | `_tr.grid_after` | int — unpopulated grid-cols after the last cell |
 | `Row_` | `grid_cols_before` | get (RO) | `_tr.grid_before` | int — unpopulated grid-cols before the first cell |
 | `Row_` | `_index` (`index_()`) | method | `_tr.tr_idx` | 0-based row data (H1) |
-| `Row_` | `cells` | — | **STUB → P6-4b** | needs `_Cell` |
+| `Row_` | `cells` | method (RO) | `iter_tc_cells_` grid walk | **LIVE @ P6-4b** — `1×N` `Cell_` (the row's cells left→right; span-identity, see [cells grid walk](#id-cell-merge)) |
 | both | `table` | method | `_parent.table` | the owning `Table` (property-as-method) |
 
 `_index` is 0-based **data** (Python `list.index()`), already `-1`-adjusted inside
 the oxml layer; ported via a **public** `index_()` method (upstream tests read
 `_Row._index` / `_Column._index`). The single leading-underscore rotations are
-`_index`→`index_`; `Row_.cells` / `Column_.cells` are the only stubs (they build
-`_Cell` objects → P6-4b).
+`_index`→`index_`. `Row_.cells` / `Column_.cells` are **LIVE at P6-4b** — they
+build `Cell_` objects over the grid (the [cells grid walk](#id-cell-merge)).
 
 **Example**
 
@@ -397,6 +417,200 @@ disp(col.index_());                         % 0
 ```
 
 *Ported from python-docx v1.2.0: `src/docx/table.py::_Row` / `src/docx/table.py::_Column`*
+
+---
+
+(id-cell)=
+## `_Cell` — the table cell (`Cell_`)
+
+**Syntax**
+
+```matlab
+t = mat2doc.Document().add_table(2, 2, mat2doc.shared.Inches(4));
+c = t.cell(0, 0);                      % Python table.cell(0, 0) -> a Cell_
+c.text = "A";                          % replace all content with one <w:p>/<w:r> "A"
+p = c.add_paragraph("second line");    % a Paragraph appended to the cell
+inner = c.add_table(2, 2);             % a NESTED table inside the cell
+c.vertical_alignment = mat2doc.enum.table.WD_CELL_VERTICAL_ALIGNMENT.CENTER;
+c.width = mat2doc.shared.Inches(1.5);  % <w:tcW w:w="…" w:type="dxa"/>
+n = c.grid_span;                       % columns this cell spans (1 normal)
+```
+
+**Description**
+
+`Cell_` is the FLAG-3 trailing-underscore rename of python-docx's `_Cell`
+(`table.py:192`). In python-docx it is `class _Cell(BlockItemContainer)`, so it is
+`classdef Cell_ < mat2doc.BlockItemContainer` — a **block-item container** (it
+contributes the paragraph/table add+read surface from
+[`BlockItemContainer`](document.md)) **plus** the cell-specific members
+(`grid_span` / `merge` / `text` / `vertical_alignment` / `width`).
+
+**The `_tc` / `_element` dual name.** python-docx stores the wrapped `<w:tc>`
+twice — `self._tc = self._element = tc` (`table.py:198`). Mat2Doc holds it as the
+private `tc_` field (every `self._tc` site) **and** through the inherited
+`element_()` C3 seam (every `self._element` site); both are the **one** `CT_Tc`.
+Unlike `_BaseHeaderFooter` (which lazily overrides `element_()`), `_Cell` stores a
+**concrete** element, so the base `BlockItemContainer.element_()` returning the
+stored tc is exactly right — the inherited container surface (`add_paragraph` /
+`paragraphs` / `add_table` / `tables`) operates directly on the tc.
+
+(id-cell-members)=
+**The member surface.**
+
+| member | kind | delegates to | note |
+|---|---|---|---|
+| `text` | get/set | `paragraphs` join / `tc.clear_content()`+`add_p`+`add_r` | **get** = `"\n".join(p.text …)` (**no strip**, H16 latent); **set** replaces ALL content with one `<w:p>`/`<w:r>` |
+| `add_paragraph(text, style)` | method | `super().add_paragraph` | docstring override only — verbatim `BlockItemContainer` behavior (H13 defaults `""`/`[]`) |
+| `add_table(rows, cols)` | method | `super().add_table(rows, cols, width)` | a **NESTED** table; width = the cell's width, or `Inches(1)` when the cell has none (H3); a trailing empty `<w:p>` is appended (Word requires a paragraph as a cell's last block child) |
+| `grid_span` | get (RO) | `tc.grid_span` | columns this cell spans (1 normal, 2+ horizontally merged) |
+| `paragraphs` | get (RO) | `super().paragraphs` | `1×N` Paragraph; each read mints fresh views (H5) |
+| `tables` | get (RO) | `super().tables` | `1×N` Table — the base `BlockItemContainer.tables` is **un-stubbed at P6-4b** (a required dependency of `_Cell.tables`) |
+| `vertical_alignment` | get/set | `./w:tcPr/w:vAlign/@w:val` | `WD_CELL_VERTICAL_ALIGNMENT` \| `[]` (H10/H3 — get uses the RAW `tcPr`, a read never creates it; `[]`-assign removes) |
+| `width` | get/set | `tc.width` | `Length` (EMU) \| `[]` (H6/H3 — dxa twips via `CT_TblWidth`) |
+| `merge(other)` | method | `tc.merge(other._tc)` | a NEW merged `Cell_` — see [cell merge](#id-cell-merge) |
+
+:::{note}
+**`_Cell.tables` needed one dependency un-stubbed.** `_Cell.tables` is
+`super(_Cell, self).tables` (`table.py:262`), so the shared
+`BlockItemContainer.tables` (stubbed since P2-3, all deps live once `Table` landed
+at P6-4a) is un-stubbed at P6-4b. It is the single shared implementation that
+`_Cell.tables`, `Body_.tables` (inherited) all route through. `Document.tables`
+(its **own** separate stub, `document.py:221`) is left stubbed — out of the
+P6-4b 8-stub scope; its concrete owner is re-assigned to **P8-3** (the
+blkcntnr-remainder WP, the `Document.paragraphs`→P8-3 precedent).
+:::
+
+**Example**
+
+```matlab
+d = mat2doc.Document();
+t = d.add_table(2, 2);
+c = t.cell(0, 0);                              % a Cell_
+c.text = "A";                                  % one <w:p>/<w:r> "A"
+disp(c.text);                                  % A
+c.add_paragraph("p2");                         % append a second paragraph
+disp(c.text);                                  % A<newline>p2   (H16 newline-join, no strip)
+disp(numel(c.paragraphs));                     % 2
+inner = c.add_table(1, 1);                     % a NESTED table
+disp(numel(c.tables));                         % 1   (tables() un-stubbed @ P6-4b)
+disp(c.grid_span);                             % 1
+c.vertical_alignment = mat2doc.enum.table.WD_CELL_VERTICAL_ALIGNMENT.CENTER;
+disp(c.vertical_alignment == mat2doc.enum.table.WD_CELL_VERTICAL_ALIGNMENT.CENTER);  % 1
+c.vertical_alignment = [];                     % H3 -> removes w:vAlign
+disp(isempty(c.vertical_alignment));           % 1
+c.width = mat2doc.shared.Inches(1.5);
+disp(double(c.width));                          % 1371600  (1.5 in EMU)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/table.py::_Cell`*
+
+---
+
+(id-add-row-column)=
+## `Table.add_row` / `Table.add_column` / `Table.cell` — grow the table, address a cell
+
+`add_row()` appends a `<w:tr>` (one `<w:tc>` per grid column, each carrying the
+column's width) and returns the new `Row_`; `add_column(width)` appends a
+`<w:gridCol>` **and** a `<w:tc>` to **every** existing row, returning the new
+`Column_`. `cell(row, col)` addresses the `_cells` grid (`col + row*_column_count`,
+H1 `+1`) and returns the `Cell_` at that grid position (a spanned cell is returned
+at each position it covers — see [span identity](#id-cell-merge)).
+
+**Example**
+
+```matlab
+d = mat2doc.Document();
+t = d.add_table(2, 2);
+r = t.add_row();                               % a Row_ (a 3rd row)
+disp(t.rows.len_());                           % 3
+rc = r.cells;                                  % the new row's cells (1x2 Cell_)
+rc(1).text = "X";  rc(2).text = "Y";
+col = t.add_column(mat2doc.shared.Inches(1));  % a Column_ (a 3rd column)
+disp(t.columns.len_());                        % 3
+disp(t.cell(0, 0).text);                       % (row 0, col 0)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/table.py::Table.add_row` / `::Table.add_column` / `::Table.cell`*
+
+---
+
+(id-cell-merge)=
+## ★ Cell merge (`_Cell.merge`) + the cells grid walk (`_Row.cells` / `_Column.cells`)
+
+**Syntax**
+
+```matlab
+t  = mat2doc.Document().add_table(2, 2);
+m  = t.cell(0, 0).merge(t.cell(0, 1));   % horizontal merge -> a merged Cell_ (gridSpan=2)
+m.text = "merged";                        % write into the merged cell
+disp(m.grid_span);                        % 2
+```
+
+**The merge authoring path — `cell1.merge(cell2)` → `gridSpan`/`vMerge` in the
+package.** `_Cell.merge(other)` (`table.py:237`) is the faithful three-liner
+`tc = self._tc; tc_2 = other._tc; merged_tc = tc.merge(tc_2); return _Cell(merged_tc,
+self._parent)` — Mat2Doc's `merge` calls the **byte-proven `CT_Tc.merge` engine**
+(the P6-3a merge engine, risk-register #2) and returns a NEW `Cell_` over the
+top-left merged `<w:tc>`, parented to `self._parent`. The engine writes `w:gridSpan`
+(horizontal spans) and `w:vMerge` (`restart` on the top cell, a **bare `<w:vMerge/>`**
+continuation below) into the package. If the requested region is not rectangular it
+raises `mat2doc:InvalidSpanError` ("requested span not rectangular"), verbatim.
+
+:::{important}
+**★ The cell merge is byte-identical to python-docx and COM-verified.**
+`cell1.merge(cell2)` through the full public API produces the **exact**
+python-docx `word/document.xml` bytes across every merge geometry (Gate-3
+`s0077`–`s0082`, each part-level 17/17 L1): horizontal `gridSpan`
+(`9f626e2b…`), vertical `vMerge` (`e833fac8…`), 2×2 block (`ac155531…`),
+merge-then-set-text (`c96a3351…`), and the 3×3 mixed merge with populated span
+cells (`63b25b1a…`). **All merge shapes open clean in real Microsoft Word** (Word
+16.0.20228; `com_verify_P6_tables.md`): the horizontal `gridSpan=2` reads as one
+wide cell over two, the 2×2 block collapses to a single merged cell, and the 3×3
+mixed merge lays out with the four labels (TL/TR/BLK/V) in the correct span
+geometry — no repair prompt, no dropped content, clean round-trip. **Zero new
+D-numbers.**
+:::
+
+**The cells grid walk — a merged cell is the SAME handle at each spanned grid
+position (H5).** `_Row.cells` and `Table._cells` build the grid by **repeating one
+`Cell_` handle** across every grid position a spanned cell covers, exactly as
+python-docx's `_cells` repeats one `_Cell` reference. `Cell_` is a **handle class**,
+so two accesses of a spanned position compare `==` (handle identity), matching
+lxml's same-tc-same-`_Cell` semantics. A horizontal span appends the one handle
+`grid_span` times; a `vMerge="continue"` continuation recurses to the `_tc_above`
+span root (the private `iter_tc_cells_`), so the continuation position yields the
+**root** cell's handle. The span-identity partition is independently proven at both
+the handle level and the byte level — the 3×3 mixed-merge grid partition
+`[0,0,2,3,3,5,3,3,5]` (first-identity index repeated at each spanned position) is
+byte-companioned by `s0082` (17/17 L1 vs python-docx), and text written through a
+**non-root** grid position lands in the span-root `<w:tc>` in both the handle read
+and the serialized bytes.
+
+:::{note}
+**Fresh wrappers per access (VERIFY-2 — faithful, not a deviation).** Each
+`cells` / `cell(…)` / `*_cells` call mints **fresh** `Cell_` wrappers, so cells
+compared **across two separate accesses** are `~=` — exactly as python-docx's
+recomputed `_cells` `@property` gives `table.cell(1,2) is table._cells[5]` →
+`False`. Within a **single** access, span identity is preserved exactly. The
+serialized bytes are unaffected. NOT a D-number.
+:::
+
+**Example**
+
+```matlab
+d = mat2doc.Document();
+t = d.add_table(2, 2);
+m = t.cell(0, 0).merge(t.cell(0, 1));          % horizontal merge (gridSpan=2)
+disp(m.grid_span);                             % 2
+m.text = "merged";                             % write into the merged cell
+disp(t.cell(0, 0).text);                       % merged
+row0 = t.rows.getitem_(0).cells;               % the merged row -> SAME handle twice
+disp(row0(1) == row0(2));                       % 1   (span identity, H5)
+row1 = t.rows.getitem_(1).cells;               % the unmerged row -> distinct handles
+disp(row1(1) == row1(2));                       % 0
+```
+
+*Ported from python-docx v1.2.0: `src/docx/table.py::_Cell.merge` / `::_Row.cells` / `::_Column.cells`*
 
 ---
 
@@ -428,17 +642,25 @@ disp(class(sitems{1}));                     % mat2doc.table.Table (no notYetPort
 
 ---
 
-## Table API live — `_Cell.merge` + add_row/add_column + the Word-COM sweep (P6-4b) close Phase 6
+## ★ PHASE 6 COMPLETE — the full table tier is byte-proven end-to-end and COM-verified
 
-P6-4a lands the table **API surface**: the `Table` proxy (alignment [A2],
-autofit, style, table_direction, rows/columns, `_column_count`), the row/column
-collections (`Rows_`/`Columns_` — the 0-based `getitem_` int/negative/slice,
-`to_array`, `len_`) and the single-row/column proxies (`Row_`/`Column_` —
-width/height/height_rule/grid_cols_*/`_index`), plus the **authoring path**
-(`Document.add_table` / `BlockItemContainer.add_table` + the `iter_inner_content`
-sites, byte-proven). It is behavioral + un-stub with **no registry rows**,
-byte-neutral (M1 17/17, `document.xml` unchanged on a bare save), and carries
-**zero new D-numbers**. The final Phase-6 tier — **P6-4b**, `_Cell.merge` +
-`add_row` / `add_column` (the cell-merge + grow API) and the **table Word-COM
-sweep** (a plain grid — now P6-4a-reachable — **and** a merged-cell package,
-`gridSpan` + `vMerge`, COM-verified in real Word) — closes Phase 6.
+P6-4a landed the table **API surface** (the `Table` proxy + the `Rows_`/`Columns_`
+collections + the `Row_`/`Column_` proxies + the `add_table` authoring path);
+**P6-4b** closes it with `_Cell` (with `.merge`), `Table.add_row`/`add_column`, and
+`_Row.cells`/`_Column.cells` — un-stubbing the 8 P6-4a table stubs plus the required
+`BlockItemContainer.tables`. Both are behavioral + un-stub with **no registry rows**,
+byte-neutral (M1 17/17, `document.xml` unchanged on a bare save), and carry **zero
+new D-numbers**.
+
+With P6-4b, **Phase 6 (tables) is COMPLETE**: the table **oxml layer** (14
+`oxml/table.py` element classes — 7 leaves P6-1 + 4 property containers P6-2 +
+`CT_Tc`/`CT_TcPr` the merge engine P6-3a + `CT_Tbl` P6-3b), the table **API tier**
+(`Table` / `_Rows` / `_Columns` / `_Row` / `_Column` / `_Cell`), and the full
+**authoring surface** (`add_table` / `add_row` / `add_column` / `merge`) are all
+byte-proven end-to-end against python-docx v1.2.0 and **COM-verified in real
+Microsoft Word** (all five table packages — plain, styled, horizontal-merge,
+block-merge, 3×3 mixed-merge — open clean, merges honored, cell text intact;
+`com_verify_P6_tables.md`). The **`CT_Tc` merge engine** — the project's
+risk-register #2 and the single hardest WP — is byte-identical across the entire
+merge matrix. **Zero new D-numbers across all of Phase 6.** Next: **Phase 7**
+(images / drawing / inline pictures).
