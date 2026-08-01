@@ -330,19 +330,24 @@ classdef Test_p7_1b_png_gif_bmp < matlab.unittest.TestCase
             testCase.verifyEqual(double(bmpImg.px_width), 211, 'BMP dispatch parsed px_width');
             testCase.verifyEqual(double(bmpImg.horz_dpi), 96, 'BMP dispatch dpi 96 (reverted)');
 
-            % Jfif / Exif / Tiff signatures STILL notYetPorted (P7-2).
+            % Jfif / Exif signatures STILL notYetPorted (P7-2b jpeg).
             jfif = uint8([255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)]);
             exif = uint8([255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)]);
+            verifyRaises(testCase, @() mat2doc.image.Image.from_blob(jfif), ...
+                'mat2doc:notYetPorted', 'JFIF still notYetPorted (P7-2b)');
+            verifyRaises(testCase, @() mat2doc.image.Image.from_blob(exif), ...
+                'mat2doc:notYetPorted', 'Exif still notYetPorted (P7-2b)');
+
+            % TIFF_MM/TIFF_II signatures -- RE-PINNED at P7-2a: the real Tiff parser
+            % (un-stubbed) reads a bogus IFD (entry_count 19789/18761 from the
+            % 'MM'/'II' bytes) and runs past the 32-byte signature-only blob ->
+            % mat2doc:UnexpectedEndOfFileError (was notYetPorted at P7-1b).
             tiffMM = uint8([77 77 0 42, zeros(1, 28)]);
             tiffII = uint8([73 73 42 0, zeros(1, 28)]);
-            verifyRaises(testCase, @() mat2doc.image.Image.from_blob(jfif), ...
-                'mat2doc:notYetPorted', 'JFIF still notYetPorted (P7-2)');
-            verifyRaises(testCase, @() mat2doc.image.Image.from_blob(exif), ...
-                'mat2doc:notYetPorted', 'Exif still notYetPorted (P7-2)');
             verifyRaises(testCase, @() mat2doc.image.Image.from_blob(tiffMM), ...
-                'mat2doc:notYetPorted', 'TIFF(MM) still notYetPorted (P7-2)');
+                'mat2doc:UnexpectedEndOfFileError', 'TIFF(MM) now dispatches to the real Tiff parser (P7-2a)');
             verifyRaises(testCase, @() mat2doc.image.Image.from_blob(tiffII), ...
-                'mat2doc:notYetPorted', 'TIFF(II) still notYetPorted (P7-2)');
+                'mat2doc:UnexpectedEndOfFileError', 'TIFF(II) now dispatches to the real Tiff parser (P7-2a)');
         end
 
         % =============================================================== %

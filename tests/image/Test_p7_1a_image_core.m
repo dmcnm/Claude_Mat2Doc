@@ -491,17 +491,22 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_factory_dispatch_to_stubs(testCase)
-            % Edge (RE-PINNED at P7-1b, 2026-08-01): the 8 SIGNATURES rows dispatch
-            % a recognized signature to its format parser. At P7-1a all 6 parsers
-            % were notYetPorted stubs; P7-1b un-stubs PNG/GIF/BMP, so those rows now
-            % dispatch to the REAL parsers (Jfif/Exif/Tiff stay notYetPorted, P7-2).
+            % Edge (RE-PINNED at P7-1b then P7-2a, 2026-08-01): the 8 SIGNATURES
+            % rows dispatch a recognized signature to its format parser. At P7-1a
+            % all 6 parsers were notYetPorted stubs; P7-1b un-stubs PNG/GIF/BMP and
+            % P7-2a un-stubs TIFF, so those rows now dispatch to the REAL parsers
+            % (only Jfif/Exif stay notYetPorted, P7-2b jpeg).
             % Expected behaviour per row on the crafted signature-only blob:
             %   * PNG/BMP -> the real parser hits EOF on the all-zeros blob ->
             %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted).
             %   * GIF87/GIF89 -> the real Gif parser PARSES SUCCESSFULLY (seek 6,
             %     read 4 zero bytes -> px 0x0, dpi 72/72); Image.from_blob RETURNS
-            %     an Image, so there is NO error to catch. (Gate-3 re-pin item 1.)
-            %   * TIFF/JFIF/Exif -> still mat2doc:notYetPorted (P7-2).
+            %     an Image, so there is NO error to catch. (P7-1b re-pin.)
+            %   * TIFF_MM/TIFF_II -> RE-PINNED at P7-2a: the real Tiff parser reads
+            %     a bogus IFD (entry_count 19789/18761 from the 'MM'/'II' bytes) and
+            %     runs past the 32-byte signature-only blob ->
+            %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted). (P7-2a re-pin item 1.)
+            %   * JFIF/Exif -> still mat2doc:notYetPorted (P7-2b jpeg).
             % kind: 'eof' expects UnexpectedEndOfFileError; 'parse' expects a
             % successful Image return; 'nyp' expects notYetPorted.
             cases = { ...
@@ -509,8 +514,8 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
                 'GIF87',   [double('GIF87a'), zeros(1, 26)],                'parse'; ...
                 'GIF89',   [double('GIF89a'), zeros(1, 26)],                'parse'; ...
                 'BMP',     [double('BM'), zeros(1, 30)],                    'eof'; ...
-                'TIFF_MM', [77 77 0 42, zeros(1, 28)],                      'nyp'; ...
-                'TIFF_II', [73 73 42 0, zeros(1, 28)],                      'nyp'; ...
+                'TIFF_MM', [77 77 0 42, zeros(1, 28)],                      'eof'; ...
+                'TIFF_II', [73 73 42 0, zeros(1, 28)],                      'eof'; ...
                 'JFIF',    [255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)], 'nyp'; ...
                 'Exif',    [255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)], 'nyp'};
             for k = 1:size(cases, 1)
@@ -547,22 +552,25 @@ classdef Test_p7_1a_image_core < matlab.unittest.TestCase
         end
 
         function test_parser_stubs_raise_notyetported_directly(testCase)
-            % Edge (RE-PINNED at P7-1b, 2026-08-01): direct format-parser calls on
-            % a 4-byte garbage stream. P7-1b un-stubbed Png/Gif/Bmp, so they no
-            % longer raise notYetPorted -- they run the real parser:
+            % Edge (RE-PINNED at P7-1b then P7-2a, 2026-08-01): direct format-parser
+            % calls on a 4-byte garbage stream. P7-1b un-stubbed Png/Gif/Bmp and
+            % P7-2a un-stubbed Tiff, so they no longer raise notYetPorted -- they
+            % run the real parser:
             %   * Png/Bmp -> mat2doc:UnexpectedEndOfFileError (real parser hits EOF).
             %   * Gif -> MATLAB:badsubscript (seek(6) past EOF, read(4) empty,
             %     bytes_(1) bad subscript -- an incidental corrupt-input error class,
             %     unreachable via a well-formed factory dispatch; audit section 6.2).
-            %   * Jfif/Exif/Tiff -> still mat2doc:notYetPorted (P7-2). (Gate-3
-            %     re-pin item 2.)
+            %   * Tiff -> RE-PINNED at P7-2a: endian II, TiffParser_.parse's
+            %     read_long(4) seeks past the 4-byte stream -> EOF ->
+            %     mat2doc:UnexpectedEndOfFileError (NOT notYetPorted). (P7-2a re-pin item 2.)
+            %   * Jfif/Exif -> still mat2doc:notYetPorted (P7-2b jpeg).
             stream = @() mat2doc.image.BytesIO(uint8([0 0 0 0]));
             stubs = { ...
                 'Png',  @() mat2doc.image.Png.from_stream(stream()),  'mat2doc:UnexpectedEndOfFileError'; ...
                 'Jfif', @() mat2doc.image.Jfif.from_stream(stream()), 'mat2doc:notYetPorted'; ...
                 'Exif', @() mat2doc.image.Exif.from_stream(stream()), 'mat2doc:notYetPorted'; ...
                 'Gif',  @() mat2doc.image.Gif.from_stream(stream()),  'MATLAB:badsubscript'; ...
-                'Tiff', @() mat2doc.image.Tiff.from_stream(stream()), 'mat2doc:notYetPorted'; ...
+                'Tiff', @() mat2doc.image.Tiff.from_stream(stream()), 'mat2doc:UnexpectedEndOfFileError'; ...
                 'Bmp',  @() mat2doc.image.Bmp.from_stream(stream()),  'mat2doc:UnexpectedEndOfFileError'};
             for k = 1:size(stubs, 1)
                 lbl   = stubs{k, 1};
