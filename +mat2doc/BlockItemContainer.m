@@ -16,16 +16,15 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
 %   mirroring `from docx.blkcntnr import BlockItemContainer`. It does NOT collide
 %   with the +mat2doc\Document.m factory function (distinct names).
 %
-%   LIVE vs STUB (P2-3 + P4-7b):
+%   LIVE vs STUB (P2-3 + P4-7b + P6-4a + P6-4b):
 %     LIVE  -- the container wiring: __init__(element, parent) storing _element
-%              (rotated element_) and delegating parent to StoryChild; AND the
+%              (rotated element_) and delegating parent to StoryChild; the
 %              paragraph surface add_paragraph / _add_paragraph (add_paragraph_) /
-%              paragraphs, un-stubbed at P4-7b now that Paragraph (P4-5b),
-%              add_run and style are all live over the LIVE CT_Body.add_p() /
-%              p_lst (P2-3).
-%     STUB  -- add_table / tables (need CT_Tbl + Table, P6) and iter_inner_content
-%              (heterogeneous Paragraph|Table -- still stubs at the Table P6
-%              boundary though Paragraph is now live).
+%              paragraphs (P4-7b); add_table / iter_inner_content (P6-4a); AND
+%              tables (P6-4b) -- un-stubbed now that Table (P6-4a) is live. This
+%              tables() is the shared implementation _Cell.tables / Body_.tables /
+%              (via delegation) Document.tables route through.
+%     STUB  -- (none) the container block-item surface is fully ported.
 %
 %   UNDERSCORE ROTATION (design.md section 2): _element -> element_,
 %   _add_paragraph -> add_paragraph_.
@@ -176,13 +175,22 @@ classdef BlockItemContainer < mat2doc.shared.StoryChild
             end
         end
 
-        function ts = tables(obj) %#ok<MANU,STOUT>
-            % TABLES STUB (blkcntnr.py 89-97). Owner: P6 table tier.
-            %   Faithful body: [Table(tbl, self) for tbl in self._element.tbl_lst].
-            %   CT_Body.tbl_lst is LIVE; the Table construction is the boundary.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Table (owning WP: P6 table tier) required by " + ...
-                "mat2doc.BlockItemContainer.tables");
+        function ts = tables(obj)
+            % TABLES A list of the tables in this container, in document order
+            %   (blkcntnr.py 89-97, @property, read-only). UN-STUBBED at P6-4b now
+            %   that Table (P6-4a) is live -- this is the shared implementation
+            %   _Cell.tables / Body_.tables / (via delegation) Document.tables all
+            %   route through. Python: [Table(tbl, self) for tbl in
+            %   self._element.tbl_lst]. A homogeneous 1xN Table array; each mints a
+            %   FRESH Table view (H5). CT_Body.tbl_lst is LIVE (P2-3); empty -> a
+            %   1x0 Table array.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/blkcntnr.py::BlockItemContainer.tables
+            tbllst = obj.element_().tbl_lst;   % C3 seam; LIVE tbl_lst
+            ts = mat2doc.table.Table.empty(1, 0);
+            for k = 1:numel(tbllst)   % Python: for tbl in self._element.tbl_lst
+                ts(k) = mat2doc.table.Table(tbllst(k), obj);   % Table(tbl, self)
+            end
         end
     end
 

@@ -1,0 +1,86 @@
+{
+  "cell_props": {
+    "default_text": "",
+    "grid_span": "1",
+    "valign_default": "None",
+    "width_default": "2743200",
+    "paragraphs_len": "1",
+    "tables_len": "0",
+    "after_set_text": "hi",
+    "after_valign_center": "CENTER",
+    "after_valign_none": "None",
+    "after_width_inches2": "1828800",
+    "add_paragraph_ret_text": "p2",
+    "paragraphs_len_after_add": "2",
+    "multi_para_text": "hi\np2",
+    "tables_len_after_nested": "1"
+  },
+  "merge_props": {
+    "grid_span": "2",
+    "merged_text": "merged"
+  },
+  "return_types": {
+    "add_row_index": "2",
+    "add_row_cells_len": "2",
+    "add_col_index": "2",
+    "add_col_cells_len": "2"
+  },
+  "grid_walk": {
+    "partition": [
+      0,
+      0,
+      2,
+      3,
+      3,
+      5,
+      3,
+      3,
+      5
+    ],
+    "texts": [
+      "TL",
+      "TL",
+      "TR",
+      "BLK",
+      "BLK",
+      "V",
+      "BLK",
+      "BLK",
+      "V"
+    ],
+    "cell_texts": [
+      "TL",
+      "TL",
+      "TR",
+      "BLK",
+      "BLK",
+      "V",
+      "BLK",
+      "BLK",
+      "V"
+    ],
+    "row_lens": [
+      3,
+      3,
+      3
+    ],
+    "row_parts": [
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "cross_access_same": "False"
+  }
+}

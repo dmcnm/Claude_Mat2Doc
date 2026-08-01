@@ -53,13 +53,11 @@ classdef Table < mat2doc.shared.StoryChild
 %   value (a WD_TABLE_DIRECTION member; CT_Tbl handles bool(value) H4/H10).
 %
 %   ========================= P6-4a vs P6-4b BOUNDARY ============================
-%   LIVE (P6-4a, this WP): alignment (A2), autofit, columns, rows, style,
-%   table (returns self), table_direction, _column_count (column_count_),
-%   _tblPr (tblPr_). Everything reading the table's read structure ports fully.
-%   STUB -> P6-4b (need _Cell, which is P6-4b): add_column, add_row (the
-%   mutators), cell, column_cells, row_cells, _cells. Each raises a clean
-%   mat2doc:notYetPorted naming its owner (P6-4b). _Cell itself is NOT ported in
-%   this WP (no Cell_.m file); it lands with P6-4b.
+%   LIVE (P6-4a): alignment (A2), autofit, columns, rows, style, table (returns
+%   self), table_direction, _column_count (column_count_), _tblPr (tblPr_).
+%   UN-STUBBED at P6-4b (now that Cell_ is ported): add_column, add_row (the
+%   mutators), cell, column_cells, row_cells, _cells (cells_). The whole table
+%   tier is now live end-to-end (cell content + cell merge reachable).
 %
 %   UNDERSCORE ROTATION (design.md section 2): _element -> element_, _tbl -> tbl_,
 %   _column_count -> column_count_, _tblPr -> tblPr_. Python single-underscore
@@ -115,26 +113,63 @@ classdef Table < mat2doc.shared.StoryChild
             obj.tbl_ = tbl;
         end
 
-        % ============================ add_column (STUB -> P6-4b) ============================
-        function col = add_column(obj, width) %#ok<INUSD,STOUT>
-            % ADD_COLUMN STUB (table.py 37-45). Owner: P6-4b (the mutators).
-            %   Faithful body: tblGrid = self._tbl.tblGrid; gridCol =
-            %   tblGrid.add_gridCol(); gridCol.w = width; for tr in self._tbl.tr_lst:
-            %   tc = tr.add_tc(); tc.width = width; return _Column(gridCol, self).
-            %   CT_Tc.width and the returned _Cell-free _Column exist, but add_column
-            %   is grouped with the P6-4b mutators per the WP split.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Table.add_column (owning WP: P6-4b table mutators)");
+        % ============================ add_column (LIVE P6-4b) ============================
+        function col = add_column(obj, width)
+            % ADD_COLUMN A Column_ of `width`, newly added rightmost to the table
+            %   (table.py 37-45). UN-STUBBED at P6-4b. Adds a <w:gridCol> to the
+            %   grid, sets its width, then appends a <w:tc> of the same width to
+            %   every row.
+            %
+            %   Python (table.py 39-45):
+            %     tblGrid = self._tbl.tblGrid
+            %     gridCol = tblGrid.add_gridCol()
+            %     gridCol.w = width
+            %     for tr in self._tbl.tr_lst:
+            %         tc = tr.add_tc()
+            %         tc.width = width
+            %     return _Column(gridCol, self)
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table.add_column
+            tblGrid = obj.tbl_.tblGrid;              % Python: tblGrid = self._tbl.tblGrid
+            gridCol = tblGrid.add_gridCol();         % Python: gridCol = tblGrid.add_gridCol()
+            gridCol.w = width;                       % Python: gridCol.w = width
+            trs = obj.tbl_.tr_lst;
+            for k = 1:numel(trs)                     % Python: for tr in self._tbl.tr_lst
+                tc = trs(k).add_tc();                % Python: tc = tr.add_tc()
+                tc.width = width;                    % Python: tc.width = width
+            end
+            col = mat2doc.table.Column_(gridCol, obj);   % Python: return _Column(gridCol, self)
         end
 
-        % ============================ add_row (STUB -> P6-4b) ============================
-        function row = add_row(obj) %#ok<MANU,STOUT>
-            % ADD_ROW STUB (table.py 47-55). Owner: P6-4b (the mutators).
-            %   Faithful body: tbl = self._tbl; tr = tbl.add_tr(); for gridCol in
-            %   tbl.tblGrid.gridCol_lst: tc = tr.add_tc(); if gridCol.w is not None:
-            %   tc.width = gridCol.w; return _Row(tr, self).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Table.add_row (owning WP: P6-4b table mutators)");
+        % ============================ add_row (LIVE P6-4b) ============================
+        function row = add_row(obj)
+            % ADD_ROW A Row_ newly added bottom-most to the table (table.py 47-55).
+            %   UN-STUBBED at P6-4b. Appends a <w:tr> with one <w:tc> per grid
+            %   column; each new cell takes the corresponding column's width when
+            %   that column has an explicit width.
+            %
+            %   Python (table.py 49-55):
+            %     tbl = self._tbl
+            %     tr = tbl.add_tr()
+            %     for gridCol in tbl.tblGrid.gridCol_lst:
+            %         tc = tr.add_tc()
+            %         if gridCol.w is not None:
+            %             tc.width = gridCol.w
+            %     return _Row(tr, self)
+            %   H3: `gridCol.w is not None` -> ~isequal(w, []).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table.add_row
+            tbl = obj.tbl_;                          % Python: tbl = self._tbl
+            tr = tbl.add_tr();                       % Python: tr = tbl.add_tr()
+            gridCols = tbl.tblGrid.gridCol_lst;
+            for k = 1:numel(gridCols)                % Python: for gridCol in tbl.tblGrid.gridCol_lst
+                tc = tr.add_tc();                    % Python: tc = tr.add_tc()
+                w = gridCols(k).w;
+                if ~isequal(w, [])                   % Python: if gridCol.w is not None (H3)
+                    tc.width = w;                    % Python: tc.width = gridCol.w
+                end
+            end
+            row = mat2doc.table.Row_(tr, obj);       % Python: return _Row(tr, self)
         end
 
         % ============================ alignment (A2 cross-enum) ============================
@@ -159,22 +194,49 @@ classdef Table < mat2doc.shared.StoryChild
             obj.tblPr_().autofit = value;     % Python: self._tblPr.autofit = value
         end
 
-        % ============================ cell (STUB -> P6-4b) ============================
-        function c = cell(obj, row_idx, col_idx) %#ok<INUSD,STOUT>
-            % CELL STUB (table.py 85-91). Owner: P6-4b (_Cell).
-            %   Faithful body: cell_idx = col_idx + (row_idx * self._column_count);
-            %   return self._cells[cell_idx]. Needs _cells (a _Cell sequence), P6-4b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Table.cell");
+        % ============================ cell (LIVE P6-4b) ============================
+        function c = cell(obj, row_idx, col_idx)
+            % CELL The Cell_ at the (row_idx, col_idx) intersection; (0, 0) is the
+            %   top, left-most cell (table.py 85-91). UN-STUBBED at P6-4b. Both
+            %   indices are 0-based DATA (Python's public row/col addressing).
+            %
+            %   Python (table.py 90-91):
+            %     cell_idx = col_idx + (row_idx * self._column_count)
+            %     return self._cells[cell_idx]
+            %   H1: cell_idx is a 0-based index into _cells -> +1 for the 1-based
+            %   MATLAB list. row_idx/col_idx are RAW 0-based grid DATA.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table.cell
+            cell_idx = col_idx + (row_idx * obj.column_count_());   % Python: 0-based cell_idx
+            cells = obj.cells_();                                   % Python: self._cells
+            c = cells(cell_idx + 1);   % IDX: 0-based cell_idx -> 1-based
         end
 
-        % ============================ column_cells (STUB -> P6-4b) ============================
-        function cells = column_cells(obj, column_idx) %#ok<INUSD,STOUT>
-            % COLUMN_CELLS STUB (table.py 93-97). Owner: P6-4b (_Cell).
-            %   Faithful body walks self._cells at self._column_count stride. Needs
-            %   _cells (a _Cell sequence), P6-4b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Table.column_cells");
+        % ============================ column_cells (LIVE P6-4b) ============================
+        function cells = column_cells(obj, column_idx)
+            % COLUMN_CELLS The Cell_ sequence in the column at `column_idx`
+            %   (table.py 93-97). UN-STUBBED at P6-4b. Walks _cells at a
+            %   _column_count stride starting from column_idx.
+            %
+            %   Python (table.py 95-97):
+            %     cells = self._cells
+            %     idxs = range(column_idx, len(cells), self._column_count)
+            %     return [cells[idx] for idx in idxs]
+            %   H1: range() yields 0-based indices into _cells (start=column_idx,
+            %   stop=len exclusive, step=_column_count) -> the MATLAB colon
+            %   `column_idx : column_count : (numel-1)` reproduces it (colon includes
+            %   <= numel-1, matching Python `< len`); each index +1 for the 1-based
+            %   list.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table.column_cells
+            all_cells = obj.cells_();                 % Python: cells = self._cells
+            column_count = obj.column_count_();       % Python: self._column_count
+            % Python: idxs = range(column_idx, len(cells), column_count) (0-based)
+            idxs = column_idx : column_count : (numel(all_cells) - 1);
+            cells = mat2doc.table.Cell_.empty(1, 0);
+            for k = 1:numel(idxs)                     % Python: [cells[idx] for idx in idxs]
+                cells(k) = all_cells(idxs(k) + 1);    % IDX: 0-based idx -> 1-based
+            end
         end
 
         % ============================ columns (@lazyproperty) ============================
@@ -189,14 +251,28 @@ classdef Table < mat2doc.shared.StoryChild
             value = obj.columns_cache_;
         end
 
-        % ============================ row_cells (STUB -> P6-4b) ============================
-        function cells = row_cells(obj, row_idx) %#ok<INUSD,STOUT>
-            % ROW_CELLS STUB (table.py 104-112). Owner: P6-4b (_Cell).
-            %   DEPRECATED in python-docx (use table.rows[row_idx].cells). Faithful
-            %   body slices self._cells[start:end]. Needs _cells (a _Cell sequence),
-            %   P6-4b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Table.row_cells");
+        % ============================ row_cells (LIVE P6-4b) ============================
+        function cells = row_cells(obj, row_idx)
+            % ROW_CELLS The Cell_ sequence in the row at `row_idx` (table.py
+            %   104-112). DEPRECATED in python-docx (use rows[row_idx].cells) but
+            %   ported faithfully. UN-STUBBED at P6-4b.
+            %
+            %   Python (table.py 109-112):
+            %     column_count = self._column_count
+            %     start = row_idx * column_count
+            %     end = start + column_count
+            %     return self._cells[start:end]
+            %   H1: start/end are 0-based; the CPython slice cells[start:end] ->
+            %   1-based cells(start+1 : end) (end is exclusive 0-based == inclusive
+            %   1-based).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table.row_cells
+            column_count = obj.column_count_();       % Python: column_count = self._column_count
+            start = row_idx * column_count;           % Python: start (0-based)
+            finish = start + column_count;            % Python: end (0-based, exclusive)
+            all_cells = obj.cells_();
+            % Python: return self._cells[start:end] -> cells(start+1 : finish)
+            cells = all_cells((start + 1) : finish);  % IDX
         end
 
         % ============================ rows (@lazyproperty) ============================
@@ -254,13 +330,47 @@ classdef Table < mat2doc.shared.StoryChild
     end
 
     methods  % property-as-method ports of the single-underscore @property members
-        function cells = cells_(obj) %#ok<MANU,STOUT>
-            % _CELLS STUB (table.py 163-180). Owner: P6-4b (_Cell).
-            %   A _Cell per layout-grid cell (repeated references for spans). The
-            %   whole body constructs _Cell objects, so it defers to P6-4b.
-            %   Underscore rotation: _cells -> cells_.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Table._cells");
+        function cells = cells_(obj)
+            % _CELLS A Cell_ per layout-grid cell (table.py 163-180). UN-STUBBED at
+            %   P6-4b. Where the table contains a span, one or more Cell_ references
+            %   are REPEATED -- the SAME Cell_ handle appears at each grid position it
+            %   covers (H5 identity: the wrapper is the node). Underscore rotation:
+            %   _cells -> cells_.
+            %
+            %   Python (table.py 170-180):
+            %     col_count = self._column_count
+            %     cells = []
+            %     for tc in self._tbl.iter_tcs():
+            %         for grid_span_idx in range(tc.grid_span):
+            %             if tc.vMerge == ST_Merge.CONTINUE:
+            %                 cells.append(cells[-col_count])   # the cell directly above
+            %             elif grid_span_idx > 0:
+            %                 cells.append(cells[-1])           # the cell to the left
+            %             else:
+            %                 cells.append(_Cell(tc, self))     # a fresh cell
+            %     return cells
+            %   H5: appending an existing Cell_ handle (cells[-col_count]/cells[-1])
+            %   stores the SAME reference, so a spanned cell reads identical (==) at
+            %   every covered grid position. H1: cells[-col_count] -> the current
+            %   array's element col_count from the end == cells(end - col_count + 1);
+            %   cells[-1] -> cells(end). ST_Merge.CONTINUE == "continue".
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::Table._cells
+            col_count = obj.column_count_();          % Python: col_count = self._column_count
+            cells = mat2doc.table.Cell_.empty(1, 0);
+            tcs = obj.tbl_.iter_tcs();                 % Python: self._tbl.iter_tcs()
+            for i = 1:numel(tcs)                       % Python: for tc in ...
+                tc = tcs(i);
+                for grid_span_idx = 0:(tc.grid_span - 1)   % Python: range(tc.grid_span)
+                    if isequal(tc.vMerge, "continue")      % Python: tc.vMerge == ST_Merge.CONTINUE
+                        cells(end + 1) = cells(end - col_count + 1); %#ok<AGROW> % cells[-col_count] (IDX)
+                    elseif grid_span_idx > 0
+                        cells(end + 1) = cells(end);         %#ok<AGROW> % cells[-1]
+                    else
+                        cells(end + 1) = mat2doc.table.Cell_(tc, obj); %#ok<AGROW> % _Cell(tc, self)
+                    end
+                end
+            end
         end
 
         function n = column_count_(obj)

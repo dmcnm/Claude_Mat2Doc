@@ -55,12 +55,14 @@ classdef Column_ < mat2doc.shared.Parented
             obj.gridCol_ = gridCol;                 % Python: self._gridCol = gridCol
         end
 
-        function c = cells(obj) %#ok<MANU,STOUT>
-            % CELLS STUB (table.py 322-325). Owner: P6-4b (_Cell).
-            %   Faithful body: return tuple(self.table.column_cells(self._index)).
-            %   column_cells builds _Cell objects, so this defers to P6-4b.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.table.Cell_ (owning WP: P6-4b) required by mat2doc.table.Column_.cells");
+        function c = cells(obj)
+            % CELLS The Cell_ sequence for this column (table.py 322-325).
+            %   UN-STUBBED at P6-4b. Python: return tuple(
+            %   self.table.column_cells(self._index)). Delegates to
+            %   Table.column_cells at this column's 0-based grid index (H1 DATA).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/table.py::_Column.cells
+            c = obj.table().column_cells(obj.index_());   % Python: self.table.column_cells(self._index)
         end
 
         function value = table(obj)

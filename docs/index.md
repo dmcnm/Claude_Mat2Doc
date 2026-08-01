@@ -356,10 +356,30 @@ syntax, description, example, ported-from).
   so `Document().save()` stays M1 17/17. **★ The FIRST end-to-end table is now
   byte-proven** — `document.add_table(2, 3)` → `word/document.xml` byte-identical
   to python-docx (`a1eda043…`, `styles.xml` unchanged; with a style →
-  `<w:tblStyle>` + `styles.xml` gains the style), **0 new D-numbers**. The **table
-  READ/authoring API is live**; `_Cell.merge` + add_row/add_column + the table
-  Word-COM sweep (**P6-4b**) close Phase 6. See the
+  `<w:tblStyle>` + `styles.xml` gains the style), **0 new D-numbers**. **P6-4b**
+  then closes the tier: `mat2doc.table.Cell_` (the `_Cell` FLAG-3 rename — `text`
+  get/set, `add_paragraph`, nested `add_table`, `grid_span`, `paragraphs`,
+  `tables`, `vertical_alignment`, `width`, and **`merge`**), `Table.add_row` /
+  `add_column`, and `_Row.cells` / `_Column.cells` (the cells grid walk), un-stubbing
+  the 8 P6-4a stubs plus the required `BlockItemContainer.tables`. **★ Cell merge:**
+  `cell1.merge(cell2)` drives `gridSpan`/`vMerge` into the package — byte-identical
+  to python-docx across every geometry (horizontal `9f626e2b…`, vertical
+  `e833fac8…`, 2×2 block `ac155531…`, merge-then-text `c96a3351…`, the 3×3 mixed
+  merge `63b25b1a…`) and **COM-verified in real Word** (all five table packages open
+  clean, merges honored). A merged cell is the **SAME `Cell_` handle** at each
+  spanned grid position (H5). **0 new D-numbers.** See the
   [table API page](api/table_api.md).
+- **★ PHASE 6 COMPLETE (tables) — 2026-08-01.** The full table tier is byte-proven
+  end-to-end and COM-verified: the table **oxml layer** (14 classes — leaves,
+  property containers, the `CT_Tc` merge engine, `CT_Tbl`), the **API tier**
+  (`Table`/`_Rows`/`_Columns`/`_Row`/`_Column`/`_Cell`), and the full **authoring
+  surface** (`add_table`/`add_row`/`add_column`/`merge`). The **`CT_Tc` merge
+  engine** — risk-register #2, the single hardest WP of the port — is byte-identical
+  across the entire merge matrix and its outputs open clean in real Microsoft Word
+  (Word 16.0.20228: plain, styled, horizontal-merge, block-merge and 3×3
+  mixed-merge packages all open silently with merges honored and text intact —
+  `com_verify_P6_tables.md`). **Zero new D-numbers across all of Phase 6.** Next:
+  **Phase 7** (images / drawing / inline pictures).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

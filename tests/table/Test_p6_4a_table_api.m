@@ -47,10 +47,12 @@ classdef Test_p6_4a_table_api < matlab.unittest.TestCase
 %       messages ("column index [3]/[-9] is out of range" with the ORIGINAL idx;
 %       "list index out of range"); width/height/height_rule get/set + None;
 %       _index (0-based DATA); grid_cols_before/after; the CPython slice port.
-%     * (BOUNDARY) test_p6_4b_stubs -- the 8 P6-4b-owned members (add_column,
+%     * (BOUNDARY) test_p6_4b_members_live -- the 8 P6-4b-owned members (add_column,
 %       add_row, cell, column_cells, row_cells, _cells, _Row.cells, _Column.cells)
-%       each raise the IDENTIFIER mat2doc:notYetPorted (need _Cell, P6-4b) -- never
-%       a silent no-op.
+%       now RESOLVE to their correct types (Cell_/Row_/Column_ + Cell_ arrays) --
+%       RE-PINNED at P6-4b Gate-4 (was test_p6_4b_stubs asserting mat2doc:notYetPorted,
+%       flipped when _Cell landed). The end-to-end byte behavior lives in
+%       Test_p6_4b_cell_merge.
 %     * (ITER_INNER_CONTENT) test_iter_inner_content / test_section_iter_inner_content
 %       -- a paragraph/table/paragraph document yields [Paragraph, Table, Paragraph]
 %       in document order; a table in a section yields a Table (the C2 debt
@@ -133,6 +135,7 @@ classdef Test_p6_4a_table_api < matlab.unittest.TestCase
         COLUMN_     = 'mat2doc.table.Column_'
         ROWS_       = 'mat2doc.table.Rows_'
         ROW_        = 'mat2doc.table.Row_'
+        CELL_       = 'mat2doc.table.Cell_'
         PARAGRAPH   = 'mat2doc.text.Paragraph'
         TABLE_STYLE = 'mat2doc.styles.TableStyle_'
 
@@ -385,14 +388,24 @@ classdef Test_p6_4a_table_api < matlab.unittest.TestCase
             testCase.verifyClass(t.tblPr_(), 'mat2doc.oxml.table.CT_TblPr', 'tblPr_ -> a CT_TblPr');
         end
 
-        function test_table_add_row_column_stub(testCase)
-            % Edge / Error path (table.py 37-55): the mutators add_row / add_column
-            % raise mat2doc:notYetPorted (owner P6-4b) -- never a silent no-op.
+        function test_table_add_row_column_live(testCase)
+            % Nominal (table.py 37-55) -- RE-PINNED at P6-4b Gate-4 (was
+            % test_table_add_row_column_stub, which asserted mat2doc:notYetPorted).
+            % The mutators are now LIVE: add_row returns a Row_ (the new bottom row);
+            % add_column returns a Column_ (the new rightmost column). The full byte
+            % form of the authoring path is pinned in Test_p6_4b_cell_merge (s0074 /
+            % s0075). Here we pin the return types + the +1 grid growth.
             t = mat2doc.Document().add_table(2, 3);
-            testCase.verifyError(@() t.add_row(), 'mat2doc:notYetPorted', ...
-                'Table.add_row -> mat2doc:notYetPorted (P6-4b)');
-            testCase.verifyError(@() t.add_column(mat2doc.shared.Inches(1)), 'mat2doc:notYetPorted', ...
-                'Table.add_column -> mat2doc:notYetPorted (P6-4b)');
+
+            row = t.add_row();
+            testCase.verifyClass(row, testCase.ROW_, ...
+                'Table.add_row RESOLVES to a Row_ (P6-4b un-stub, was mat2doc:notYetPorted)');
+            testCase.verifyEqual(t.rows.len_(), 3, 'add_row grew rows.len_ to 3 (the +1 <w:tr>)');
+
+            col = t.add_column(mat2doc.shared.Inches(1));
+            testCase.verifyClass(col, testCase.COLUMN_, ...
+                'Table.add_column RESOLVES to a Column_ (P6-4b un-stub, was mat2doc:notYetPorted)');
+            testCase.verifyEqual(t.columns.len_(), 4, 'add_column grew columns.len_ to 4 (the +1 <w:gridCol>)');
         end
 
         % =============================================================== %
@@ -548,30 +561,45 @@ classdef Test_p6_4a_table_api < matlab.unittest.TestCase
         % 9. P6-4b boundary -- the 8 notYetPorted stubs                     %
         % =============================================================== %
 
-        function test_p6_4b_stubs(testCase)
-            % Edge / Error path (P6-4b boundary): the 8 members that need _Cell (not
-            % ported this WP) each raise the IDENTIFIER mat2doc:notYetPorted. Covers
-            % Table.{add_column, add_row, cell, column_cells, row_cells, _cells} and
-            % _Row.cells / _Column.cells.
+        function test_p6_4b_members_live(testCase)
+            % Nominal (P6-4b boundary) -- RE-PINNED at P6-4b Gate-4 (was
+            % test_p6_4b_stubs, which asserted all 8 members raise mat2doc:notYetPorted).
+            % _Cell is now ported, so the 8 members are all LIVE and return their
+            % correct types: Table.{cell -> Cell_, add_row -> Row_, add_column ->
+            % Column_, column_cells/row_cells/_cells -> Cell_ arrays} and _Row.cells /
+            % _Column.cells -> Cell_ arrays. (The end-to-end byte behavior of these
+            % paths is pinned in Test_p6_4b_cell_merge; here we pin the type flip.)
             IN = @(v) mat2doc.shared.Inches(v);
+
+            % cell -> Cell_
+            testCase.verifyClass(mat2doc.Document().add_table(2, 3).cell(0, 0), testCase.CELL_, ...
+                'Table.cell RESOLVES to a Cell_ (P6-4b un-stub, was mat2doc:notYetPorted)');
+
+            % add_row -> Row_ ; add_column -> Column_ (fresh tables -- these mutate)
+            testCase.verifyClass(mat2doc.Document().add_table(2, 3).add_row(), testCase.ROW_, ...
+                'Table.add_row RESOLVES to a Row_ (P6-4b un-stub)');
+            testCase.verifyClass(mat2doc.Document().add_table(2, 3).add_column(IN(1)), testCase.COLUMN_, ...
+                'Table.add_column RESOLVES to a Column_ (P6-4b un-stub)');
+
+            % column_cells / row_cells / _cells -> Cell_ arrays
             t = mat2doc.Document().add_table(2, 3);
+            cc = t.column_cells(0);
+            testCase.verifyClass(cc, testCase.CELL_, 'Table.column_cells RESOLVES to a Cell_ array (P6-4b un-stub)');
+            testCase.verifyEqual(numel(cc), 2, 'column_cells(0) on a 2x3 table has 2 cells');
+            rc = t.row_cells(0);
+            testCase.verifyClass(rc, testCase.CELL_, 'Table.row_cells RESOLVES to a Cell_ array (P6-4b un-stub)');
+            testCase.verifyEqual(numel(rc), 3, 'row_cells(0) on a 2x3 table has 3 cells');
+            allc = t.cells_();
+            testCase.verifyClass(allc, testCase.CELL_, 'Table._cells RESOLVES to a Cell_ array (P6-4b un-stub)');
+            testCase.verifyEqual(numel(allc), 6, '_cells on a 2x3 table has 6 cells');
+
+            % _Row.cells / _Column.cells -> Cell_ arrays
             r0 = t.rows.getitem_(0);
             c0 = t.columns.getitem_(0);
-            calls = { ...
-                'Table.add_column',  @() t.add_column(IN(1)); ...
-                'Table.add_row',     @() t.add_row(); ...
-                'Table.cell',        @() t.cell(0, 0); ...
-                'Table.column_cells',@() t.column_cells(0); ...
-                'Table.row_cells',   @() t.row_cells(0); ...
-                'Table._cells',      @() t.cells_(); ...
-                '_Row.cells',        @() r0.cells(); ...
-                '_Column.cells',     @() c0.cells() };
-            testCase.verifyEqual(size(calls, 1), 8, 'the P6-4b stub battery covers exactly 8 members');
-            for k = 1:size(calls, 1)
-                ME = captureError(calls{k, 2});
-                testCase.verifyEqual(string(ME.identifier), "mat2doc:notYetPorted", ...
-                    sprintf('stub %s must raise mat2doc:notYetPorted (P6-4b)', calls{k, 1}));
-            end
+            testCase.verifyClass(r0.cells, testCase.CELL_, '_Row.cells RESOLVES to a Cell_ array (P6-4b un-stub)');
+            testCase.verifyEqual(numel(r0.cells), 3, '_Row.cells on a 2x3 table has 3 cells');
+            testCase.verifyClass(c0.cells, testCase.CELL_, '_Column.cells RESOLVES to a Cell_ array (P6-4b un-stub)');
+            testCase.verifyEqual(numel(c0.cells), 2, '_Column.cells on a 2x3 table has 2 cells');
         end
 
         % =============================================================== %
