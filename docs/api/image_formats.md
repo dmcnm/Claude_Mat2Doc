@@ -1,8 +1,8 @@
 ---
-title: "mat2doc.image (format parsers) — PNG / GIF / BMP / TIFF header parsers (the PIL→docx dpi reversion)"
+title: "mat2doc.image (format parsers) — PNG / GIF / BMP / TIFF / JPEG header parsers (the PIL→docx dpi reversion)"
 ---
 
-# `mat2doc.image` (format parsers) — PNG / GIF / BMP / TIFF
+# `mat2doc.image` (format parsers) — PNG / GIF / BMP / TIFF / JPEG
 
 Ported from python-docx v1.2.0 `src/docx/image/png.py` (`Png` + the seven
 chunk helpers), `src/docx/image/gif.py` (`Gif`) and `src/docx/image/bmp.py`
@@ -14,10 +14,13 @@ dispatch and the **raw header parse** (`Image.from_blob(real_png)` reads px/dpi
 straight from the bytes) are now end-to-end live — no more seeded test-double.
 
 `ImageHeaderFactory_` (P7-1a) resolves its dispatch targets as
-`@mat2doc.image.{Png,Gif,Bmp,Tiff}.from_stream` **at call time**, so it routes to
-the real parsers with **no factory edit**. **P7-2a un-stubs `Tiff`** (below — the
-IFD parser, the second PIL→docx dpi reversion, and the `D-tiff-den0`
-re-litigation); `Jfif`/`Exif` remain `notYetPorted` until **P7-2b**.
+`@mat2doc.image.{Png,Gif,Bmp,Tiff,Jfif,Exif}.from_stream` **at call time**, so it
+routes to the real parsers with **no factory edit**. **P7-2a un-stubs `Tiff`**
+(below — the IFD parser, the second PIL→docx dpi reversion, and the `D-tiff-den0`
+re-litigation); **P7-2b un-stubs `Jfif`/`Exif`** (the JPEG tier — the marker walk,
+the SOF px dims, and the App0/App1 dpi), which **completes the image-parser tier**:
+all six `SIGNATURES`-table format parsers (png / gif / bmp / tiff / jpeg-jfif /
+jpeg-exif) are now live and value-verified against python-docx.
 
 :::{important}
 **★ The dpi is docx math, NOT Mat2Ppt's PIL re-oracling — this is the reversion the whole WP turns on.**
@@ -381,27 +384,200 @@ end
 
 ---
 
-## ★ TIFF done — JPEG (P7-2b) next
+(id-jpeg)=
+## `Jpeg` / `Jfif` / `Exif` — JPEG header parsers (the marker walk + the App1-via-Tiff dpi)
 
-P7-2a un-stubs the fourth `BaseImageHeader` subclass and lands the **second (and
-last format-parser) PIL→docx dpi reversion** — the one that turns on the
-`int_dpi` clamp. `Tiff` parses the main IFD (both endians, the four typed entry
-classes) and derives per-axis dpi from the X/YResolution + ResolutionUnit tags,
-proven value-identical to python-docx `Image.from_file` across the `s0085` corpus
-(`probe_diff` 191/191, 16 crafted blobs byte-identical, plus the two shipped
-`72-dpi.tiff` / `little-endian.tif`). It is a **pure-parsing** WP (no oxml, no
-`parts`, nothing on the save path), so **M1 stays 17/17 byte-identical** and there
-are **zero new D-numbers** — the `int_dpi`-clamp reversal is proven (3000/5000
-uncapped), the half-to-even ties and the F-1 multi-value unit are locked, and
-`D-tiff-den0` is an error-path match that carries **no ledger row** into docx.
+**Syntax**
 
-Next: **P7-2b — JPEG (`Jfif` + `Exif`).** The `Exif` dpi reads the APP1/Exif
-segment **as a TIFF** via the just-ported `Tiff.from_stream` (the docx dpi, now
-available) — the dependency inversion that put TIFF first is now discharged. The
-JPEG marker walk (`_JfifMarkers` / `_MarkerFinder` / `_MarkerParser` / the SOF /
-APP0 / APP1 markers) is the watch item, in particular the App1/Exif marker
-parsing. Then **P7-3** (`oxml/drawing` + `InlineShape` — the P7 registry-adding
-WP) and **P7-4** (`add_picture` wiring + `ImagePart` + the picture Word-COM sweep).
+```matlab
+header = mat2doc.image.Jfif.from_stream(stream);   % a Jfif (BaseImageHeader subclass)
+header = mat2doc.image.Exif.from_stream(stream);   % an Exif (BaseImageHeader subclass)
+ct = header.content_type;                          % "image/jpeg"
+e  = header.default_ext;                            % "jpg"
+```
+
+**Description**
+
+`Jpeg` (`jpeg.py:14-26`) is the common base for the two JPEG sub-formats.
+`content_type` is unconditionally `image/jpeg` and `default_ext` is always
+`"jpg"` for both. The concrete `from_stream` lives on the two subclasses, which
+are chosen by `ImageHeaderFactory_` from the byte signature (a `"JFIF"` string in
+the APP0 segment → `Jfif`; an `"Exif"` string in the APP1 segment → `Exif`):
+
+- **`Jfif`** (`jpeg.py:47-61`) — px dimensions from the **SOFn** marker, dpi from
+  the **APP0** (JFIF) marker;
+- **`Exif`** (`jpeg.py:29-44`) — px dimensions from the **SOFn** marker, dpi from
+  the **APP1** (Exif) marker.
+
+Both delegate the actual parse to `JfifMarkers_.from_stream`, which walks the JPEG
+marker stream up to (and including) the first **SOS** marker and exposes the
+`app0` / `app1` / `sof` accessors the two headers read.
+
+The marker machinery ports as a factory plus a small class family (underscore
+rotation, design.md §2):
+
+| MATLAB helper | python-docx | role |
+|---|---|---|
+| `JfifMarkers_` | `_JfifMarkers` | the parsed marker sequence; `app0` / `app1` / `sof` first-match accessors (each raises `mat2doc:KeyError` verbatim when absent), `from_stream` breaks at SOS |
+| `MarkerParser_` | `_MarkerParser` | owns the `StreamReader`; `iter_markers` → a `MarkerIterator_` cursor |
+| `MarkerIterator_` | (generator body of `iter_markers`, `jpeg.py:142-152`) | **explicit cursor** (H9): `has_more` / `next_marker` reproduce the `while marker_code != EOI` loop incl. the `None` first pass; no standalone Python class |
+| `MarkerFinder_` | `_MarkerFinder` | the FF-scan for the next marker (FF-padding skip, the `FF 00` restart, `tell()-1` / `position+1` byte-address arithmetic — **not** H1 shifts) |
+| `MarkerFactory_` | `_MarkerFactory` | a module function: APP0→`App0Marker_`, APP1→`App1Marker_`, any SOFn→`SofMarker_`, else base `Marker_` (H10) |
+| `Marker_` | `_Marker` | base + generic marker: `marker_code` / `offset` / `segment_length` (0 when standalone, else `read_short(offset)`) |
+| `App0Marker_` | `_App0Marker` | JFIF dpi via the density-units formula (below) |
+| `App1Marker_` | `_App1Marker` | Exif dpi via **`Tiff.from_stream`** on the embedded segment (below) |
+| `SofMarker_` | `_SofMarker` | `px_width` / `px_height` from the SOF segment (H2 big-endian; height @ +3, width @ +5) |
+
+The generator `iter_markers` (an early `break` at SOS) becomes the
+`MarkerIterator_` cursor. **Laziness IS observable**: the consumer breaks at SOS,
+so entropy-coded scan data after SOS is never parsed as markers (an eager walk to
+EOI could raise on a truncated stream where Python never reads). Preserved exactly
+(H9). Marker-code comparison is on a `1×1 uint8` off `BytesIO.read(1)`; the JPEG
+stream is big-endian (`StreamReader.BIG_ENDIAN`, H2).
+
+:::{important}
+**★ The JPEG dpi — two distinct algorithms, both docx (not Mat2Ppt PIL).**
+
+**App0 / JFIF dpi** (`App0Marker_._dpi`, `jpeg.py:305-313`) is the docx
+density-units formula, **applied UNCONDITIONALLY** by `Jfif.from_stream`
+(`horz_dpi = markers.app0.horz_dpi`):
+
+$$\texttt{app0\_dpi} \;=\; \begin{cases}
+\text{density} & \text{density\_units} = 1 \text{ (dots/inch)} \\[2pt]
+\texttt{int(round(density} \times 2.54)) & \text{density\_units} = 2 \text{ (dots/cm)} \\[2pt]
+72 & \text{otherwise (aspect ratio only / unknown)}
+\end{cases}$$
+
+with `int(round(...))` = CPython **round-half-to-even** (`pyRound`, banker's) then
+truncate-toward-zero (`fix`) — **H6/H14** — so a `density = 75` cm image gives
+`round(190.5) = 190` (a native MATLAB `round()` would give 191). The Mat2Ppt
+**CLASS-J** variant (a unit-0 / aspect-only JFIF falls back to the APP1/Exif dpi,
+mirroring PIL) lived in `Jfif.from_stream`, **not** in `_dpi`, and is **reverted**:
+docx uses the APP0 dpi with **no Exif fallback** (aspect-only → **72**,
+unconditionally; `app1_or_none` and the `density_units` public accessor are not
+ported).
+
+**App1 / Exif dpi** (`App1Marker_.from_stream`, `jpeg.py:344-360`) is **the key
+reversion**. The docx Exif dpi has **no separate algorithm** — it parses the
+APP1/Exif segment **as a standalone TIFF** and reads that TIFF's dpi:
+
+```
+segment_length = stream.read_short(offset)
+if _is_non_Exif_APP1_segment(stream, offset):   % no 'Exif\x00\x00' at offset+2
+    return App1Marker_(marker_code, offset, segment_length, 72, 72)   % non-Exif APP1 -> 72
+stream.seek(offset + 8)                          % skip marker(2)+len(2)+'Exif\x00\x00'(4)... offset arithmetic
+segment_bytes = stream.read(segment_length - 8)
+tiff = mat2doc.image.Tiff.from_stream(mat2doc.image.BytesIO(segment_bytes));   % the P7-2a docx Tiff
+return App1Marker_(marker_code, offset, segment_length, tiff.horz_dpi, tiff.vert_dpi)
+```
+
+So the Exif dpi is exactly the P7-2a `Tiff` `_dpi` over the embedded TIFF's
+X/YResolution + ResolutionUnit tags — this is why `Tiff` was ported first
+(boundary audit C1). The Mat2Ppt **CLASS-E** PIL mirror
+(`_read_dpi_from_exif`: XResolution for *both* axes, only `ResolutionUnit == 3`
+converts cm) is **fully reverted** — no `_read_dpi_from_exif`, no
+`exif_dpi_from_segment_`, no XResolution-for-both-axes.
+
+The App1-via-Tiff path is proven **four ways** (frozen `s0086`, 170/170
+value-identical, 9 crafted blobs byte-identical):
+
+1. **The exif-420 red herring** — the shipped `exif-420-dpi.jpg` returns
+   **72/72, NOT 420**: docx reads the *embedded TIFF's* `XResolution = 72/1`,
+   `ResolutionUnit = 2`, so the dpi is 72. The `420` in the filename is a red
+   herring; a PIL/CLASS-E reader would read a different tag. (python-docx
+   `Image.from_file` confirms 72/72.)
+2. **Positive control** — a synthetic Exif whose embedded TIFF holds
+   `XRes = YRes = 300/1` returns **300/300**, identical to a standalone
+   `Tiff.from_stream` on the extracted segment.
+3. **The asymmetric discriminator** — `XRes = 96`, `YRes = 300` returns
+   **96/300** (X→horz, Y→vert, **not** swapped, **not** XResolution-for-both-axes).
+   Any residual PIL leftover would have produced 96/96; it is absent.
+4. **cm-in-Exif** — an embedded `ResolutionUnit = 3` (cm) with `XRes = 72`
+   returns **183/183** = `round(72 × 2.54)`, the docx Tiff unit factor.
+
+A **non-Exif APP1** segment (signature ≠ `Exif\x00\x00`) defaults to **72/72**
+(unreachable through `from_blob`, which needs `"Exif"` at the format-detect
+offset — pinned directly at the marker entry point).
+:::
+
+**Example** (crafted end-to-end JPEGs — a JFIF inch dpi and an Exif-via-Tiff dpi,
+both executed through `Image.from_blob`, plus the marker walk):
+
+```matlab
+be16 = @(v) uint8([floor(mod(v,65536)/256), mod(v,256)]);
+be32 = @(v) uint8([mod(floor(v/16777216),256), mod(floor(v/65536),256), ...
+                   mod(floor(v/256),256), mod(v,256)]);
+sof  = [uint8([255 192]) be16(11) uint8(8) be16(30) be16(40) uint8(1) uint8([1 17 0])]; % SOF0 40x30
+sos  = uint8([255 218 0 2]);                                                            % empty SOS
+
+% --- JFIF: APP0 density_units=1 (inch), x/y density 150 -> dpi 150/150 (UNCONDITIONAL) ---
+payload = [uint8('JFIF') uint8(0) uint8([1 1]) uint8(1) be16(150) be16(150) uint8([0 0])];
+app0 = [uint8([255 224]) be16(2 + numel(payload)) payload];
+jfif = [uint8([255 216]) app0 sof sos];
+img  = mat2doc.image.Image.from_blob(jfif);
+fprintf('JFIF: %dx%d dpi %d/%d %s\n', img.px_width, img.px_height, ...
+        img.horz_dpi, img.vert_dpi, img.content_type);
+% JFIF: 40x30 dpi 150/150 image/jpeg
+
+% --- Exif: APP1/Exif embeds a big-endian ("MM") TIFF XRes=YRes=300/1 unit=2 -> dpi 300/300 ---
+ent  = @(tag,typ,v4) [be16(tag) be16(typ) be32(1) v4];   % IFD entry, count 1
+% IFD0 @ offset 8; 3 entries -> IFD spans 8..49; the two rationals live at 50 / 58.
+ifd  = [be16(3) ent(282,5,be32(50)) ent(283,5,be32(58)) ent(296,3,[be16(2) be16(0)]) be32(0)];
+data = [be32(300) be32(1) be32(300) be32(1)];
+tiff = [uint8('MM') be16(42) be32(8) ifd data];
+payload = [uint8('Exif') uint8([0 0]) tiff];
+app1 = [uint8([255 225]) be16(2 + numel(payload)) payload];
+exif = [uint8([255 216]) app1 sof sos];
+img2 = mat2doc.image.Image.from_blob(exif);
+fprintf('Exif: %dx%d dpi %d/%d %s\n', img2.px_width, img2.px_height, ...
+        img2.horz_dpi, img2.vert_dpi, img2.content_type);
+% Exif: 40x30 dpi 300/300 image/jpeg   (the docx Tiff parse, NOT PIL)
+
+% --- The marker walk via the MarkerParser_ / MarkerIterator_ cursor (H9: stops at SOS) ---
+mp = mat2doc.image.MarkerParser_.from_stream(mat2doc.image.BytesIO(jfif));
+it = mp.iter_markers();
+codes = uint8([]);
+while it.has_more
+    m = it.next_marker();
+    codes(end+1) = m.marker_code;
+    if m.marker_code == mat2doc.image.JPEG_MARKER_CODE.SOS, break; end
+end
+fprintf('markers (hex): %s\n', upper(join(string(dec2hex(double(codes),2)), " ")));
+% markers (hex): D8 E0 C0 DA   (SOI, APP0, SOF0, SOS)
+```
+
+*Ported from python-docx v1.2.0: `src/docx/image/jpeg.py::Jpeg` / `::Jfif` / `::Exif`*
+
+---
+
+## ★ Image-parser tier COMPLETE — drawing/InlineShape (P7-3) next
+
+P7-2b un-stubs the last two `BaseImageHeader` subclasses (`Jfif` / `Exif`) and
+lands the JPEG marker walk (`JfifMarkers_` / `MarkerParser_` / `MarkerFinder_` /
+the `MarkerIterator_` cursor / the `App0` / `App1` / `Sof` markers). The **App0 /
+JFIF dpi** is the docx density-units formula used unconditionally (inch / cm /
+aspect, incl. the half-to-even ties), and the **App1 / Exif dpi** is the docx
+`Tiff.from_stream` path (P7-2a) — proven four ways (the exif-420 red herring
+72/72, the 300/300 positive control, the asymmetric 96/300 discriminator, and the
+cm-in-Exif 183/183). Value-identical to python-docx `Image.from_file` across the
+`s0086` corpus (`probe_diff` 170/170, 9 crafted blobs byte-identical, the marker
+trace byte-identical row-for-row). A **pure-parsing** WP (no oxml, no `parts`,
+nothing on the save path), so **M1 stays 17/17 byte-identical** with **zero new
+D-numbers** — the App0 dpi is the docx formula verbatim, the App1 dpi is the
+already-audited docx Tiff path, and the error paths (absent APP0/APP1 →
+`mat2doc:KeyError`, truncated stream → `mat2doc:Exception`) are verbatim-message
+matches.
+
+**★ With PNG / GIF / BMP (P7-1b), TIFF (P7-2a), and now JPEG-JFIF / JPEG-Exif
+(P7-2b) all live, the image-parser tier is COMPLETE** — all six `SIGNATURES`-table
+format parsers are byte/value-verified against python-docx.
+
+Next: **P7-3** — `oxml/drawing` (`CT_Drawing`) + `oxml/shape` (`CT_Inline` /
+`CT_Anchor` / `CT_Blip`) + `InlineShape` / `InlineShapes` — **the first P7
+registry-adding WP** (`w:drawing`), so the registry-flip standing rule applies.
+Then **P7-4** — `add_picture` wiring + `parts/image.py::ImagePart` + the C6
+header-image scenario + the picture Word-COM sweep — which places these parsers'
+dpi→EMU values into `wp:extent`.
 
 :::{note}
 API pages in this project are **auto-generated** from the MATLAB help headers.

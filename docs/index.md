@@ -441,6 +441,29 @@ syntax, description, example, ported-from).
   new D-numbers.** Next: **P7-2b — JPEG** (`Jfif` + `Exif`; the Exif dpi reads the
   APP1/Exif segment as a TIFF via the just-ported `Tiff`). See the
   [image format-parsers page](api/image_formats.md).
+- **Images tier — JPEG parsers (P7-2b) → ★ the image-parser tier COMPLETE** — the
+  last two `BaseImageHeader` subclasses, un-stubbing the P7-1a `Jfif` / `Exif`
+  placeholders so the recognized-format factory dispatch and the raw JPEG parse
+  (`Image.from_blob(jpeg)` → px/dpi/content_type) go end-to-end. The common `Jpeg`
+  base fixes `image/jpeg` + `"jpg"`; `Jfif` and `Exif` both read px dims from the
+  **SOFn** marker and dpi from `JfifMarkers_`, which walks the marker stream to the
+  first **SOS** via `MarkerParser_` / `MarkerFinder_` / the explicit
+  `MarkerIterator_` cursor (H9 — laziness preserved: scan data after SOS is never
+  parsed) / `MarkerFactory_` and the `App0` / `App1` / `Sof` markers. **★ The JPEG
+  dpi is two docx algorithms, not Mat2Ppt PIL:** the **App0/JFIF** dpi is the docx
+  density-units formula used **unconditionally** (units 1→density, 2→`round(density
+  ×2.54)` half-to-even, else→72 — no Exif fallback, the CLASS-J variant reverted);
+  the **App1/Exif** dpi parses the APP1/Exif segment **as a TIFF** via the P7-2a
+  `Tiff.from_stream` (the docx path — the CLASS-E PIL reader reverted), proven four
+  ways (the exif-420 red herring **72/72 not 420**, the 300/300 positive control,
+  the asymmetric **96/300** discriminator, and cm-in-Exif 183/183). Value-identical
+  to `Image.from_file` across `s0086` (`probe_diff` 170/170, 9 crafted blobs
+  byte-identical, the marker trace byte-identical). **Pure-parsing → M1 17/17, 0 new
+  D-numbers.** **★ With png / gif / bmp / tiff / jpeg-jfif / jpeg-exif all live, the
+  image-parser tier is COMPLETE.** Next: **P7-3** (`oxml/drawing` + `InlineShape` —
+  the first P7 registry-adding WP) → **P7-4** (`add_picture` wiring + `ImagePart` +
+  the picture Word-COM sweep). See the
+  [image format-parsers page](api/image_formats.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

@@ -70,7 +70,8 @@ classdef Test_p7_2a_tiff < matlab.unittest.TestCase
 %     tags -> None ([]) while dpi still resolves).
 %   * factory dispatch (edge) -- test_factory_dispatch_and_stubs: a TIFF MM/II
 %     blob dispatches through the P7-1a factory to the REAL Tiff parser; the
-%     Jfif/Exif stubs STILL raise mat2doc:notYetPorted (P7-2b boundary).
+%     Jfif/Exif rows RE-PINNED at P7-2b (real parsers now -> mat2doc:Exception
+%     EOF on the SOS-less signature blob, no longer notYetPorted).
 %   * ★ Equivalence (headline replay) -- test_replay_all_191_records: replays the
 %     ENTIRE frozen Gate-3 battery (the exact 191-probe sequence of
 %     s0085_..._probe.m, rebuilt inline through mat2doc.image.* from the
@@ -471,8 +472,9 @@ classdef Test_p7_2a_tiff < matlab.unittest.TestCase
         function test_factory_dispatch_and_stubs(testCase)
             % Edge: the P7-1a factory now dispatches a TIFF MM/II signature to the
             % REAL Tiff parser (Image.from_blob returns a parsed Image with the
-            % right px/dpi), while the Jfif/Exif signatures STILL raise
-            % mat2doc:notYetPorted (the P7-2b jpeg boundary).
+            % right px/dpi). RE-PINNED at P7-2b: the Jfif/Exif signatures now
+            % dispatch to their REAL parsers too (mat2doc:Exception EOF on the
+            % SOS-less signature blob, no longer notYetPorted).
             here = fileparts(mfilename('fullpath'));
 
             % A well-formed TIFF MM + II both dispatch to the real Tiff parser.
@@ -486,13 +488,18 @@ classdef Test_p7_2a_tiff < matlab.unittest.TestCase
             testCase.verifyEqual(string(mmImg.content_type), "image/tiff", 'TIFF(MM) dispatch -> real Tiff');
             testCase.verifyEqual(double(mmImg.horz_dpi), 300, 'TIFF(MM) dispatch parsed dpi');
 
-            % Jfif / Exif signatures STILL notYetPorted (P7-2b jpeg).
+            % Jfif / Exif signatures -- RE-PINNED at P7-2b: the real Jfif/Exif
+            % parsers (un-stubbed) dispatch through JfifMarkers_.from_stream; the
+            % SOS-less signature-only blob makes the marker walk hit EOF ->
+            % mat2doc:Exception "unexpected end of file" (was notYetPorted).
             jfif = uint8([255 216 255 224 0 16, double('JFIF'), 0, zeros(1, 21)]);
             exif = uint8([255 216 255 225 0 16, double('Exif'), 0, zeros(1, 21)]);
-            [idJ, ~] = catchErr(@() mat2doc.image.Image.from_blob(jfif));
-            testCase.verifyEqual(idJ, 'mat2doc:notYetPorted', 'JFIF still notYetPorted (P7-2b)');
-            [idE, ~] = catchErr(@() mat2doc.image.Image.from_blob(exif));
-            testCase.verifyEqual(idE, 'mat2doc:notYetPorted', 'Exif still notYetPorted (P7-2b)');
+            [idJ, msgJ] = catchErr(@() mat2doc.image.Image.from_blob(jfif));
+            testCase.verifyEqual(idJ, 'mat2doc:Exception', 'JFIF now dispatches to the real Jfif parser (P7-2b)');
+            testCase.verifyEqual(msgJ, 'unexpected end of file', 'JFIF EOF message verbatim');
+            [idE, msgE] = catchErr(@() mat2doc.image.Image.from_blob(exif));
+            testCase.verifyEqual(idE, 'mat2doc:Exception', 'Exif now dispatches to the real Exif parser (P7-2b)');
+            testCase.verifyEqual(msgE, 'unexpected end of file', 'Exif EOF message verbatim');
         end
 
         % =============================================================== %
