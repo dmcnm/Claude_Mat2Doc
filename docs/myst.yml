@@ -62,6 +62,9 @@ project:
       children:
         - file: api/oxml_table.md
         - file: api/table_api.md
+    - title: Images tier (Phase 7)
+      children:
+        - file: api/image_core.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

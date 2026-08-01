@@ -1,0 +1,12 @@
+# Byte-exact frozen Gate-4 fixtures for Mat2Doc P7-1a (image-parsing CORE).
+# The two real test images are the sha1 END-TO-END equivalence blobs (300-dpi.png
+# sha1 ca11f589..., 300-dpi.jpg sha1 4040957e...); ANY byte translation on the
+# master checkout would flip the sha1 pin and the width/height/ext/filename core
+# equivalence. Copied verbatim from python-docx 1.2.0 tests/test_files/.
+# (Byte-fixture .gitattributes lesson: co-locate a `* binary` pin or the master
+#  checkout mangles them.)
+300-dpi.png binary
+300-dpi.jpg binary
+# probe.json is the frozen s0083 value oracle (195 probes); JSON is line-ending
+# agnostic -- pin LF only, no binary translation needed (matches references/s0083).
+probe.json text eol=lf
