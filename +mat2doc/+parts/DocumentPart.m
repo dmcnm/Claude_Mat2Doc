@@ -64,6 +64,11 @@ classdef DocumentPart < mat2doc.parts.StoryPart
 %   (LIVE: core_properties 52-56, document 58-61, save 111-114, _settings_part
 %   143-154, _styles_part 156-169. Feature stubs name their real-phase owner.)
 
+    properties (Access = private)
+        numbering_part_cache_                          % numbering_part lazyproperty cache (P8-1)
+        numbering_part_computed_ (1,1) logical = false
+    end
+
     methods
         function obj = DocumentPart(partname, content_type, element, package)
             % Pass-through to the StoryPart constructor (design.md CT_*/part
@@ -246,16 +251,38 @@ classdef DocumentPart < mat2doc.parts.StoryPart
                 "required by mat2doc.parts.DocumentPart.inline_shapes");
         end
 
-        function np = numbering_part(obj) %#ok<MANU,STOUT>
-            % NUMBERING_PART STUB (parts/document.py 98-109, @lazyproperty). Owner: P8-1.
-            %   Kept stubbed at P2-2 (the numbering-definitions feature and
-            %   NumberingPart.new -- which raises NotImplementedError in
-            %   python-docx itself -- land at P8-1). NumberingPart the PART class
-            %   IS ported (thin XmlPart shell) so the WML_NUMBERING flip lands;
-            %   this ACCESSOR stays a feature stub.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.NumberingPart numbering definitions (owning WP: " + ...
-                "P8-1 numbering tier) required by mat2doc.parts.DocumentPart.numbering_part");
+        function np = numbering_part(obj)
+            % NUMBERING_PART (parts/document.py 98-109, @lazyproperty): the
+            %   NumberingPart providing access to the numbering definitions,
+            %   creating an empty one if not present. UN-STUBBED at P8-1. Python:
+            %     try:
+            %         return cast(NumberingPart, self.part_related_by(RT.NUMBERING))
+            %     except KeyError:
+            %         numbering_part = NumberingPart.new()
+            %         self.relate_to(numbering_part, RT.NUMBERING)
+            %         return numbering_part
+            %   part_related_by raises mat2doc:KeyError when absent (any other
+            %   exception propagates). NumberingPart.new() FAITHFULLY raises
+            %   mat2doc:NotImplementedError (python-docx v1.2.0 leaves new()
+            %   unimplemented), so on a package WITHOUT a numbering part this
+            %   accessor raises NotImplementedError -- exactly as python-docx does.
+            %   @lazyproperty: cache only a SUCCESSFUL return (an exception is
+            %   re-raised on every access, never cached).
+            if ~obj.numbering_part_computed_
+                RT = mat2doc.opc.RELATIONSHIP_TYPE;
+                try
+                    np_local = obj.part_related_by(RT.NUMBERING);
+                catch ME
+                    if ME.identifier ~= "mat2doc:KeyError"
+                        rethrow(ME);
+                    end
+                    np_local = mat2doc.parts.NumberingPart.new();   % raises NotImplementedError (faithful)
+                    obj.relate_to(np_local, RT.NUMBERING);
+                end
+                obj.numbering_part_cache_ = np_local;
+                obj.numbering_part_computed_ = true;
+            end
+            np = obj.numbering_part_cache_;
         end
 
         function s = settings(obj)

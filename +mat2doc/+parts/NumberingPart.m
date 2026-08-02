@@ -21,16 +21,21 @@ classdef NumberingPart < mat2doc.opc.XmlPart
 %   2 exception mapping). It is unreached at P2-2 (DocumentPart.numbering_part,
 %   the only caller of new(), is itself a P8-1 feature stub).
 %
-%   `numbering_definitions` -- P8-1 FEATURE STUB: its faithful body builds a
-%   _NumberingDefinitions over self._element, whose __len__ reads
-%   self._numbering.num_lst -- requiring the CT_Numbering `num_lst` descriptor
-%   (P8-1). Never on the open/save path.
+%   `numbering_definitions` -- UN-STUBBED at P8-1 (@lazyproperty): builds a
+%   NumberingDefinitions_ over self._element (the parsed <w:numbering> ->
+%   CT_Numbering). Cached via a logical flag (design.md @lazyproperty rule; NEVER
+%   isempty as the sentinel). Never on the open/save path.
 %
 %   ARG ORDER (docx): NumberingPart(partname, content_type, element, package).
 %
 %   Ported from python-docx v1.2.0: src/docx/parts/numbering.py::NumberingPart
-%   (new 11-14 faithful NotImplementedError; numbering_definitions 16-20 -> P8-1
-%   stub. The _NumberingDefinitions collection 23-32 lands at P8-1.)
+%   (new 11-14 faithful NotImplementedError; numbering_definitions 16-20 +
+%   _NumberingDefinitions 23-32 LIVE at P8-1.)
+
+    properties (Access = private)
+        numbering_definitions_cache_                       % numbering_definitions lazyproperty cache
+        numbering_definitions_computed_ (1,1) logical = false
+    end
 
     methods
         function obj = NumberingPart(partname, content_type, element, package)
@@ -39,13 +44,19 @@ classdef NumberingPart < mat2doc.opc.XmlPart
             obj@mat2doc.opc.XmlPart(partname, content_type, element, package);
         end
 
-        function nd = numbering_definitions(obj) %#ok<MANU,STOUT>
-            % NUMBERING_DEFINITIONS STUB (numbering.py 16-20, @lazyproperty).
-            %   Owner: P8-1. Faithful body: return _NumberingDefinitions(self._element).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts._NumberingDefinitions / CT_Numbering.num_lst " + ...
-                "(owning WP: P8-1 numbering tier) required by " + ...
-                "mat2doc.parts.NumberingPart.numbering_definitions");
+        function nd = numbering_definitions(obj)
+            % NUMBERING_DEFINITIONS (numbering.py 16-20, @lazyproperty): the
+            %   NumberingDefinitions_ instance containing the numbering definitions
+            %   (<w:num> proxies) for this part. Python:
+            %     return _NumberingDefinitions(self._element)
+            %   Cached via a logical flag (design.md @lazyproperty rule; NEVER
+            %   isempty as the sentinel).
+            if ~obj.numbering_definitions_computed_
+                obj.numbering_definitions_cache_ = ...
+                    mat2doc.parts.NumberingDefinitions_(obj.element());
+                obj.numbering_definitions_computed_ = true;
+            end
+            nd = obj.numbering_definitions_cache_;
         end
     end
 

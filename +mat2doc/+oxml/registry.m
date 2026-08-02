@@ -358,6 +358,36 @@ map = registerElementCls_(map, "wp:anchor",     "mat2doc.oxml.shape.CT_Anchor");
 map = registerElementCls_(map, "wp:docPr",      "mat2doc.oxml.shape.CT_NonVisualDrawingProps");% __init__.py:60 (P7-3)
 map = registerElementCls_(map, "wp:extent",     "mat2doc.oxml.shape.CT_PositiveSize2D");       % __init__.py:61 (P7-3)
 map = registerElementCls_(map, "wp:inline",     "mat2doc.oxml.shape.CT_Inline");               % __init__.py:62 (P7-3)
+% -- numbering block (docx/oxml/__init__.py:103-112), P8-1 -- FIRST WP of Phase 8
+% -- (numbering). The numbering block registers 8 tags across 4 numbering CT_*
+% -- classes (CT_Num/CT_NumLvl/CT_NumPr/CT_Numbering) + the shared CT_DecimalNumber
+% -- (the 3 int-attr children w:abstractNumId/w:ilvl/w:numId + w:startOverride),
+% -- in docx/oxml/__init__.py source order. CT_DecimalNumber ALREADY EXISTS (P4-6);
+% -- these 4 rows point at it (NOT re-ported). NOTE the abstract-definition
+% -- container <w:abstractNum> is DELIBERATELY NOT registered -- upstream has NO
+% -- register_element_cls("w:abstractNum", ...) row (grep '"w:abstractNum"'
+% -- docx/oxml/__init__.py -> 0 hits; only "w:abstractNumId"@105), so <w:abstractNum>
+% -- stays a plain XmlElement, matching python-docx exactly.
+% --
+% -- C1 TWO-PART M1 FLIP (the P8-1 byte-critical risk): registering these 8 rows
+% -- re-classes TWO of the 17 default.docx M1 parts onto the new parse path:
+% --   (1) styles.xml -- carries 7 <w:numPr> (6 <w:numId> + 1 <w:ilvl>) inside
+% --       <w:pPr>; these transited as generic XmlElement since P4-6 and now
+% --       resolve to CT_NumPr / CT_DecimalNumber.
+% --   (2) numbering.xml -- root <w:numbering> (-> CT_Numbering) + 9 <w:num>
+% --       (-> CT_Num); the 9 <w:abstractNum> stay generic (unregistered, above).
+% -- Byte-neutral: registering a CT changes only a parsed node's CLASS, not its
+% -- content/attr-order/child-order (P4-6/P5-1/P6-2 precedent); M1 stays 17/17 L1
+% -- (proven in-worktree: styles.xml + numbering.xml byte-identical to the
+% -- python-docx round-trip before commit).
+map = registerElementCls_(map, "w:abstractNumId", "mat2doc.oxml.shared.CT_DecimalNumber");   % __init__.py:105 (P8-1)
+map = registerElementCls_(map, "w:ilvl",          "mat2doc.oxml.shared.CT_DecimalNumber");   % __init__.py:106 (P8-1)
+map = registerElementCls_(map, "w:lvlOverride",   "mat2doc.oxml.numbering.CT_NumLvl");        % __init__.py:107 (P8-1)
+map = registerElementCls_(map, "w:num",           "mat2doc.oxml.numbering.CT_Num");           % __init__.py:108 (P8-1)
+map = registerElementCls_(map, "w:numId",         "mat2doc.oxml.shared.CT_DecimalNumber");   % __init__.py:109 (P8-1)
+map = registerElementCls_(map, "w:numPr",         "mat2doc.oxml.numbering.CT_NumPr");         % __init__.py:110 (P8-1)
+map = registerElementCls_(map, "w:numbering",     "mat2doc.oxml.numbering.CT_Numbering");     % __init__.py:111 (P8-1)
+map = registerElementCls_(map, "w:startOverride", "mat2doc.oxml.shared.CT_DecimalNumber");   % __init__.py:112 (P8-1)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
