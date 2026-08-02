@@ -392,13 +392,15 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             %     STAYS stubbed (P4-7b left it in scope for the next content WP -- its
             %     deps are live but it was not un-stubbed; audit VERIFY-1), so it
             %     remains pinned here.
+            %   * P7-4: Package.image_parts was un-stubbed (the picture milestone WP)
+            %     and now RESOLVES (returns an ImageParts collection) -> REMOVED from
+            %     the notYetPorted set, positive check below (validate_P7-4 s5/re-pin 1).
             pkg = mat2doc.package.Package.open(char(testCase.templatePath()));
             dp  = pkg.main_document_part();
             d   = dp.document();
             calls = { ...
                 @() d.paragraphs(),     'document.Document.paragraphs'; ...
-                @() dp.numbering_part(),'parts.DocumentPart.numbering_part'; ...
-                @() pkg.image_parts(),  'package.Package.image_parts'};
+                @() dp.numbering_part(),'parts.DocumentPart.numbering_part'};
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -421,6 +423,12 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             % milestone WP) -> a Paragraph appended to the body.
             testCase.verifyClass(d.add_paragraph(), 'mat2doc.text.Paragraph', ...
                 'Document.add_paragraph RESOLVES to a Paragraph (P4-7b un-stub, M2)');
+
+            % Package.image_parts now RESOLVES (un-stubbed at P7-4, the picture
+            % milestone WP) -> an ImageParts collection over the package's media parts
+            % (registry-flip re-pin 1; validate_P7-4 s5).
+            testCase.verifyClass(pkg.image_parts(), 'mat2doc.package.ImageParts', ...
+                'Package.image_parts RESOLVES to an ImageParts collection (P7-4 un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

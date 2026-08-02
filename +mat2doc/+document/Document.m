@@ -9,8 +9,9 @@ classdef Document < mat2doc.shared.ElementProxy
 %   `add_paragraph` (P4-7b, the M2 critical path), and -- UN-STUBBED at P5-3a
 %   (C1) -- `sections` and `add_section` are LIVE, as are the private
 %   object-graph accessors `body_` / `block_width_` (block_width_ now reaches the
-%   live sections). The remaining content members (add_table / add_picture /
-%   add_page_break / paragraphs / inline_shapes / tables / comments / ...) are
+%   live sections). add_picture is LIVE at P7-4 (add_paragraph().add_run()
+%   .add_picture(...)). The remaining content members (add_table / add_page_break
+%   / paragraphs / inline_shapes / tables / comments / ...) are
 %   mat2doc:notYetPorted stubs. NONE of the stubs is on the open->save path.
 %
 %   VERIFY-M1-DOC-BASE (RESOLVED in P2-1): in python-docx Document extends
@@ -258,11 +259,24 @@ classdef Document < mat2doc.shared.ElementProxy
             p = obj.body_().add_paragraph(text, style);   % Python: self._body.add_paragraph(text, style)
         end
 
-        function shape = add_picture(obj, image_path_or_stream, width, height) %#ok<INUSD,MANU,STOUT>
-            % ADD_PICTURE STUB (document.py 121-138). P7 image tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_picture (owning WP: P7 image " + ...
-                "tier) is not yet ported");
+        function shape = add_picture(obj, image_path_or_stream, width, height)
+            % ADD_PICTURE Return a new picture shape added in its own paragraph at
+            %   the end of the document (document.py 121-138). UN-STUBBED at P7-4.
+            %   Python:
+            %     run = self.add_paragraph().add_run()
+            %     return run.add_picture(image_path_or_stream, width, height)
+            %   H13 defaults: width/height default None ([]) -> native size /
+            %   aspect-preserving scale.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_picture
+            arguments
+                obj
+                image_path_or_stream
+                width = []     % Python default None
+                height = []    % Python default None
+            end
+            run = obj.add_paragraph().add_run();   % Python: self.add_paragraph().add_run()
+            shape = run.add_picture(image_path_or_stream, width, height);
         end
 
         function section = add_section(obj, start_type)

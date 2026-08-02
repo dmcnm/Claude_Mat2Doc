@@ -487,6 +487,44 @@ syntax, description, example, ported-from).
   Next: **P7-4** (`add_picture` wiring + `parts/image.py::ImagePart` + the C6
   header-image scenario + the picture Word-COM sweep → **Phase 7 complete**). See
   the [inline-picture oxml + InlineShape API page](api/drawing_shape.md).
+- **Images tier — the `add_picture` authoring path (P7-4 [N])** — the **final
+  Phase-7 WP**, the picture milestone: the **first runtime image part** in
+  Mat2Doc. `doc.add_picture(path[, width[, height]])` emits three coordinated
+  additions — a new `word/media/imageN.<ext>` part (the image bytes copied
+  **verbatim** via a new `mat2doc.parts.ImagePart`), its relationship + a
+  `[Content_Types]` Default, and a `<w:drawing>`/`<wp:inline>` tree built by the
+  P7-3 `CT_Inline.new_pic_inline` — whose `wp:extent`/`a:ext` `cx`/`cy` are the
+  image's **dpi → EMU** extent (the P7-1..P7-2 parsers → P7-3 builder → P7-4
+  chain). Un-stubs the whole picture-owner deferral: `ImagePart` +
+  `mat2doc.package.ImageParts` (the **SHA1 dedupe** — same image bytes → one
+  media part), `StoryPart.get_or_add_image` / `new_pic_inline`,
+  `Run.add_picture` / `Document.add_picture`, and the `PartFactory`
+  IMAGE→`ImagePart` flip. **★ The full-package output is 18/18 (L1 + binary)
+  byte-identical to python-docx** (`s0090`, the frozen P7 picture oracle) and
+  **opens clean in real Microsoft Word** (the picture Word-COM sweep PASS). The
+  Gate-2 **DEFECT-1** fix guards the non-numbered-partname path (a reopened
+  `logo.png` doc — `PackURI.idx` None; `s0095` scenario J 19/19). **★ C6
+  discharged** — a picture in a **header** materializes the first-ever
+  `word/_rels/header1.xml.rels` (`s0096` 20/20), and body+header **share** one
+  package-level media part (`s0097` 20/20). **M1 stayed 17/17** even though
+  un-stubbing `image_parts` puts `_gather_image_parts` on every open
+  (`default.docx` has no internal IMAGE rel → gather short-circuits). **0 new
+  D-numbers.** See the [add_picture authoring path page](api/add_picture.md).
+- **★ PHASE 7 COMPLETE (images / drawing / inline pictures) — 2026-08-02.** The
+  full image tier is byte-proven end-to-end and COM-verified: the **6 image
+  parsers** (PNG/GIF/BMP/TIFF/JPEG-JFIF/JPEG-Exif — the format-agnostic `Image`
+  core + the **PIL → docx dpi reversion**, a re-port from Mat2Ppt's `+image` with
+  docx as HOME), the **DrawingML inline-picture oxml** (`CT_Inline` with the
+  byte-proven `new_pic_inline` builder, `CT_Picture` and the `a:`/`pic:`/`wp:`
+  tree, `CT_Drawing`, `InlineShapes`/`InlineShape`, 16 registry rows), and the
+  end-to-end **`add_picture` wiring** (body **and** header). The picture Word-COM
+  sweep (Word 16.0.20228) passed on all four picture packages — body inline PNG,
+  header image (first `header1.xml.rels`), two distinct inline images, and the
+  cross-part shared-media part — each opening silently with the correct picture
+  inventory in Word's object model, a visible render, and a clean round-trip
+  (`com_verify_P7_pictures.md`). **Zero new D-numbers across ALL of Phase 7.**
+  Next: **Phase 8** (numbering / comments + the `blkcntnr` remainder → the final
+  system campaigns).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
