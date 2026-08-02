@@ -548,6 +548,40 @@ syntax, description, example, ported-from).
   mutated-numbering production serializer and the API surface are byte/value
   identical to python-docx (`s0099` 4/4 L1, `s0100` probe 17/17), **0 new
   D-numbers**. See the [numbering tier page](api/numbering.md).
+- **Comments tier (Phase 8)** — the **comments tier** (P8-2 [N], the second WP
+  of the final phase). The two `oxml/comments.py` element classes land in the new
+  `+mat2doc\+oxml\+comments` package: `mat2doc.oxml.comments.CT_Comments` (the
+  `<w:comments>` root — `add_comment` with the **auto-`w:id`** allocation via
+  `_next_available_comment_id` and the 32-bit-overflow gap-fill,
+  `get_comment_by_id` with its `[]`-on-miss) and `CT_Comment` (a single
+  `<w:comment>` — the required `w:id` / `w:author`, the optional `w:initials`, and
+  **★ the first reachable `ST_DateTime` consumer** `w:date`; the `p` / `tbl`
+  `ZeroOrMore` block content). The API proxies land in the new
+  `+mat2doc\+comments` package: `mat2doc.comments.Comments` (the plain-`handle`
+  collection over the `<w:comments>` root + owning part — `to_array` / `len_` /
+  `add_comment` / `get`) and `mat2doc.comments.Comment` (a **`BlockItemContainer`**
+  — the **C3 element-accessor seam**, storing the concrete `<w:comment>` like a
+  table cell; `author` / `comment_id` / `initials` / `text` / `timestamp` and the
+  `CommentText`-styling `add_paragraph`, whose element read-back
+  `element_().p_lst(end)` is the byte-faithful stand-in for python-docx's
+  `paragraph._p`, VERIFY-COMMENTTEXT). `mat2doc.parts.CommentsPart` is the **last
+  new part type** — a `StoryPart` for the single fixed `word/comments.xml`,
+  created **on demand** via `CommentsPart.default` (the `[Content_Types]` Override
+  + document-rels COMMENTS relationship materialize on first comment access). It
+  un-stubs the whole comment-authoring path — `Document.add_comment` (anchoring a
+  comment to a run range via the pre-ported `CT_R` comment-range markers) /
+  `Document.comments`, `DocumentPart.comments` / `_comments_part`. **★ ST_DateTime
+  goes live and the P3-2 deferred ruling is discharged with zero new D-number** —
+  the write path (tz-aware UTC → whole-seconds + literal `Z`) is byte-exact; the
+  residual read-path under-accept on schema-invalid `@w:date` stays in the signed
+  **D-002** class (the extended six-shape list: seconds-omitted, non-zero-padded
+  fields, non-`T` separator, offset-with-seconds, basic format, week/ordinal).
+  Registering the **2** comment tags is **byte-neutral** — `default.docx` has no
+  comments part, so the rows and the `WML_COMMENTS → CommentsPart` PartFactory flip
+  re-class **zero** M1 parts (M1 17/17 preserved); the on-demand comments packages
+  are byte/value identical to python-docx (`s0101`–`s0106` full-package L1,
+  `s0107` probe 24/24, `s0108` M1 17/17), **0 new D-numbers**. See the
+  [comments tier page](api/comments.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

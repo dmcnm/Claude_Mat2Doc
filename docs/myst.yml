@@ -71,6 +71,9 @@ project:
     - title: Numbering tier (Phase 8)
       children:
         - file: api/numbering.md
+    - title: Comments tier (Phase 8)
+      children:
+        - file: api/comments.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
