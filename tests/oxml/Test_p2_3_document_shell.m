@@ -102,12 +102,16 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %             Body_.iter_inner_content                      (12 -> 8)
         %       P6-4b un-stubbed Body_.tables (inherited BlockItemContainer.tables,
         %             the required dependency of _Cell.tables)      (8  -> 7)
-        %     Document.add_page_break / Document.add_picture / Document.add_comment /
-        %     Document.paragraphs / Document.tables / Document.comments /
-        %     Document.inline_shapes and the P6/P7/P8 adders REMAIN genuinely stubbed.
+        %     Document.add_page_break / Document.paragraphs / Document.tables /
+        %     Document.inline_shapes and the P8-3 adders REMAIN genuinely stubbed.
         %     (Document.tables is its OWN separate stub -- out of the P6-4b 8-member
-        %     scope -- and stays pinned below.) ---
-        STUB_COUNT = 6
+        %     scope -- and stays pinned below.)
+        %   * P8-2 (comments WP) RE-PIN: Document.comments + Document.add_comment are
+        %     now LIVE -> DROPPED from the battery (6 -> 4) and asserted resolved below
+        %     (comments -> a Comments proxy; add_comment no longer raises
+        %     notYetPorted). Document.paragraphs/tables/inline_shapes stay pinned ->
+        %     P8-3 (the blkcntnr-remainder WP). ---
+        STUB_COUNT = 4
     end
 
     methods (TestClassSetup)
@@ -338,13 +342,11 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             ct = testCase.parseBody();
             calls = { ...
                 'Document.add_page_break',     @() d.add_page_break(); ...
-                'Document.add_comment',        @() d.add_comment([], "t", "a", "i"); ...
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
-                'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 6 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b + Document.add_picture P7-4 un-stubbed)');
+                'the stub battery must cover exactly 4 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b + Document.add_picture P7-4 + Document.comments/add_comment P8-2 un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -356,6 +358,22 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                     sprintf('stub %s must raise', calls{k, 1}));
                 testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
                     sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 1}));
+            end
+            % Document.comments now RESOLVES (un-stubbed at P8-2).
+            testCase.verifyClass(d.comments(), 'mat2doc.comments.Comments', ...
+                'Document.comments RESOLVES to a Comments proxy (P8-2 un-stub)');
+            % Document.add_comment now RESOLVES past the stub (un-stubbed at P8-2): a
+            % []-run argument may raise a DIFFERENT error, but never notYetPorted
+            % (registry/un-stub re-pin pattern, cf. Document.add_picture P7-4).
+            caughtAC = [];
+            try
+                d.add_comment([], "t", "a", "i");
+            catch ME
+                caughtAC = ME;
+            end
+            if ~isempty(caughtAC)
+                testCase.verifyNotEqual(caughtAC.identifier, 'mat2doc:notYetPorted', ...
+                    'Document.add_comment no longer raises notYetPorted (P8-2 un-stub)');
             end
             % Document.styles now RESOLVES (un-stubbed at P4-7a).
             testCase.verifyClass(d.styles(), 'mat2doc.styles.Styles', ...
