@@ -525,6 +525,29 @@ syntax, description, example, ported-from).
   (`com_verify_P7_pictures.md`). **Zero new D-numbers across ALL of Phase 7.**
   Next: **Phase 8** (numbering / comments + the `blkcntnr` remainder → the final
   system campaigns).
+- **Numbering tier (Phase 8 — begins)** — the **numbering-definitions tier**
+  (P8-1 [N], the first WP of the final phase). The four `oxml/numbering.py`
+  element classes land in the new `+mat2doc\+oxml\+numbering` package:
+  `mat2doc.oxml.numbering.CT_Numbering` (the `<w:numbering>` root — `add_num`
+  with the **auto-numId** allocation, the `_next_numId` gap-fill, and
+  `num_having_numId` with its `mat2doc:KeyError` miss), `CT_Num` (a `<w:num>`
+  list instance — the required `<w:abstractNumId>` + `@w:numId`, `add_lvlOverride`),
+  `CT_NumLvl` (a `<w:lvlOverride>` level override — `add_startOverride`), and
+  `CT_NumPr` (the paragraph `<w:numPr>` — the H11 `ilvl`/`numId` successor slices
+  that serialize `<w:ilvl>` before `<w:numId>` even when `numId` is added first;
+  the inactive commented-out setters faithfully **not** ported). It un-stubs
+  `NumberingPart.numbering_definitions` (a `@lazyproperty` over a new
+  `mat2doc.parts.NumberingDefinitions_` collection — `len_()` reports the
+  `<w:num>` count) and `DocumentPart.numbering_part` (returns the related part,
+  or faithfully raises `mat2doc:NotImplementedError` via `NumberingPart.new`,
+  exactly as python-docx does when no numbering part exists). Registering the
+  **8** numbering tags is **byte-neutral** — `styles.xml` (7 `<w:numPr>`) and
+  `numbering.xml` (root + 9 `<w:num>`) now transit the new classes with **zero**
+  byte change (M1 17/17: `styles.xml` `02d71a68…`, `numbering.xml` `70976f19…`);
+  `<w:abstractNum>` stays deliberately unregistered, matching python-docx. The
+  mutated-numbering production serializer and the API surface are byte/value
+  identical to python-docx (`s0099` 4/4 L1, `s0100` probe 17/17), **0 new
+  D-numbers**. See the [numbering tier page](api/numbering.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

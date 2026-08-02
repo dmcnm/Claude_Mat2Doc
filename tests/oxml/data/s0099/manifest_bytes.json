@@ -1,0 +1,25 @@
+{
+  "schema": "p81-numbering-byte/1",
+  "artifacts": [
+    {
+      "file": "caseA_build.xml",
+      "size": 334,
+      "sha256": "df8192406e5403b9ee979fe3e51b6a47b6e2fcc7117c75fb1dd705f4ba1e3fb3"
+    },
+    {
+      "file": "caseB_cleanup.xml",
+      "size": 231,
+      "sha256": "67a88da919a5cb964051fdb2b9604bb83d8a34e1c748322376eb3efc65209b47"
+    },
+    {
+      "file": "caseC_numpr_order.xml",
+      "size": 185,
+      "sha256": "948b2c9fbd7e56c2700a3d0857df555f4605e1e577cd58c5f86535ad580b59de"
+    },
+    {
+      "file": "caseD_numpr_ins.xml",
+      "size": 193,
+      "sha256": "99dc996211d03651d5f90034d098a8dc3259ce9cc5ab27e9eb07ff69aa00d6d4"
+    }
+  ]
+}

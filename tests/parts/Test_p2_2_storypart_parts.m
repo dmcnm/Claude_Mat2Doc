@@ -349,22 +349,23 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % REGISTRY-FLIP RE-PIN (P7-4, the picture milestone WP; validate_P7-4 s6
             % re-pin 5): StoryPart.get_or_add_image is now LIVE -> it reaches the image
             % loader instead of the notYetPorted stub and moved to the positive block
-            % below (4 -> 3). The remaining THREE are genuine stubs (numbering / inline-
-            % shapes tiers: numbering_part, inline_shapes, numbering_definitions) and
-            % stay pinned notYetPorted. (Only the image path flipped this WP; everything
-            % else is intact -- the registry-flip stale-pins lesson. The full
-            % get_or_add_image rId+Image surface is pinned in
-            % tests\parts\Test_p7_4_add_picture.m.)
+            % below (4 -> 3).
+            % REGISTRY-FLIP RE-PIN (P8-1 Gate-4): P8-1 un-stubbed BOTH
+            % DocumentPart.numbering_part (default.docx ships a numbering part, so it
+            % now RESOLVES to a NumberingPart via part_related_by(NUMBERING)) AND
+            % NumberingPart.numbering_definitions (returns a NumberingDefinitions_).
+            % Both moved to the positive block below (3 -> 1). The ONE remaining
+            % genuine stub is DocumentPart.inline_shapes (the inline-shapes tier,
+            % P8-2+). (registry-flip stale-pins lesson; the full numbering surface is
+            % pinned in tests\oxml\Test_p8_1_numbering.m.)
             pkg = testCase.openPkg();
             dp = pkg.main_document_part();
             sp = dp.styles_part_();      % real StylesPart
             st = dp.settings_part_();    % real SettingsPart
             np = testCase.partByCT(pkg, mat2doc.opc.CONTENT_TYPE.WML_NUMBERING); % NumberingPart
             calls = { ...
-                @() dp.numbering_part(),         'DocumentPart.numbering_part'; ...
-                @() dp.inline_shapes(),          'DocumentPart.inline_shapes'; ...
-                @() np.numbering_definitions(),   'NumberingPart.numbering_definitions'};
-            testCase.verifyEqual(size(calls, 1), 3, 'exactly 3 genuine feature stubs remain after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr + P7-4 image un-stubs');
+                @() dp.inline_shapes(),          'DocumentPart.inline_shapes'};
+            testCase.verifyEqual(size(calls, 1), 1, 'exactly 1 genuine feature stub remains after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr + P7-4 image + P8-1 numbering un-stubs');
             for k = 1:size(calls, 1)
                 caught = testCase.catchCall(calls{k, 1});
                 testCase.assertNotEmpty(caught, ...
@@ -421,6 +422,21 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
                 'StoryPart.get_or_add_image on a bogus path must still error (image load)');
             testCase.verifyEqual(caughtImg.identifier, 'mat2doc:FileNotFoundError', ...
                 'StoryPart.get_or_add_image is LIVE (P7-4): bogus path -> FileNotFoundError, NOT notYetPorted');
+
+            % --- the two numbering paths P8-1 un-stubbed now RESOLVE (no stub) ---
+            % DocumentPart.numbering_part RESOLVES to the package's NumberingPart
+            % (default.docx ships numbering.xml, related via RT.NUMBERING, so the
+            % faithful NotImplementedError new() branch is never reached).
+            % NumberingPart.numbering_definitions RESOLVES to a NumberingDefinitions_
+            % (len == 9 <w:num> on default.docx). The full numbering surface +
+            % lazyproperty identity is pinned in tests\oxml\Test_p8_1_numbering.m.
+            testCase.verifyClass(dp.numbering_part(), 'mat2doc.parts.NumberingPart', ...
+                'DocumentPart.numbering_part RESOLVES to a NumberingPart (un-stubbed at P8-1)');
+            nd = np.numbering_definitions();
+            testCase.verifyClass(nd, 'mat2doc.parts.NumberingDefinitions_', ...
+                'NumberingPart.numbering_definitions RESOLVES to a NumberingDefinitions_ (un-stubbed at P8-1)');
+            testCase.verifyEqual(nd.len_(), 9, ...
+                'default.docx numbering_definitions len == 9 <w:num>');
         end
 
         function test_numberingpart_new_raises_notimplemented(testCase)
