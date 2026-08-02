@@ -74,6 +74,9 @@ project:
     - title: Comments tier (Phase 8)
       children:
         - file: api/comments.md
+    - title: Drawing + inner-content tier (Phase 8 — ★ PORT COMPLETE)
+      children:
+        - file: api/drawing.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md

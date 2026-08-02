@@ -582,6 +582,31 @@ syntax, description, example, ported-from).
   are byte/value identical to python-docx (`s0101`–`s0106` full-package L1,
   `s0107` probe 24/24, `s0108` M1 17/17), **0 new D-numbers**. See the
   [comments tier page](api/comments.md).
+- **Drawing + inner-content tier (Phase 8 — ★ the FINAL port WP)** — the
+  **third and last port WP of the whole project** (P8-3 [N]). It lands
+  `mat2doc.drawing.Drawing` (the `<w:drawing>` picture proxy — `has_picture`
+  inline-or-floating xpath test and `image`, which resolves the
+  `pic:blipFill/a:blip/@r:embed` relationship to the live image part or raises
+  `mat2doc:ValueError` "drawing does not contain a picture"; the **last of the 95
+  catalog modules** to be ported, **C2b**), the run **inner-content** surface —
+  `CT_R.inner_content_items` (a run's content as an ordered heterogeneous cell of
+  `str | CT_Drawing | CT_LastRenderedPageBreak`, plain-text children coalesced,
+  now live because both element classes are registered) and
+  `Run.iter_inner_content` (its proxy-tier view — `str | RenderedPageBreak |
+  Drawing`) — and the **final un-stub sweep**: `Document.add_page_break`
+  (composing `add_paragraph`→`add_run`→`add_break(WD_BREAK.PAGE)` → a byte-exact
+  `<w:br w:type="page"/>`), `Document.paragraphs` / `Document.tables` /
+  `Document.inline_shapes`, the `@lazyproperty` `DocumentPart.inline_shapes`, and
+  the `OpcPackage._core_properties_part` default-creation branch (the silent
+  survivor, dead on M1). **★ C4 met — zero live `mat2doc:notYetPorted` sites**;
+  hyperlink + `blkcntnr` were VERIFIED already-live (no edits). Byte-neutral (no
+  registry row, no serialization surface): the `s0109` rich-doc scenario
+  (paragraphs incl. non-ASCII + hard page break + 2×3 table + inline picture) is
+  **18/18 parts byte-identical**, `s0110`/`s0111` probes MATCH (incl. the
+  reopened-package `Drawing.image` sha1 identity), **0 new D-numbers**. See the
+  [drawing + inner-content page](api/drawing.md). **★ With P8-3, the PORT is
+  COMPLETE — only P8-EXIT (system campaigns + Word-COM oracle + the dogfooded
+  Word user manual) remains before Mat2Doc COMPLETE.**
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6
