@@ -399,23 +399,20 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             %     new() branch is never reached) -> REMOVED from the notYetPorted set,
             %     positive check below (validate_P8-1 §4 re-pin 3). The full numbering
             %     surface is pinned in tests\oxml\Test_p8_1_numbering.m.
+            %   * P8-3 (FINAL port WP): document.Document.paragraphs was un-stubbed
+            %     (the last content delegator) and now RESOLVES to a Paragraph array
+            %     delegated from the body -> REMOVED from the notYetPorted set, positive
+            %     check below (validate_P8-3 s0110). The notYetPorted battery is now
+            %     EMPTY: C4 met -- ZERO live mat2doc:notYetPorted sites remain in the
+            %     whole toolbox. This test now asserts only positive resolution.
             pkg = mat2doc.package.Package.open(char(testCase.templatePath()));
             dp  = pkg.main_document_part();
             d   = dp.document();
-            calls = { ...
-                @() d.paragraphs(),     'document.Document.paragraphs'};
-            for k = 1:size(calls, 1)
-                caught = [];
-                try
-                    calls{k, 1}();
-                catch ME
-                    caught = ME;
-                end
-                testCase.assertNotEmpty(caught, ...
-                    sprintf('stub %s must raise', calls{k, 2}));
-                testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
-                    sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 2}));
-            end
+
+            % Document.paragraphs now RESOLVES (un-stubbed at P8-3, the final port WP)
+            % -> a Paragraph array delegated from the body (Python: self._body.paragraphs).
+            testCase.verifyClass(d.paragraphs(), 'mat2doc.text.Paragraph', ...
+                'Document.paragraphs RESOLVES to a Paragraph array (P8-3 un-stub, C4 met)');
 
             % Document.styles now RESOLVES (un-stubbed at P4-7a) -> a Styles proxy
             % over the real styles part.

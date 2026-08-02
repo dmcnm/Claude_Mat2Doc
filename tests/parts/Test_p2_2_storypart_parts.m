@@ -354,25 +354,25 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % DocumentPart.numbering_part (default.docx ships a numbering part, so it
             % now RESOLVES to a NumberingPart via part_related_by(NUMBERING)) AND
             % NumberingPart.numbering_definitions (returns a NumberingDefinitions_).
-            % Both moved to the positive block below (3 -> 1). The ONE remaining
-            % genuine stub is DocumentPart.inline_shapes (the inline-shapes tier,
-            % P8-2+). (registry-flip stale-pins lesson; the full numbering surface is
-            % pinned in tests\oxml\Test_p8_1_numbering.m.)
+            % Both moved to the positive block below (3 -> 1).
+            % REGISTRY-FLIP RE-PIN (P8-3 Gate-4, the FINAL port WP): P8-3 un-stubbed the
+            % LAST remaining stub, DocumentPart.inline_shapes, which now RESOLVES to an
+            % InlineShapes collection over the document body -> moved to the positive
+            % block below (1 -> 0). The notYetPorted battery is now EMPTY: C4 met --
+            % ZERO live mat2doc:notYetPorted sites remain in the whole toolbox. This
+            % test now asserts only positive resolution.
             pkg = testCase.openPkg();
             dp = pkg.main_document_part();
             sp = dp.styles_part_();      % real StylesPart
             st = dp.settings_part_();    % real SettingsPart
             np = testCase.partByCT(pkg, mat2doc.opc.CONTENT_TYPE.WML_NUMBERING); % NumberingPart
-            calls = { ...
-                @() dp.inline_shapes(),          'DocumentPart.inline_shapes'};
-            testCase.verifyEqual(size(calls, 1), 1, 'exactly 1 genuine feature stub remains after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr + P7-4 image + P8-1 numbering un-stubs');
-            for k = 1:size(calls, 1)
-                caught = testCase.catchCall(calls{k, 1});
-                testCase.assertNotEmpty(caught, ...
-                    sprintf('stub %s must raise', calls{k, 2}));
-                testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
-                    sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 2}));
-            end
+
+            % --- the LAST stub P8-3 un-stubbed now RESOLVES (no stub; C4 met) ---
+            % DocumentPart.inline_shapes RESOLVES to an InlineShapes collection over the
+            % document body (empty on default.docx). The full inline-shapes surface +
+            % Document<->DocumentPart parity is pinned in tests\drawing\Test_p8_3_unstub.m.
+            testCase.verifyClass(dp.inline_shapes(), 'mat2doc.shape.InlineShapes', ...
+                'DocumentPart.inline_shapes RESOLVES to an InlineShapes collection (P8-3 un-stub, C4 met)');
 
             % --- the four styles paths P4-7a un-stubbed now RESOLVE (no stub) ---
             PARA = mat2doc.enum.style.WD_STYLE_TYPE.PARAGRAPH;
