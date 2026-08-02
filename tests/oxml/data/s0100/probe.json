@@ -1,0 +1,19 @@
+{
+  "add_num_id1": "int|1",
+  "add_num_id2": "int|2",
+  "add_num_id3": "int|3",
+  "ctnum_abstractnumid_val": "int|42",
+  "ctnum_numid": "int|5",
+  "default_nd_len": "int|9",
+  "default_numdef_identity": "bool|true",
+  "default_numpart_class": "str|NumberingPart",
+  "default_numpart_identity": "bool|true",
+  "gapfill_12": "int|3",
+  "gapfill_13": "int|2",
+  "gapfill_empty": "int|1",
+  "having_hit_identity": "bool|true",
+  "having_hit_numid": "int|2",
+  "having_miss": "err|KeyError|no <w:num> element with numId 99",
+  "nd_len": "int|3",
+  "numpart_new_raises": "err|NotImplementedError"
+}

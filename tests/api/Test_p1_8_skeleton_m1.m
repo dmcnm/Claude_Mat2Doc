@@ -379,8 +379,6 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             % feature-stub set each raises mat2doc:notYetPorted (identifier pinned),
             % NOT a silent no-op. Covers the still-wired stubs:
             %   document.Document.paragraphs   (still stubbed -- P4-7b VERIFY-1 scope)
-            %   DocumentPart.numbering_part
-            %   Package.image_parts
             %
             % REGISTRY-FLIP RE-PINS (the un-stub moved the behavior, so the pin moves
             % with it -- registry-flip stale-pins lesson):
@@ -395,12 +393,17 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             %   * P7-4: Package.image_parts was un-stubbed (the picture milestone WP)
             %     and now RESOLVES (returns an ImageParts collection) -> REMOVED from
             %     the notYetPorted set, positive check below (validate_P7-4 s5/re-pin 1).
+            %   * P8-1: DocumentPart.numbering_part was un-stubbed. default.docx ships
+            %     a numbering part (related via RT.NUMBERING), so it now RESOLVES to a
+            %     NumberingPart via part_related_by (the faithful NotImplementedError
+            %     new() branch is never reached) -> REMOVED from the notYetPorted set,
+            %     positive check below (validate_P8-1 §4 re-pin 3). The full numbering
+            %     surface is pinned in tests\oxml\Test_p8_1_numbering.m.
             pkg = mat2doc.package.Package.open(char(testCase.templatePath()));
             dp  = pkg.main_document_part();
             d   = dp.document();
             calls = { ...
-                @() d.paragraphs(),     'document.Document.paragraphs'; ...
-                @() dp.numbering_part(),'parts.DocumentPart.numbering_part'};
+                @() d.paragraphs(),     'document.Document.paragraphs'};
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -429,6 +432,13 @@ classdef Test_p1_8_skeleton_m1 < matlab.unittest.TestCase
             % (registry-flip re-pin 1; validate_P7-4 s5).
             testCase.verifyClass(pkg.image_parts(), 'mat2doc.package.ImageParts', ...
                 'Package.image_parts RESOLVES to an ImageParts collection (P7-4 un-stub)');
+
+            % DocumentPart.numbering_part now RESOLVES (un-stubbed at P8-1) -> the
+            % package's NumberingPart (default.docx ships numbering.xml, related via
+            % RT.NUMBERING). The faithful NotImplementedError new() branch is only
+            % reached on a package WITHOUT a numbering part.
+            testCase.verifyClass(dp.numbering_part(), 'mat2doc.parts.NumberingPart', ...
+                'DocumentPart.numbering_part RESOLVES to a NumberingPart (P8-1 un-stub)');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

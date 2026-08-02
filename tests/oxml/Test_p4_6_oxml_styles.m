@@ -576,7 +576,8 @@ classdef Test_p4_6_oxml_styles < matlab.unittest.TestCase
             % CT_LsdException, CT_LatentStyles, CT_DecimalNumber and their children)
             % and re-serialize -- must be byte-identical to the input. Directly
             % exercises the new CT_* parse->serialize path at part scale. numId/ilvl
-            % remain generic (deferred to P6/P8).
+            % now parse onto CT_DecimalNumber (P8-1 registered w:numId/w:ilvl ->
+            % CT_DecimalNumber); the byte roundtrip stays L1 regardless.
             inBytes  = emitDocPart('styles.xml');
             root     = mat2doc.oxml.parse_xml(inBytes);
             outBytes = mat2doc.oxml.serialize_part_xml(root);
@@ -585,18 +586,23 @@ classdef Test_p4_6_oxml_styles < matlab.unittest.TestCase
             % Count guards (looser-than-byte, justified): the frozen default template
             % ships EXACTLY 164 w:style / 137 w:lsdException; pinning proves the new
             % CT_* path was exercised at scale, not that a short part slipped through.
-            % numId (6) / ilvl (1) DO appear (inside w:pPr/w:numPr) but stay GENERIC.
+            % numId (6) / ilvl (1) DO appear (inside w:pPr/w:numPr); P8-1 registered
+            % w:numId/w:ilvl -> CT_DecimalNumber, so they now parse onto a real CT_*.
             testCase.verifyEqual(numel(root.xpath('.//w:style')), 164, ...
                 'styles.xml must parse exactly 164 w:style (CT_Style path exercised at scale)');
             testCase.verifyEqual(numel(root.xpath('.//w:lsdException')), 137, ...
                 'styles.xml must parse exactly 137 w:lsdException (CT_LsdException at scale)');
             numIds = root.xpath('.//w:numId');
             ilvls  = root.xpath('.//w:ilvl');
-            testCase.verifyEqual(numel(numIds), 6, 'w:numId present (generic, deferred)');
-            testCase.verifyEqual(numel(ilvls), 1,  'w:ilvl present (generic, deferred)');
-            % numId/ilvl parse as GENERIC XmlElement (NOT registered by this WP)
-            testCase.verifyEqual(class(numIds(1)), 'mat2doc.oxml.XmlElement', ...
-                'w:numId stays generic XmlElement (deferred to P6/P8)');
+            testCase.verifyEqual(numel(numIds), 6, 'w:numId present (CT_DecimalNumber, P8-1)');
+            testCase.verifyEqual(numel(ilvls), 1,  'w:ilvl present (CT_DecimalNumber, P8-1)');
+            % REGISTRY-FLIP RE-PIN (P8-1 Gate-4): P8-1 registered w:numId/w:ilvl ->
+            % CT_DecimalNumber, so class(numIds(1)) flips generic XmlElement ->
+            % mat2doc.oxml.shared.CT_DecimalNumber. The :583 byte roundtrip PASSES
+            % unchanged (styles.xml byte-neutral: 349458 B / 02d71a68...); only this
+            % class assertion moves. (registry-flip stale-pins lesson.)
+            testCase.verifyEqual(class(numIds(1)), 'mat2doc.oxml.shared.CT_DecimalNumber', ...
+                'w:numId parses onto CT_DecimalNumber (P8-1 registered w:numId/w:ilvl)');
             % a live get_by_id transits the new CT_Style parse class
             h1 = root.get_by_id("Heading1");
             testCase.verifyEqual(h1.name_val, "heading 1");
