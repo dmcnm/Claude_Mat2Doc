@@ -59,8 +59,9 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
 %     (H5 / StoryChild) run.font == run.font True (fresh proxy, same w:r);
 %     Run(r, partStub).part() delegates via StoryChild to parent.part() -> "STUBPART".
 %
-%     (Stub-safety) add_picture / iter_inner_content / style get / style set each
-%     raise mat2doc:notYetPorted (identifier verified, 4/4).
+%     (Stub-safety) the formerly-stubbed paths now all RESOLVE: add_picture ->
+%     FileNotFoundError on a bogus path (P7-4), iter_inner_content -> empty cell
+%     (P8-3), style get/set -> CharacterStyle (P4-7a). ZERO notYetPorted remain.
 %
 %   Provenance (Gate-1..3, all 2026-07-30):
 %     * Audit    : validation\mat2doc\audit_P4-4b_text_run.md (Porter Gate-1 +
@@ -443,9 +444,8 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_stub_safety(testCase)
-            % Edge / stub-safety (run.py 59-81, 153-174): the remaining
-            % unported-dependency stubs each raise mat2doc:notYetPorted (identifier
-            % verified). iter_inner_content -> P4-5b+P7 (still stubbed).
+            % Edge / stub-safety (run.py 59-81, 153-174): the formerly unported-
+            % dependency stubs now all RESOLVE (P8-3 was the final un-stub sweep).
             %
             % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): Run.style GET and SET were
             % un-stubbed at P4-7a (they delegate to the now-live
@@ -454,9 +454,18 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
             % registry-flip stale-pins lesson). The old notYetPorted assertion is
             % gone.
             %
+            % REGISTRY-FLIP RE-PIN (P8-3, the FINAL un-stub sweep):
+            % Run.iter_inner_content is now LIVE (RenderedPageBreak P4-5b + Drawing
+            % P8-3 + CT_R.inner_content_items P8-3 all live). Over a bare (empty) run
+            % it RESOLVES to an empty 1x0 cell array (no content items), NOT
+            % mat2doc:notYetPorted -- the identifier change is the un-stub proof.
+            % Content-item ordering over drawings/page-breaks is Gate-4 scope.
             [~, run] = newRun();
-            testCase.verifyEqual(string(captureError(@() run.iter_inner_content()).identifier), ...
-                "mat2doc:notYetPorted", 'iter_inner_content -> mat2doc:notYetPorted');
+            iic = run.iter_inner_content();
+            testCase.verifyClass(iic, 'cell', ...
+                'Run.iter_inner_content RESOLVES to a cell array (P8-3 un-stub)');
+            testCase.verifyEmpty(iic, ...
+                'a bare run has no inner-content items -> empty cell');
 
             % --- Run.style get/set now RESOLVE end-to-end over a live Document ---
             % Capture the CT_P so the CT_R rStyle can be reached via xpath (Run

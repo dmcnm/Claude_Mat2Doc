@@ -109,9 +109,13 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %   * P8-2 (comments WP) RE-PIN: Document.comments + Document.add_comment are
         %     now LIVE -> DROPPED from the battery (6 -> 4) and asserted resolved below
         %     (comments -> a Comments proxy; add_comment no longer raises
-        %     notYetPorted). Document.paragraphs/tables/inline_shapes stay pinned ->
-        %     P8-3 (the blkcntnr-remainder WP). ---
-        STUB_COUNT = 4
+        %     notYetPorted).
+        %   * P8-3 (the FINAL un-stub sweep) RE-PIN: Document.add_page_break /
+        %     Document.paragraphs / Document.tables / Document.inline_shapes are now
+        %     LIVE -> DROPPED from the battery (4 -> 0) and asserted resolved below.
+        %     The content-authoring stub battery is now EMPTY: the toolbox raises
+        %     ZERO mat2doc:notYetPorted (C4 exit condition). ---
+        STUB_COUNT = 0
     end
 
     methods (TestClassSetup)
@@ -340,13 +344,11 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
-            calls = { ...
-                'Document.add_page_break',     @() d.add_page_break(); ...
-                'Document.paragraphs',         @() d.paragraphs(); ...
-                'Document.tables',             @() d.tables(); ...
-                'Document.inline_shapes',      @() d.inline_shapes()};
+            % P8-3: the content-authoring stub battery is now EMPTY (STUB_COUNT=0);
+            % the four formerly-pinned members are asserted RESOLVED below.
+            calls = cell(0, 2);
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 4 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b + Document.add_picture P7-4 + Document.comments/add_comment P8-2 un-stubbed)');
+                'the stub battery must be EMPTY (P8-3 un-stubbed the last 4 Document members: add_page_break/paragraphs/tables/inline_shapes -> ZERO notYetPorted, C4 exit condition)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -359,6 +361,15 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 testCase.verifyEqual(caught.identifier, 'mat2doc:notYetPorted', ...
                     sprintf('stub %s must raise mat2doc:notYetPorted', calls{k, 1}));
             end
+            % P8-3 RE-PIN: the four formerly-pinned Document members now RESOLVE.
+            testCase.verifyClass(d.paragraphs(), 'mat2doc.text.Paragraph', ...
+                'Document.paragraphs RESOLVES to a Paragraph array (P8-3 un-stub)');
+            testCase.verifyClass(d.tables(), 'mat2doc.table.Table', ...
+                'Document.tables RESOLVES to a Table array (P8-3 un-stub)');
+            testCase.verifyClass(d.inline_shapes(), 'mat2doc.shape.InlineShapes', ...
+                'Document.inline_shapes RESOLVES to an InlineShapes collection (P8-3 un-stub)');
+            testCase.verifyClass(d.add_page_break(), 'mat2doc.text.Paragraph', ...
+                'Document.add_page_break RESOLVES to a Paragraph (P8-3 un-stub)');
             % Document.comments now RESOLVES (un-stubbed at P8-2).
             testCase.verifyClass(d.comments(), 'mat2doc.comments.Comments', ...
                 'Document.comments RESOLVES to a Comments proxy (P8-2 un-stub)');

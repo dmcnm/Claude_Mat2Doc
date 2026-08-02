@@ -24,7 +24,7 @@ classdef DocumentPart < mat2doc.parts.StoryPart
 %       settings            -> P5-1 (Settings proxy)
 %       numbering_part      -> P8-1 (NumberingPart.new / numbering definitions)
 %       comments / _comments_part -> P8-2 (CommentsPart + Comments)
-%       inline_shapes       -> P7   (InlineShapes)
+%       inline_shapes       -> LIVE at P8-3 (InlineShapes over the document body)
 %       get_style / get_style_id -> P4-7 (styles resolution)
 %     LIVE at P5-3b (header/footer separate-part wiring):
 %       add_header_part / add_footer_part -> Header/FooterPart.new + relate_to
@@ -67,6 +67,8 @@ classdef DocumentPart < mat2doc.parts.StoryPart
     properties (Access = private)
         numbering_part_cache_                          % numbering_part lazyproperty cache (P8-1)
         numbering_part_computed_ (1,1) logical = false
+        inline_shapes_cache_                           % inline_shapes lazyproperty cache (P8-3)
+        inline_shapes_computed_ (1,1) logical = false
     end
 
     methods
@@ -248,11 +250,24 @@ classdef DocumentPart < mat2doc.parts.StoryPart
             hp = cellval{1};
         end
 
-        function s = inline_shapes(obj) %#ok<MANU,STOUT>
-            % INLINE_SHAPES STUB (parts/document.py 93-96, @lazyproperty). Owner: P7.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.shape.InlineShapes (owning WP: P7 image/shape tier) " + ...
-                "required by mat2doc.parts.DocumentPart.inline_shapes");
+        function s = inline_shapes(obj)
+            % INLINE_SHAPES The InlineShapes instance containing the inline shapes
+            %   in the document (parts/document.py 93-96, @lazyproperty).
+            %   UN-STUBBED at P8-3. Python:
+            %     return InlineShapes(self._element.body, self)
+            %   `self._element.body` is the CT_Document root's <w:body> (a CT_Body);
+            %   `self` is this DocumentPart (a ProvidesStoryPart). @lazyproperty:
+            %   the SAME InlineShapes handle is returned on every access (cached
+            %   after first computation via the logical flag -- design.md
+            %   @lazyproperty rule; NEVER isempty as the cache sentinel).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.inline_shapes
+            if ~obj.inline_shapes_computed_
+                obj.inline_shapes_cache_ = mat2doc.shape.InlineShapes( ...
+                    obj.element().body, obj);   % Python: InlineShapes(self._element.body, self)
+                obj.inline_shapes_computed_ = true;
+            end
+            s = obj.inline_shapes_cache_;
         end
 
         function np = numbering_part(obj)
