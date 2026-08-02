@@ -388,6 +388,14 @@ map = registerElementCls_(map, "w:numId",         "mat2doc.oxml.shared.CT_Decima
 map = registerElementCls_(map, "w:numPr",         "mat2doc.oxml.numbering.CT_NumPr");         % __init__.py:110 (P8-1)
 map = registerElementCls_(map, "w:numbering",     "mat2doc.oxml.numbering.CT_Numbering");     % __init__.py:111 (P8-1)
 map = registerElementCls_(map, "w:startOverride", "mat2doc.oxml.shared.CT_DecimalNumber");   % __init__.py:112 (P8-1)
+% -- comments block (docx/oxml/__init__.py:89-92), P8-2 -- the comments tier. Two
+% -- rows: the <w:comments> root (-> CT_Comments) and each <w:comment> (->
+% -- CT_Comment). M1-NEUTRAL: default.docx ships NO comments.xml, and no other M1
+% -- part contains <w:comments>/<w:comment>, so registering these two rows flips
+% -- ZERO of the 17 M1 parts onto a new parse path (unlike the P8-1 numbering
+% -- block, which re-classed styles.xml + numbering.xml). M1 stays 17/17 L1.
+map = registerElementCls_(map, "w:comments",      "mat2doc.oxml.comments.CT_Comments");      % __init__.py:91 (P8-2)
+map = registerElementCls_(map, "w:comment",       "mat2doc.oxml.comments.CT_Comment");       % __init__.py:92 (P8-2)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE

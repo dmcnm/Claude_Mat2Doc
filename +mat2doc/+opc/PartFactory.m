@@ -132,12 +132,12 @@ classdef PartFactory
             %   WML_NUMBERING -> NumberingPart (mirrors docx/__init__.py 49-51).
             %   Re-proven byte-neutral by the 17/17 M1 sweep. P5-3b flips
             %   WML_FOOTER -> FooterPart, WML_HEADER -> HeaderPart (StoryPart<XmlPart
-            %   shells). Still base-XmlPart stand-in: WML_COMMENTS (P8-2).
+            %   shells). P8-2 flips WML_COMMENTS -> CommentsPart (StoryPart<XmlPart
+            %   shell; on-demand part -- no M1 fixture loads it, so byte-neutral).
             CT  = mat2doc.opc.CONTENT_TYPE;
-            XP  = "mat2doc.opc.XmlPart";   % base XmlPart -> parse + re-serialize
             reg = [ ...
                 CT.OPC_CORE_PROPERTIES, "mat2doc.opc.parts.CorePropertiesPart";  ...  % P1-8 flip (P1-7 class)
-                CT.WML_COMMENTS,        XP;                             ...  % P8-2: CommentsPart (StoryPart<XmlPart)
+                CT.WML_COMMENTS,        "mat2doc.parts.CommentsPart";   ...  % P8-2 flip (StoryPart<XmlPart shell)
                 CT.WML_DOCUMENT_MAIN,   "mat2doc.parts.DocumentPart";   ...  % P1-8 flip (M1-required)
                 CT.WML_FOOTER,          "mat2doc.parts.FooterPart";     ...  % P5-3b flip (StoryPart<XmlPart shell)
                 CT.WML_HEADER,          "mat2doc.parts.HeaderPart";     ...  % P5-3b flip (StoryPart<XmlPart shell)

@@ -182,11 +182,46 @@ classdef Document < mat2doc.shared.ElementProxy
         % un-stub these. NONE is on the open->save path.
         % ------------------------------------------------------------------
 
-        function comment = add_comment(obj, runs, text, author, initials) %#ok<INUSD,MANU,STOUT>
-            % ADD_COMMENT STUB (document.py 41-88). Owner: P8-2 comments tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_comment (owning WP: P8-2 comments " + ...
-                "tier) is not yet ported");
+        function comment = add_comment(obj, runs, text, author, initials)
+            % ADD_COMMENT Add a comment anchored to the specified runs, and return
+            %   it (document.py 41-88). UN-STUBBED at P8-2.
+            %
+            %   `runs` is a single Run or a non-empty Run array; only the first and
+            %   last run are used (they delimit the comment reference range via a
+            %   w:commentRangeStart before the first run and a w:commentRangeEnd +
+            %   w:commentReference after the last run). `text` seeds a simple
+            %   plain-text comment (see Comments.add_comment); `author` (required,
+            %   "" by default) and `initials` (optional, "" by default) set the
+            %   metadata.
+            %
+            %   Python:
+            %     runs = [runs] if isinstance(runs, Run) else runs
+            %     first_run = runs[0]
+            %     last_run = runs[-1]
+            %     comment = self.comments.add_comment(text=text, author=author, initials=initials)
+            %     first_run.mark_comment_range(last_run, comment.comment_id)
+            %     return comment
+            %
+            %   NORMALIZATION (H10/H9): Python wraps a lone Run in a list so runs[0]
+            %   /runs[-1] index it. In MATLAB a scalar Run and a 1xN Run array are
+            %   BOTH isa("mat2doc.text.Run") and BOTH index with (1)/(end), so the
+            %   isinstance-wrap is a no-op -- first/last are read directly. H13
+            %   defaults: text="", author="", initials="". mark_comment_range is
+            %   LIVE (CT_R comment-range helpers). H5: the returned Comment is a
+            %   fresh view (Comments.add_comment mints it).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_comment
+            arguments
+                obj
+                runs
+                text     = ""   % Python default "" (str | None)
+                author   = ""   % Python default ""
+                initials = ""   % Python default "" (pass [] for None)
+            end
+            first_run = runs(1);      % Python: runs[0]  (see NORMALIZATION note)
+            last_run = runs(end);     % Python: runs[-1]
+            comment = obj.comments().add_comment(text, author, initials);  % Python: self.comments.add_comment(...)
+            first_run.mark_comment_range(last_run, comment.comment_id);     % Python: first_run.mark_comment_range(last_run, comment.comment_id)
         end
 
         function p = add_heading(obj, text, level)
@@ -334,11 +369,14 @@ classdef Document < mat2doc.shared.ElementProxy
             table.style = style;                                            % Python: table.style = style
         end
 
-        function c = comments(obj) %#ok<MANU,STOUT>
-            % COMMENTS STUB (document.py 160-163). Owner: P8-2 comments tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.comments (owning WP: P8-2 comments " + ...
-                "tier) is not yet ported");
+        function c = comments(obj)
+            % COMMENTS A Comments object providing access to comments added to the
+            %   document (document.py 160-163, @property). Python: return
+            %   self._part.comments. UN-STUBBED at P8-2 -- the DocumentPart
+            %   materializes/loads the CommentsPart on demand.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.comments
+            c = obj.part_.comments;
         end
 
         function s = inline_shapes(obj) %#ok<MANU,STOUT>

@@ -171,11 +171,15 @@ classdef DocumentPart < mat2doc.parts.StoryPart
             rId = obj.relate_to(header_part, mat2doc.opc.RELATIONSHIP_TYPE.HEADER);
         end
 
-        function c = comments(obj) %#ok<MANU,STOUT>
-            % COMMENTS STUB (parts/document.py 47-50). Owner: P8-2.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.CommentsPart / mat2doc.comments.Comments (owning " + ...
-                "WP: P8-2 comments tier) required by mat2doc.parts.DocumentPart.comments");
+        function c = comments(obj)
+            % COMMENTS A Comments object providing access to the comments added to
+            %   this document (parts/document.py 47-50, @property). Python:
+            %   return self._comments_part.comments. UN-STUBBED at P8-2:
+            %   _comments_part (comments_part_) materializes/loads the CommentsPart,
+            %   whose `comments` returns the Comments proxy.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart.comments
+            c = obj.comments_part_().comments;
         end
 
         function drop_header_part(obj, rId)
@@ -307,14 +311,37 @@ classdef DocumentPart < mat2doc.parts.StoryPart
     end
 
     methods (Access = private)
-        function cp = comments_part_(obj) %#ok<MANU,STOUT>
-            % _comments_part STUB (parts/document.py 128-140, plain @property).
-            %   Owner: P8-2. Faithful body fetches the CommentsPart via
-            %   part_related_by(RT.COMMENTS) or creates CommentsPart.default. The
-            %   CommentsPart class + WML_COMMENTS flip land at P8-2.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.parts.CommentsPart (owning WP: P8-2 comments tier) " + ...
-                "required by mat2doc.parts.DocumentPart._comments_part");
+        function cp = comments_part_(obj)
+            % _comments_part The CommentsPart for this document, creating a default
+            %   one if not present (parts/document.py 128-140, plain @property).
+            %   UN-STUBBED at P8-2. Python:
+            %     try:
+            %         return cast(CommentsPart, self.part_related_by(RT.COMMENTS))
+            %     except KeyError:
+            %         assert self.package is not None
+            %         comments_part = CommentsPart.default(self.package)
+            %         self.relate_to(comments_part, RT.COMMENTS)
+            %         return comments_part
+            %   part_related_by raises mat2doc:KeyError when absent (any other
+            %   exception propagates -- the numbering_part precedent). This is a
+            %   PLAIN @property (NOT a lazyproperty): re-evaluated each access, but
+            %   idempotent -- the first access creates & relates the part, later
+            %   accesses find it via part_related_by (H5: relate_to dedupes to the
+            %   same rId/part). CommentsPart.default(package) builds word/comments.xml
+            %   from the default template on demand.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/parts/document.py::DocumentPart._comments_part
+            RT = mat2doc.opc.RELATIONSHIP_TYPE;
+            try
+                cp = obj.part_related_by(RT.COMMENTS);   % Python: self.part_related_by(RT.COMMENTS)
+                return
+            catch ME
+                if ME.identifier ~= "mat2doc:KeyError"   % Python: except KeyError
+                    rethrow(ME);
+                end
+            end
+            cp = mat2doc.parts.CommentsPart.default(obj.package());  % Python: CommentsPart.default(self.package)
+            obj.relate_to(cp, RT.COMMENTS);                          % Python: self.relate_to(comments_part, RT.COMMENTS)
         end
     end
 
