@@ -68,6 +68,9 @@ project:
         - file: api/image_formats.md
         - file: api/drawing_shape.md
         - file: api/add_picture.md
+    - title: Numbering tier (Phase 8)
+      children:
+        - file: api/numbering.md
     - title: Enumerations (enum)
       children:
         - file: api/enums.md
