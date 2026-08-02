@@ -1,0 +1,145 @@
+{
+  "schema": "p73-byte/1",
+  "artifacts": [
+    {
+      "kind": "new_pic_inline",
+      "label": "A_porter",
+      "file": "new_pic_inline_A_porter.xml",
+      "args": {
+        "shape_id": 1,
+        "rId": "rId7",
+        "filename": "python-image.png",
+        "cx": 2438400,
+        "cy": 1828800
+      },
+      "size": 958,
+      "sha256": "ce13bdb0a75f41ebb57942c205ec2039d69b69933f1b55f98b50963494771490"
+    },
+    {
+      "kind": "new_pic",
+      "label": "A_porter",
+      "file": "new_pic_A_porter.xml",
+      "args": {
+        "pic_id": 0,
+        "filename": "python-image.png",
+        "rId": "rId7",
+        "cx": 2438400,
+        "cy": 1828800
+      },
+      "size": 577,
+      "sha256": "9d28d220df9007bcd7d78bca66a2d60376d046dab8314a732ace1d608bbc431f"
+    },
+    {
+      "kind": "new_pic_inline",
+      "label": "B_escaping",
+      "file": "new_pic_inline_B_escaping.xml",
+      "args": {
+        "shape_id": 43,
+        "rId": "rId99",
+        "filename": "Amp & \"quote\" <tag>.png",
+        "cx": 914400,
+        "cy": 914400
+      },
+      "size": 984,
+      "sha256": "7e070b294beef9abe8ab2af9d09c5e61b860838500f749ff751d61f2b438da56"
+    },
+    {
+      "kind": "new_pic",
+      "label": "B_escaping",
+      "file": "new_pic_B_escaping.xml",
+      "args": {
+        "pic_id": 0,
+        "filename": "Amp & \"quote\" <tag>.png",
+        "rId": "rId99",
+        "cx": 914400,
+        "cy": 914400
+      },
+      "size": 603,
+      "sha256": "7ff5d154949c45e99f2e185e31778294dd87f57bc7c8de80e895c4bd976be5b3"
+    },
+    {
+      "kind": "new_pic_inline",
+      "label": "C_utf8",
+      "file": "new_pic_inline_C_utf8.xml",
+      "args": {
+        "shape_id": 7,
+        "rId": "rId1",
+        "filename": "café 图片 🚀.png",
+        "cx": 1000000,
+        "cy": 500000
+      },
+      "size": 961,
+      "sha256": "c38186175e7d18ded0333681013340e7ab576d363ee0f4360e09dbc81b2e716e"
+    },
+    {
+      "kind": "new_pic",
+      "label": "C_utf8",
+      "file": "new_pic_C_utf8.xml",
+      "args": {
+        "pic_id": 0,
+        "filename": "café 图片 🚀.png",
+        "rId": "rId1",
+        "cx": 1000000,
+        "cy": 500000
+      },
+      "size": 581,
+      "sha256": "f69bd193590eee143b01d8c1727c49f2799444e0128c6ad4954ddf483266c94f"
+    },
+    {
+      "kind": "new_pic_inline",
+      "label": "D_tiny_emu",
+      "file": "new_pic_inline_D_tiny_emu.xml",
+      "args": {
+        "shape_id": 999,
+        "rId": "rId12",
+        "filename": "spaces in name.png",
+        "cx": 1,
+        "cy": 1
+      },
+      "size": 941,
+      "sha256": "c9611ad125c4eaef16b456d1c0253a4ca9339168c521e395e5f100864921268f"
+    },
+    {
+      "kind": "new_pic",
+      "label": "D_tiny_emu",
+      "file": "new_pic_D_tiny_emu.xml",
+      "args": {
+        "pic_id": 0,
+        "filename": "spaces in name.png",
+        "rId": "rId12",
+        "cx": 1,
+        "cy": 1
+      },
+      "size": 568,
+      "sha256": "ca5d952615d414a74a9c27dce9c7aac984dc87568ce45de6acfaa894f3db5b29"
+    },
+    {
+      "kind": "new_pic_inline",
+      "label": "E_distinct",
+      "file": "new_pic_inline_E_distinct.xml",
+      "args": {
+        "shape_id": 12345,
+        "rId": "rId2048",
+        "filename": "a.png",
+        "cx": 6858000,
+        "cy": 9144000
+      },
+      "size": 958,
+      "sha256": "3b078bbd49033dd28ba8b9d304502ec95451a40c9350ddbb9cdc92c0fdd6dfa4"
+    },
+    {
+      "kind": "new_pic",
+      "label": "E_distinct",
+      "file": "new_pic_E_distinct.xml",
+      "args": {
+        "pic_id": 0,
+        "filename": "a.png",
+        "rId": "rId2048",
+        "cx": 6858000,
+        "cy": 9144000
+      },
+      "size": 569,
+      "sha256": "3aa2ed724e3f4f5be2fe4db3bf4c730df1a1d4db5a660c1c79c8c376334ff564"
+    }
+  ]
+}
