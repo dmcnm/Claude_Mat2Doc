@@ -41,8 +41,10 @@ classdef PartFactory
 %   -- only the reloaded part's TYPE changes. Ported so far: CorePropertiesPart
 %   (P1-7), DocumentPart (P1-8), StylesPart/SettingsPart/NumberingPart (P2-2),
 %   HeaderPart/FooterPart (P5-3b). Still base-XmlPart stand-in: WML_COMMENTS
-%   (P8-2). The IMAGE selector still maps to the base mat2doc.opc.Part (ImagePart
-%   is P7). This preserves the M1 collapse/passthrough BYTE behavior throughout.
+%   (P8-2). The IMAGE selector maps to mat2doc.parts.ImagePart (P7-4 flip; was
+%   the base mat2doc.opc.Part stand-in through P7-3). This preserves the M1
+%   collapse/passthrough BYTE behavior throughout (ImagePart inherits Part.blob
+%   verbatim, so a loaded image part round-trips byte-identically).
 %
 %   ARG ORDER (docx): create(partname, content_type, reltype, blob, package) and
 %   Class.load(partname, content_type, blob, package) -- blob before package.
@@ -95,12 +97,14 @@ classdef PartFactory
         function cls = part_class_selector_(content_type, reltype) %#ok<INUSD>
             % PART_CLASS_SELECTOR_ (docx/__init__.py 37-40): reltype IMAGE -> the
             %   image part class; otherwise "" (Python None -> fall through to the
-            %   content-type map). M1 stand-in: IMAGE -> the base mat2doc.opc.Part
-            %   (ImagePart, a plain passthrough Part, is ported in P2). Not
-            %   exercised at M1 (default.docx has no IMAGE relationship; its
-            %   thumbnail is a THUMBNAIL reltype).
+            %   content-type map). P7-4 FLIP: IMAGE -> mat2doc.parts.ImagePart (was
+            %   the base mat2doc.opc.Part stand-in through M1..P7-3). Byte-neutral
+            %   on LOAD: ImagePart inherits Part.blob unchanged (verbatim image
+            %   bytes), so a loaded image part round-trips identically -- only its
+            %   TYPE changes, gaining .sha1 for the ImageParts dedupe. Not exercised
+            %   on default.docx (no IMAGE relationship; its thumbnail is THUMBNAIL).
             if reltype == mat2doc.opc.RELATIONSHIP_TYPE.IMAGE
-                cls = "mat2doc.opc.Part";   % P2: mat2doc.parts.ImagePart
+                cls = "mat2doc.parts.ImagePart";   % P7-4 flip (was mat2doc.opc.Part)
             else
                 cls = "";                   % Python None
             end

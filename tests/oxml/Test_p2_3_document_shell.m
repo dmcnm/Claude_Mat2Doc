@@ -107,7 +107,7 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
         %     Document.inline_shapes and the P6/P7/P8 adders REMAIN genuinely stubbed.
         %     (Document.tables is its OWN separate stub -- out of the P6-4b 8-member
         %     scope -- and stays pinned below.) ---
-        STUB_COUNT = 7
+        STUB_COUNT = 6
     end
 
     methods (TestClassSetup)
@@ -321,27 +321,30 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
             %     Body_.add_table / Body_.iter_inner_content un-stubbed -> REMOVED
             %     (all asserted resolved below -- add_table returns a Table;
             %     iter_inner_content returns a cell). (12 -> 8.)
-            % Document.add_page_break / Document.add_picture / Document.add_comment /
+            % Document.add_page_break / Document.add_comment /
             % Document.paragraphs / Document.tables / Document.comments /
             % Document.inline_shapes REMAIN genuinely pinned (deps not all live and/or
-            % deliberately left stubbed for the next content WP; the P6/P7/P8 adders
+            % deliberately left stubbed for the next content WP; the P6/P8 adders
             % land later). P6-4b RE-PIN: Body_.tables (inherited
             % BlockItemContainer.tables) is now LIVE -> DROPPED from the battery (8->7)
             % and asserted resolved below; Document.tables is its OWN stub (out of the
             % P6-4b scope) and stays pinned here.
+            %   * P7-4 (picture milestone WP) RE-PIN: Document.add_picture is now LIVE
+            %     -> DROPPED from the battery (7->6) and asserted resolved below (it
+            %     reaches the image loader; a bogus path raises FileNotFoundError, NOT
+            %     notYetPorted -- registry-flip re-pin 2, validate_P7-4 s6).
             d  = mat2doc.Document();
             b  = d.body_();
             ct = testCase.parseBody();
             calls = { ...
                 'Document.add_page_break',     @() d.add_page_break(); ...
-                'Document.add_picture',        @() d.add_picture("x"); ...
                 'Document.add_comment',        @() d.add_comment([], "t", "a", "i"); ...
                 'Document.paragraphs',         @() d.paragraphs(); ...
                 'Document.tables',             @() d.tables(); ...
                 'Document.comments',           @() d.comments(); ...
                 'Document.inline_shapes',      @() d.inline_shapes()};
             testCase.verifyEqual(size(calls, 1), testCase.STUB_COUNT, ...
-                'the stub battery must cover exactly 7 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b un-stubbed)');
+                'the stub battery must cover exactly 6 members (after Document.styles P4-7a + 4 adders P4-7b + Document.settings P5-1 + 3 section members P5-3a + 4 table members P6-4a + Body_.tables P6-4b + Document.add_picture P7-4 un-stubbed)');
             for k = 1:size(calls, 1)
                 caught = [];
                 try
@@ -419,6 +422,27 @@ classdef Test_p2_3_document_shell < matlab.unittest.TestCase
                 'Body_.tables RESOLVES to a Table array (P6-4b un-stub, was mat2doc:notYetPorted)');
             testCase.verifyEqual(numel(bd.body_().tables()), 1, ...
                 'Body_.tables returns the one table added to the body');
+
+            % The P7-4 Document.add_picture un-stub now RESOLVES (registry-flip re-pin
+            % 2, validate_P7-4 s6). It is LIVE at the picture milestone: it reaches the
+            % image loader (add_paragraph().add_run().add_picture(...)) instead of the
+            % notYetPorted stub. A BOGUS path is loaded-then-fails with the faithful
+            % mat2doc:FileNotFoundError (Image.from_file, image.py 35-50) -- NOT
+            % mat2doc:notYetPorted. That the identifier changed IS the un-stub proof
+            % (the byte-exact InlineShape return is pinned by Test_p7_4_add_picture; a
+            % real image is out of this class's data scope). The battery loop above has
+            % already confirmed add_picture is NO LONGER in the notYetPorted set.
+            dp = mat2doc.Document();
+            caughtPic = [];
+            try
+                dp.add_picture("no_such_image_file.png");
+            catch ME
+                caughtPic = ME;
+            end
+            testCase.assertNotEmpty(caughtPic, ...
+                'Document.add_picture on a bogus path must still error (file load)');
+            testCase.verifyEqual(caughtPic.identifier, 'mat2doc:FileNotFoundError', ...
+                'Document.add_picture is LIVE (P7-4): a bogus path raises FileNotFoundError, NOT notYetPorted');
         end
 
         function test_clean_save_fires_zero_stubs(testCase)

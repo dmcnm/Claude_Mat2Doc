@@ -445,7 +445,7 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
         function test_stub_safety(testCase)
             % Edge / stub-safety (run.py 59-81, 153-174): the remaining
             % unported-dependency stubs each raise mat2doc:notYetPorted (identifier
-            % verified). add_picture -> P7; iter_inner_content -> P4-5b+P7.
+            % verified). iter_inner_content -> P4-5b+P7 (still stubbed).
             %
             % REGISTRY-FLIP RE-PIN (P4-7a Gate-4): Run.style GET and SET were
             % un-stubbed at P4-7a (they delegate to the now-live
@@ -453,9 +453,8 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
             % real Document part -- re-pinned to the resolved behavior below (the
             % registry-flip stale-pins lesson). The old notYetPorted assertion is
             % gone.
+            %
             [~, run] = newRun();
-            testCase.verifyEqual(string(captureError(@() run.add_picture("x.png")).identifier), ...
-                "mat2doc:notYetPorted", 'add_picture -> mat2doc:notYetPorted');
             testCase.verifyEqual(string(captureError(@() run.iter_inner_content()).identifier), ...
                 "mat2doc:notYetPorted", 'iter_inner_content -> mat2doc:notYetPorted');
 
@@ -466,6 +465,20 @@ classdef Test_p4_4b_text_run < matlab.unittest.TestCase
             p = d.element().body.add_p();
             para = mat2doc.text.Paragraph(p, d);
             lrun = para.add_run("hi");
+
+            % REGISTRY-FLIP RE-PIN (P7-4, the picture milestone WP; validate_P7-4 s6
+            % re-pin 4): Run.add_picture is now LIVE -> it reaches the image loader
+            % (part().new_pic_inline -> get_or_add_image -> Image.from_file) instead of
+            % the notYetPorted stub. Exercised over `lrun` (a run with a LIVE Document
+            % part, so part() resolves before the loader). On a BOGUS path it fails
+            % inside Image.from_file with the faithful mat2doc:FileNotFoundError
+            % (image.py 35-50), NOT mat2doc:notYetPorted -- the identifier change IS the
+            % un-stub proof. The byte-exact InlineShape return over a real image is
+            % pinned by tests\parts\Test_p7_4_add_picture.m (a real image is out of this
+            % class's data scope).
+            testCase.verifyEqual(string(captureError(@() lrun.add_picture("no_such_image.png")).identifier), ...
+                "mat2doc:FileNotFoundError", ...
+                'add_picture is LIVE (P7-4): a bogus path -> FileNotFoundError, NOT notYetPorted');
             % GET (default): a CharacterStyle (the document default character style)
             testCase.verifyClass(lrun.style, 'mat2doc.styles.CharacterStyle', ...
                 'Run.style GET RESOLVES to a CharacterStyle (P4-7a un-stub)');

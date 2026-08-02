@@ -18,21 +18,21 @@ classdef Package < mat2doc.opc.OpcPackage
 %   cls=Package (opc/package.py 123-129 with cls bound to docx.package.Package).
 %   Without this override, parts would receive a base OpcPackage back-reference.
 %
-%   IMAGE GATHERING LIVE AT M1 (benign): after_unmarshal -> _gather_image_parts
+%   IMAGE GATHERING LIVE (benign at M1): after_unmarshal -> _gather_image_parts
 %   runs on every open. default.docx has NO internal RT.IMAGE relationship (its
 %   thumbnail is a THUMBNAIL reltype), so the reltype guard short-circuits before
-%   `image_parts` is ever evaluated -- the walk is a no-op and NEVER touches the
-%   (P7) image_parts stub. If an IMAGE relationship WERE present, image_parts
-%   raises mat2doc:notYetPorted (correct not-yet-ported behavior; feature lands
-%   with the P7 image tier).
+%   any image part is appended -- the walk is a no-op and the empty ImageParts is
+%   never grown, so the empty-doc save is byte-unchanged (M1 17/17 re-proven).
 %
-%   STUBS (mat2doc:notYetPorted, feature-only -- never on open/save):
-%   get_or_add_image_part and the image_parts collection require the P7 image
-%   tier (docx.image.image.Image, docx.parts.image.ImagePart, the ImageParts
-%   collection). They are unreachable on a plain open->save of default.docx.
+%   P7-4 UN-STUB (image tier now ported): get_or_add_image_part and the
+%   image_parts lazyproperty are LIVE -- image_parts returns a
+%   mat2doc.package.ImageParts collection; get_or_add_image_part delegates to it
+%   (SHA1 dedupe). _gather_image_parts appends every existing internal IMAGE
+%   target part (an ImagePart) into that collection.
 %
 %   UNDERSCORE ROTATION (design.md section 2): private `_gather_image_parts` ->
-%   gather_image_parts_.
+%   gather_image_parts_; the image_parts @lazyproperty cache ->
+%   image_parts_cache_/image_parts_computed_.
 %
 %   Example:
 %       tpl = fullfile(fileparts(fileparts(which( ...
@@ -43,6 +43,11 @@ classdef Package < mat2doc.opc.OpcPackage
 %       pkg.save("out.docx");
 %
 %   Ported from python-docx v1.2.0: src/docx/package.py::Package (lines 15-47)
+
+    properties (Access = private)
+        image_parts_cache_                   % image_parts @lazyproperty cache
+        image_parts_computed_ (1,1) logical = false
+    end
 
     methods
         function obj = Package()
@@ -61,24 +66,25 @@ classdef Package < mat2doc.opc.OpcPackage
             obj.gather_image_parts_();
         end
 
-        function image_part = get_or_add_image_part(obj, image_descriptor) %#ok<INUSD,STOUT>
-            % GET_OR_ADD_IMAGE_PART STUB (package.py 25-31): return the ImagePart
-            %   for `image_descriptor`, creating it if absent. Feature-only;
-            %   requires the P7 image tier. NEVER on the open/save path.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.package.ImageParts.get_or_add_image_part (owning WP: " + ...
-                "P7 image tier) required by " + ...
-                "mat2doc.package.Package.get_or_add_image_part");
+        function image_part = get_or_add_image_part(obj, image_descriptor)
+            % GET_OR_ADD_IMAGE_PART (package.py 25-31): the ImagePart for
+            %   `image_descriptor`, newly created if a matching one is not already
+            %   present. Python:
+            %     return self.image_parts.get_or_add_image_part(image_descriptor)
+            image_part = obj.image_parts().get_or_add_image_part(image_descriptor);
         end
 
-        function ip = image_parts(obj) %#ok<MANU,STOUT>
-            % IMAGE_PARTS STUB (package.py 33-36, @lazyproperty): the ImageParts
-            %   collection for this package. Feature-only; requires the P7 image
-            %   tier. NEVER reached on a plain open->save of default.docx (the
-            %   RT.IMAGE reltype guard in _gather_image_parts short-circuits first).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.package.ImageParts (owning WP: P7 image tier) required " + ...
-                "by mat2doc.package.Package.image_parts");
+        function ip = image_parts(obj)
+            % image_parts @lazyproperty (package.py 33-36): the ImageParts
+            %   collection for this package. Python: `return ImageParts()`.
+            %   Cached via a logical flag (design.md @lazyproperty rule; NEVER
+            %   isempty as the sentinel) so the collection is a single shared
+            %   handle across gather / get_or_add.
+            if ~obj.image_parts_computed_
+                obj.image_parts_cache_ = mat2doc.package.ImageParts();
+                obj.image_parts_computed_ = true;
+            end
+            ip = obj.image_parts_cache_;
         end
     end
 
@@ -104,9 +110,9 @@ classdef Package < mat2doc.opc.OpcPackage
             %   collection with every internal image part in the package. Iterates
             %   iter_rels (H9 -> precomputed Relationship_ array), skipping
             %   external rels and non-IMAGE reltypes. On default.docx there are no
-            %   internal IMAGE rels, so `image_parts` is never evaluated and this
-            %   is a no-op (the M1 benign path). image_parts is a P7 feature stub;
-            %   it is reached only for an actual internal IMAGE relationship.
+            %   internal IMAGE rels, so the collection stays empty and this is a
+            %   no-op (the M1 benign path). LIVE at P7-4: for a document opened WITH
+            %   images, each IMAGE target part (an ImagePart) is appended once.
             rels = obj.iter_rels();
             RT = mat2doc.opc.RELATIONSHIP_TYPE;
             for i = 1:numel(rels)
@@ -118,7 +124,7 @@ classdef Package < mat2doc.opc.OpcPackage
                     continue
                 end
                 % -- reached only for an internal IMAGE rel (none at M1) --
-                ip = obj.image_parts();     % P7 stub (raises notYetPorted)
+                ip = obj.image_parts();     % LIVE (P7-4): shared ImageParts
                 if ip.contains(rel.target_part)   % Python: in self.image_parts
                     continue
                 end

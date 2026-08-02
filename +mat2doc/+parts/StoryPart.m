@@ -27,10 +27,10 @@ classdef StoryPart < mat2doc.opc.XmlPart
 %                              feature stubs (-> P4-7). The delegation is
 %                              faithful; the notYetPorted surfaces at the P4-7
 %                              owner (styles resolution).
-%     * get_or_add_image       FEATURE STUB via package.get_or_add_image_part
-%                              (-> P7 image tier); never on the open/save path.
-%     * new_pic_inline         FEATURE STUB (-> P7): needs the image tier +
-%                              mat2doc.oxml.shape.CT_Inline (not ported until P7).
+%     * get_or_add_image       LIVE at P7-4 via package.get_or_add_image_part
+%                              (SHA1 dedupe) + relate_to(RT.IMAGE).
+%     * new_pic_inline         LIVE at P7-4: get_or_add_image + scaled_dimensions
+%                              + next_id + CT_Inline.new_pic_inline (P7-3).
 %
 %   ARG ORDER (docx): StoryPart(partname, content_type, element, package) --
 %   element third, package last (XmlPart.__init__ order). Pass-through
@@ -55,21 +55,26 @@ classdef StoryPart < mat2doc.opc.XmlPart
             obj@mat2doc.opc.XmlPart(partname, content_type, element, package);
         end
 
-        function [rId, image] = get_or_add_image(obj, image_descriptor) %#ok<STOUT,INUSD>
-            % GET_OR_ADD_IMAGE (story.py 27-39): return the (rId, image) pair for
+        function [rId, image] = get_or_add_image(obj, image_descriptor)
+            % GET_OR_ADD_IMAGE (story.py 27-39): the (rId, image) pair for
             %   `image_descriptor`, reusing the relationship if already present.
-            %   FEATURE STUB (-> P7 image tier): the first live dependency,
-            %   package.get_or_add_image_part, is itself a P7 notYetPorted stub
-            %   (mat2doc.package.Package.get_or_add_image_part). Faithful body:
+            %   UN-STUBBED at P7-4. Python:
             %     package = self._package
+            %     assert package is not None
             %     image_part = package.get_or_add_image_part(image_descriptor)
             %     rId = self.relate_to(image_part, RT.IMAGE)
             %     return rId, image_part.image
-            %   Never on the open/save path (default.docx has no IMAGE rel).
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.package.Package.get_or_add_image_part / " + ...
-                "mat2doc.image.image.Image (owning WP: P7 image tier) required " + ...
-                "by mat2doc.parts.StoryPart.get_or_add_image");
+            %   The SHA1 dedupe lives in package.get_or_add_image_part (one media
+            %   part per distinct image); relate_to dedupes the relationship (one
+            %   rId per (this story part, image part) pair). H5 identity: a repeat
+            %   image reused across this part returns the SAME rId, across a
+            %   DIFFERENT story part (e.g. a header) mints a new rId to the shared
+            %   part.
+            package = obj.package();             % Python: package = self._package (Part.package)
+            image_part = package.get_or_add_image_part(image_descriptor);
+            RT = mat2doc.opc.RELATIONSHIP_TYPE;
+            rId = obj.relate_to(image_part, RT.IMAGE);
+            image = image_part.image();          % Python: image_part.image
         end
 
         function style = get_style(obj, style_id, style_type)
@@ -89,26 +94,29 @@ classdef StoryPart < mat2doc.opc.XmlPart
             style_id = obj.document_part_().get_style_id(style_or_name, style_type);
         end
 
-        function inline = new_pic_inline(obj, image_descriptor, width, height) %#ok<STOUT,INUSD>
+        function inline = new_pic_inline(obj, image_descriptor, width, height)
             % NEW_PIC_INLINE (story.py 60-74): a newly-created `w:inline` element
-            %   containing `image_descriptor`, scaled to width/height. FEATURE
-            %   STUB (-> P7 image tier): needs get_or_add_image (P7),
-            %   image.scaled_dimensions (P7), self.next_id (LIVE) and
-            %   mat2doc.oxml.shape.CT_Inline.new_pic_inline (P7 -- CT_Inline is
-            %   not ported until P7). Faithful body:
+            %   containing `image_descriptor`, scaled to width/height. UN-STUBBED
+            %   at P7-4. Python:
             %     rId, image = self.get_or_add_image(image_descriptor)
             %     cx, cy = image.scaled_dimensions(width, height)
             %     shape_id, filename = self.next_id, image.filename
             %     return CT_Inline.new_pic_inline(shape_id, rId, filename, cx, cy)
+            %   H13 defaults: width/height default None ([]). next_id is LIVE
+            %   (max //@id + 1); CT_Inline.new_pic_inline (P7-3, byte-proven) builds
+            %   the wp:inline / a:graphic / pic:pic tree.
             arguments
-                obj %#ok<INUSA>
-                image_descriptor %#ok<INUSA>
-                width = []
-                height = []
+                obj
+                image_descriptor
+                width = []     % Python default None
+                height = []    % Python default None
             end
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.oxml.shape.CT_Inline.new_pic_inline / the image tier " + ...
-                "(owning WP: P7) required by mat2doc.parts.StoryPart.new_pic_inline");
+            [rId, image] = obj.get_or_add_image(image_descriptor);
+            [cx, cy] = image.scaled_dimensions(width, height);
+            shape_id = obj.next_id();            % Python: self.next_id
+            filename = image.filename;           % Python: image.filename
+            inline = mat2doc.oxml.shape.CT_Inline.new_pic_inline( ...
+                shape_id, rId, filename, cx, cy);
         end
 
         function n = next_id(obj)

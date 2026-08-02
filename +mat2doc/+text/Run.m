@@ -28,7 +28,8 @@ classdef Run < mat2doc.shared.StoryChild
 %
 %   STUBBED members (unported dependencies; design.md section 7 -- no silent
 %   approximation):
-%     * add_picture (run.py 59-81)         -> P7  (InlineShape / image inline shapes)
+%     * add_picture (run.py 59-81)         -> LIVE at P7-4 (part.new_pic_inline +
+%                                             CT_R.add_drawing + InlineShape)
 %     * iter_inner_content (run.py 153-174)-> P4-5b + P7 (RenderedPageBreak proxy /
 %                                             Drawing; also CT_R.inner_content_items
 %                                             is itself stubbed at P4-1b)
@@ -135,20 +136,28 @@ classdef Run < mat2doc.shared.StoryChild
         end
 
         % ============================ add_picture (STUB) ============================
-        function inline = add_picture(obj, image_path_or_stream, width, height) %#ok<STOUT,INUSD>
-            % ADD_PICTURE STUB (run.py 59-81). Owner: P7 (InlineShape /
-            %   part.new_pic_inline / CT_R.add_drawing image path). Faithful body
-            %   needs mat2doc.shape.InlineShape and StoryPart.new_pic_inline,
-            %   neither ported -- raises mat2doc:notYetPorted.
+        function shape = add_picture(obj, image_path_or_stream, width, height)
+            % ADD_PICTURE Return an InlineShape containing the image at
+            %   `image_path_or_stream`, added to the end of this run (run.py 59-81).
+            %   UN-STUBBED at P7-4. Python:
+            %     inline = self.part.new_pic_inline(image_path_or_stream, width, height)
+            %     self._r.add_drawing(inline)
+            %     return InlineShape(inline)
+            %   `self.part` is the owning StoryPart (StoryChild.part). H13 defaults:
+            %   width/height default None ([]) -> native size / aspect-preserving
+            %   scale.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/text/run.py::Run.add_picture
             arguments
-                obj %#ok<INUSA>
-                image_path_or_stream %#ok<INUSA>
-                width = []            %#ok<INUSA>  % Python default None
-                height = []           %#ok<INUSA>  % Python default None
+                obj
+                image_path_or_stream
+                width = []            % Python default None
+                height = []           % Python default None
             end
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.shape.InlineShape + StoryPart.new_pic_inline (P7) " + ...
-                "required by mat2doc.text.Run.add_picture");
+            inline = obj.part().new_pic_inline( ...   % Python: self.part.new_pic_inline(...)
+                image_path_or_stream, width, height);
+            obj.r_.add_drawing(inline);               % Python: self._r.add_drawing(inline)
+            shape = mat2doc.shape.InlineShape(inline); % Python: return InlineShape(inline)
         end
 
         % ============================ add_tab ============================

@@ -381,13 +381,17 @@ classdef Test_p1_6b_package_part < matlab.unittest.TestCase
 
         function test_partfactory_selector_cases(testCase)
             % Regression (H10, docx/__init__.py 37-40): the part_class_selector maps
-            % (PNG, IMAGE) -> "mat2doc.opc.Part" (ImagePart stand-in) and every
-            % non-IMAGE reltype -> "" (Python None -> fall to the content-type map).
+            % (PNG, IMAGE) -> the ImagePart class and every non-IMAGE reltype -> ""
+            % (Python None -> fall to the content-type map).
+            % P7-4 REGISTRY-FLIP RE-PIN (PartFactory-pin lesson, validate_P7-4 s6
+            % re-pin 3): the IMAGE selector now resolves to "mat2doc.parts.ImagePart"
+            % -- was the "mat2doc.opc.Part" stand-in before ImagePart was ported. The
+            % flip is byte-neutral on LOAD (ImagePart inherits Part.blob verbatim).
             CT = mat2doc.opc.CONTENT_TYPE;
             RT = mat2doc.opc.RELATIONSHIP_TYPE;
             testCase.verifyEqual( ...
                 mat2doc.opc.PartFactory.part_class_selector_(CT.PNG, RT.IMAGE), ...
-                "mat2doc.opc.Part", '(PNG, IMAGE) -> base Part (ImagePart stand-in)');
+                "mat2doc.parts.ImagePart", '(PNG, IMAGE) -> ImagePart (P7-4 flip; was base Part stand-in)');
             testCase.verifyEqual( ...
                 mat2doc.opc.PartFactory.part_class_selector_(CT.WML_STYLES, RT.OFFICE_DOCUMENT), ...
                 "", '(STYLES, OFFICE_DOCUMENT) -> "" (None -> content-type map)');

@@ -345,12 +345,16 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             % below -- DocumentPart.settings / SettingsPart.settings (8 -> 6).
             % REGISTRY-FLIP RE-PIN (P5-3b Gate-4): P5-3b un-stubbed the hdr/ftr part
             % factories, so add_header_part / add_footer_part now RESOLVE (return
-            % [part, rId]) and moved to the positive block below (6 -> 4). The
-            % remaining FOUR are genuine stubs (numbering / images tiers) and stay
-            % pinned notYetPorted. (Only the hdr/ftr-related paths flipped this WP;
-            % everything else is intact -- the registry-flip stale-pins lesson. The
-            % full add/get/drop hdr/ftr surface is pinned in
-            % tests\section\Test_p5_3b_hdrftr_api.m.)
+            % [part, rId]) and moved to the positive block below (6 -> 4).
+            % REGISTRY-FLIP RE-PIN (P7-4, the picture milestone WP; validate_P7-4 s6
+            % re-pin 5): StoryPart.get_or_add_image is now LIVE -> it reaches the image
+            % loader instead of the notYetPorted stub and moved to the positive block
+            % below (4 -> 3). The remaining THREE are genuine stubs (numbering / inline-
+            % shapes tiers: numbering_part, inline_shapes, numbering_definitions) and
+            % stay pinned notYetPorted. (Only the image path flipped this WP; everything
+            % else is intact -- the registry-flip stale-pins lesson. The full
+            % get_or_add_image rId+Image surface is pinned in
+            % tests\parts\Test_p7_4_add_picture.m.)
             pkg = testCase.openPkg();
             dp = pkg.main_document_part();
             sp = dp.styles_part_();      % real StylesPart
@@ -359,9 +363,8 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             calls = { ...
                 @() dp.numbering_part(),         'DocumentPart.numbering_part'; ...
                 @() dp.inline_shapes(),          'DocumentPart.inline_shapes'; ...
-                @() dp.get_or_add_image("x.png"), 'StoryPart.get_or_add_image'; ...
                 @() np.numbering_definitions(),   'NumberingPart.numbering_definitions'};
-            testCase.verifyEqual(size(calls, 1), 4, 'exactly 4 genuine feature stubs remain after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr un-stubs');
+            testCase.verifyEqual(size(calls, 1), 3, 'exactly 3 genuine feature stubs remain after the P4-7a styles + P5-1 settings + P5-3b hdr/ftr + P7-4 image un-stubs');
             for k = 1:size(calls, 1)
                 caught = testCase.catchCall(calls{k, 1});
                 testCase.assertNotEmpty(caught, ...
@@ -405,6 +408,19 @@ classdef Test_p2_2_storypart_parts < matlab.unittest.TestCase
             testCase.verifyClass(ftrPart, 'mat2doc.parts.FooterPart', ...
                 'DocumentPart.add_footer_part RESOLVES to a FooterPart (un-stubbed at P5-3b)');
             testCase.verifyClass(fRid, 'string', 'add_footer_part returns a string rId');
+
+            % --- the StoryPart.get_or_add_image path P7-4 un-stubbed now RESOLVES ---
+            % It is LIVE at the picture milestone: it reaches the image loader
+            % (package.get_or_add_image_part -> Image.from_file) instead of the
+            % notYetPorted stub. On a BOGUS path it fails with the faithful
+            % mat2doc:FileNotFoundError (image.py 35-50), NOT mat2doc:notYetPorted --
+            % the identifier change IS the un-stub proof. The byte-exact [rId, Image]
+            % return over a real image is pinned in tests\parts\Test_p7_4_add_picture.m.
+            caughtImg = testCase.catchCall(@() dp.get_or_add_image("no_such_image.png"));
+            testCase.assertNotEmpty(caughtImg, ...
+                'StoryPart.get_or_add_image on a bogus path must still error (image load)');
+            testCase.verifyEqual(caughtImg.identifier, 'mat2doc:FileNotFoundError', ...
+                'StoryPart.get_or_add_image is LIVE (P7-4): bogus path -> FileNotFoundError, NOT notYetPorted');
         end
 
         function test_numberingpart_new_raises_notimplemented(testCase)
