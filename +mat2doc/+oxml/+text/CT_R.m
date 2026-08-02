@@ -62,9 +62,9 @@ classdef CT_R < mat2doc.oxml.BaseOxmlElement
 %       correctly (write path OK), but str_() over a w:tab in the `text` getter
 %       requires CT_TabStop.str_() ("\t") -- absent until parfmt lands, so a
 %       `.text` read over a run containing a w:tab errors until then.
-%     * w:drawing -> CT_Drawing, w:lastRenderedPageBreak ->
-%       CT_LastRenderedPageBreak: inner_content_items dispatches on these classes
-%       (isinstance) -- STUBBED (mat2doc:notYetPorted) until those WPs land.
+%     * w:drawing -> CT_Drawing (P7-3), w:lastRenderedPageBreak ->
+%       CT_LastRenderedPageBreak (P4-3): inner_content_items dispatches on these
+%       classes (isinstance) -- now LIVE at P8-3 (both registered).
 %   These are out of the M2 write path (byte-critical add_t / _RunContentAppender
 %   are LIVE and complete).
 %
@@ -227,21 +227,59 @@ classdef CT_R < mat2doc.oxml.BaseOxmlElement
             end
         end
 
-        % ===================== inner_content_items (STUB) =======================
-        function items = inner_content_items(obj) %#ok<STOUT,MANU>
-            % INNER_CONTENT_ITEMS STUB (run.py 62-89). Owner: the CT_Drawing
-            %   (oxml/drawing.py) and CT_LastRenderedPageBreak
-            %   (oxml/text/pagebreak.py) WPs.
-            %   The faithful body dispatches on isinstance(e, (CT_Drawing,
-            %   CT_LastRenderedPageBreak)) -- NEITHER class is registered yet, so
-            %   the dispatch cannot reproduce python-docx (design.md section 7: no
-            %   silent approximation). Stubbed until those WPs land. NOTE the
-            %   byte-critical write path (add_t / _RunContentAppender) does NOT use
-            %   this accessor.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.oxml.CT_Drawing (oxml/drawing.py) + " + ...
-                "mat2doc.oxml.text.CT_LastRenderedPageBreak (oxml/text/pagebreak.py) " + ...
-                "required by mat2doc.oxml.text.CT_R.inner_content_items");
+        % ===================== inner_content_items (LIVE) =======================
+        function items = inner_content_items(obj)
+            % INNER_CONTENT_ITEMS The run's content as an ordered heterogeneous
+            %   list of str | CT_Drawing | CT_LastRenderedPageBreak, with the
+            %   plain-text run-content elements coalesced into single str runs
+            %   (run.py 62-89, @property). UN-STUBBED at P8-3 -- CT_Drawing (P7-3)
+            %   and CT_LastRenderedPageBreak (P4-3) are both registered.
+            %
+            %   Python:
+            %     accum = TextAccumulator()
+            %     def iter_items():
+            %         for e in self.xpath("w:br | w:cr | w:drawing"
+            %                 " | w:lastRenderedPageBreak | w:noBreakHyphen"
+            %                 " | w:ptab | w:t | w:tab"):
+            %             if isinstance(e, (CT_Drawing, CT_LastRenderedPageBreak)):
+            %                 yield from accum.pop()
+            %                 yield e
+            %             else:
+            %                 accum.push(str(e))
+            %         yield from accum.pop()   # the trailing "tail"
+            %     return list(iter_items())
+            %
+            %   H10 isinstance dispatch: isa() on the two registered element
+            %   classes (tuple isinstance -> the OR of two isa tests). H9: the
+            %   Python generator is materialized into a 1xN CELL array (the list is
+            %   HETEROGENEOUS -- string scalars interleaved with element handles --
+            %   so a cell, not a typed array). str(e) -> e.str_() (the element
+            %   text-equivalent, as in the CT_R.text getText_ getter). `yield from
+            %   accum.pop()` iterates the 1x0-or-1x1 string TextAccumulator.pop()
+            %   returns (nothing for 1x0), so an empty run yields the empty list {}.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/oxml/text/run.py::CT_R.inner_content_items
+            accum = mat2doc.shared.TextAccumulator();   % Python: accum = TextAccumulator()
+            items = {};                                 % list(iter_items()) seed (heterogeneous)
+            elms = obj.xpath("w:br | w:cr | w:drawing | w:lastRenderedPageBreak" + ...
+                " | w:noBreakHyphen | w:ptab | w:t | w:tab");
+            for k = 1:numel(elms)                       % Python: for e in self.xpath(...)
+                e = elms(k);
+                if isa(e, "mat2doc.oxml.drawing.CT_Drawing") || ...
+                        isa(e, "mat2doc.oxml.text.CT_LastRenderedPageBreak")
+                    % Python: yield from accum.pop(); yield e
+                    for t = accum.pop()                 % 1x0 (nothing) or 1x1 (one str)
+                        items{end + 1} = t;             %#ok<AGROW>
+                    end
+                    items{end + 1} = e;                 %#ok<AGROW>
+                else
+                    accum.push(e.str_());               % Python: accum.push(str(e))
+                end
+            end
+            % Python: yield from accum.pop()  (don't forget the "tail" string)
+            for t = accum.pop()
+                items{end + 1} = t;                     %#ok<AGROW>
+            end
         end
 
         % ===================== comment range helpers (LIVE) =====================

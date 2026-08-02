@@ -26,13 +26,13 @@ classdef Run < mat2doc.shared.StoryChild
 %   mutate the run's `w:rPr` through a throwaway Font whose mutation persists on
 %   the shared element.
 %
-%   STUBBED members (unported dependencies; design.md section 7 -- no silent
+%   Previously-stubbed members, now all LIVE (design.md section 7 -- no silent
 %   approximation):
 %     * add_picture (run.py 59-81)         -> LIVE at P7-4 (part.new_pic_inline +
 %                                             CT_R.add_drawing + InlineShape)
-%     * iter_inner_content (run.py 153-174)-> P4-5b + P7 (RenderedPageBreak proxy /
-%                                             Drawing; also CT_R.inner_content_items
-%                                             is itself stubbed at P4-1b)
+%     * iter_inner_content (run.py 153-174)-> LIVE at P8-3 (RenderedPageBreak P4-5b
+%                                             + Drawing P8-3 + CT_R.inner_content_items
+%                                             P8-3)
 %     * style get/set (run.py 188-203)     -> LIVE at P4-7a (CharacterStyle via
 %                                             DocumentPart.get_style / get_style_id)
 %   NOTE (style): a Dependent read/write property delegating to
@@ -234,18 +234,42 @@ classdef Run < mat2doc.shared.StoryChild
             obj.font.italic = value;            % Python: self.font.italic = value
         end
 
-        % ============================ iter_inner_content (STUB) ============================
-        function items = iter_inner_content(obj) %#ok<STOUT,MANU>
-            % ITER_INNER_CONTENT STUB (run.py 153-174). Yields str | Drawing |
-            %   RenderedPageBreak in document order. Owner: P4-5b
-            %   (RenderedPageBreak API proxy) + P7 (Drawing). It relies on
-            %   CT_R.inner_content_items, which is itself stubbed at P4-1b
-            %   (isinstance dispatch on CT_Drawing / CT_LastRenderedPageBreak).
-            %   Stubbing the whole method (design.md section 7: no silent
-            %   approximation) -- raises mat2doc:notYetPorted.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.text.RenderedPageBreak (P4-5b) + mat2doc.drawing.Drawing (P7) " + ...
-                "required by mat2doc.text.Run.iter_inner_content");
+        % ============================ iter_inner_content (LIVE) ============================
+        function items = iter_inner_content(obj)
+            % ITER_INNER_CONTENT The content-items in this run in the order they
+            %   appear (run.py 153-174). Generates str, RenderedPageBreak, and
+            %   Drawing items; any other element-type is ignored. UN-STUBBED at
+            %   P8-3 (RenderedPageBreak P4-5b + Drawing P8-3 + CT_R.inner_content_items
+            %   P8-3 are all LIVE). Python:
+            %     for item in self._r.inner_content_items:
+            %         if isinstance(item, str): yield item
+            %         elif isinstance(item, CT_LastRenderedPageBreak):
+            %             yield RenderedPageBreak(item, self)
+            %         elif isinstance(item, CT_Drawing):
+            %             yield Drawing(item, self)
+            %
+            %   H9: the Python generator is materialized into a 1xN CELL array (the
+            %   items are HETEROGENEOUS -- str scalars and two proxy types). H10
+            %   isinstance dispatch: str -> isstring; the two element classes ->
+            %   isa. NOTE the trailing else-less chain: an item matching no branch
+            %   is DROPPED (never happens -- inner_content_items only yields those
+            %   three types). Each proxy gets `self` (this Run) as its parent.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/text/run.py::Run.iter_inner_content
+            inner = obj.r_.inner_content_items;   % Python: self._r.inner_content_items
+            items = {};
+            for k = 1:numel(inner)                % Python: for item in ...inner_content_items
+                item = inner{k};
+                if isstring(item)                 % Python: if isinstance(item, str)
+                    items{end + 1} = item;        %#ok<AGROW>  yield item
+                elseif isa(item, "mat2doc.oxml.text.CT_LastRenderedPageBreak")
+                    % Python: yield RenderedPageBreak(item, self)
+                    items{end + 1} = mat2doc.text.RenderedPageBreak(item, obj);   %#ok<AGROW>
+                elseif isa(item, "mat2doc.oxml.drawing.CT_Drawing")
+                    % Python: yield Drawing(item, self)
+                    items{end + 1} = mat2doc.drawing.Drawing(item, obj);          %#ok<AGROW>
+                end
+            end
         end
 
         % ============================ mark_comment_range ============================

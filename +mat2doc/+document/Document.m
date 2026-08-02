@@ -10,9 +10,10 @@ classdef Document < mat2doc.shared.ElementProxy
 %   (C1) -- `sections` and `add_section` are LIVE, as are the private
 %   object-graph accessors `body_` / `block_width_` (block_width_ now reaches the
 %   live sections). add_picture is LIVE at P7-4 (add_paragraph().add_run()
-%   .add_picture(...)). The remaining content members (add_table / add_page_break
-%   / paragraphs / inline_shapes / tables / comments / ...) are
-%   mat2doc:notYetPorted stubs. NONE of the stubs is on the open->save path.
+%   .add_picture(...)). add_comment / comments are LIVE at P8-2. At P8-3 (the
+%   FINAL un-stub sweep) the last content members go live: add_page_break,
+%   paragraphs, tables, and inline_shapes -- so this class now raises ZERO
+%   mat2doc:notYetPorted stubs.
 %
 %   VERIFY-M1-DOC-BASE (RESOLVED in P2-1): in python-docx Document extends
 %   ElementProxy (document.py 28, `class Document(ElementProxy)`), which
@@ -262,17 +263,21 @@ classdef Document < mat2doc.shared.ElementProxy
             p = obj.add_paragraph(text, style);   % Python: return self.add_paragraph(text, style)
         end
 
-        function p = add_page_break(obj) %#ok<MANU,STOUT>
-            % ADD_PAGE_BREAK STUB (document.py 103-107). Owner: post-P4 content
-            %   follow-up (out of P4-7b's named scope: add_heading + add_paragraph).
-            %   Faithful body: paragraph = self.add_paragraph();
-            %   paragraph.add_run().add_break(WD_BREAK.PAGE); return paragraph. All
-            %   deps are now LIVE (add_paragraph P4-7b, add_run + add_break P4-5b);
-            %   left stubbed only to stay within P4-7b's explicit scope. Clean
-            %   un-stub candidate for the next content WP. See audit VERIFY note.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.add_page_break (owning WP: post-P4 " + ...
-                "content follow-up; deps live) is not yet ported");
+        function p = add_page_break(obj)
+            % ADD_PAGE_BREAK Return a newly-added Paragraph containing only a page
+            %   break (document.py 103-107). UN-STUBBED at P8-3. Python:
+            %     paragraph = self.add_paragraph()
+            %     paragraph.add_run().add_break(WD_BREAK.PAGE)
+            %     return paragraph
+            %   All deps LIVE: add_paragraph (P4-7b), Paragraph.add_run + Run.add_break
+            %   (P4-5b). WD_BREAK.PAGE emits `<w:br w:type="page"/>` in a fresh run
+            %   within a fresh trailing paragraph.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.add_page_break
+            paragraph = obj.add_paragraph();   % Python: paragraph = self.add_paragraph()
+            % Python: paragraph.add_run().add_break(WD_BREAK.PAGE)
+            paragraph.add_run().add_break(mat2doc.enum.text.WD_BREAK.PAGE);
+            p = paragraph;                     % Python: return paragraph
         end
 
         function p = add_paragraph(obj, text, style)
@@ -379,11 +384,16 @@ classdef Document < mat2doc.shared.ElementProxy
             c = obj.part_.comments;
         end
 
-        function s = inline_shapes(obj) %#ok<MANU,STOUT>
-            % INLINE_SHAPES STUB (document.py 170-178). Owner: P7 image/shape tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.inline_shapes (owning WP: P7 image/shape " + ...
-                "tier) is not yet ported");
+        function s = inline_shapes(obj)
+            % INLINE_SHAPES The InlineShapes collection for this document
+            %   (document.py 170-178, @property). An inline shape is a graphical
+            %   object (e.g. a picture) contained in a run and flowed like a
+            %   character glyph. UN-STUBBED at P8-3. Python:
+            %   return self._part.inline_shapes. DocumentPart.inline_shapes
+            %   (a @lazyproperty) mints the InlineShapes over the document body.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.inline_shapes
+            s = obj.part_.inline_shapes;   % Python: return self._part.inline_shapes
         end
 
         function items = iter_inner_content(obj)
@@ -397,16 +407,16 @@ classdef Document < mat2doc.shared.ElementProxy
             items = obj.body_().iter_inner_content();   % Python: return self._body.iter_inner_content()
         end
 
-        function p = paragraphs(obj) %#ok<MANU,STOUT>
-            % PARAGRAPHS STUB (document.py 184-191). Owner: post-P4 content
-            %   follow-up (out of P4-7b's named scope). Faithful body:
-            %   return self._body.paragraphs -- and _body.paragraphs is now LIVE
-            %   (P4-7b). Left stubbed only to stay within P4-7b's explicit scope
-            %   (Document un-stubs = add_heading + add_paragraph). Clean un-stub
-            %   candidate; the paragraphs list is reachable now via body_().paragraphs.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.paragraphs (owning WP: post-P4 content " + ...
-                "follow-up; deps live via _body.paragraphs) is not yet ported");
+        function p = paragraphs(obj)
+            % PARAGRAPHS The Paragraph instances in the document, in document order
+            %   (document.py 184-191, @property, read-only). Paragraphs within
+            %   revision marks (w:ins / w:del) do NOT appear. UN-STUBBED at P8-3.
+            %   Python: return self._body.paragraphs. Delegates to the body
+            %   BlockItemContainer (LIVE P4-7b); returns a 1xN Paragraph array,
+            %   each a FRESH view (H5), empty -> a 1x0 Paragraph array.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.paragraphs
+            p = obj.body_().paragraphs();   % Python: return self._body.paragraphs
         end
 
         function s = sections(obj)
@@ -436,11 +446,17 @@ classdef Document < mat2doc.shared.ElementProxy
             s = obj.part_.styles();
         end
 
-        function t = tables(obj) %#ok<MANU,STOUT>
-            % TABLES STUB (document.py 221-230). Owner: P6 table tier.
-            error("mat2doc:notYetPorted", "%s", ...
-                "mat2doc.document.Document.tables (owning WP: P6 table tier) " + ...
-                "is not yet ported");
+        function t = tables(obj)
+            % TABLES All Table instances in the document, in document order
+            %   (document.py 221-230, @property, read-only). Only TOP-LEVEL tables
+            %   appear (a table nested in a cell does not); tables within revision
+            %   marks (w:ins / w:del) also do not. UN-STUBBED at P8-3. Python:
+            %   return self._body.tables. Delegates to the body BlockItemContainer
+            %   (LIVE P6-4b); returns a 1xN Table array, each a FRESH view (H5),
+            %   empty -> a 1x0 Table array.
+            %
+            %   Ported from python-docx v1.2.0: src/docx/document.py::Document.tables
+            t = obj.body_().tables();   % Python: return self._body.tables
         end
     end
 end

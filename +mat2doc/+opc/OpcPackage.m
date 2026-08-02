@@ -249,20 +249,30 @@ classdef OpcPackage < handle
         function part = core_properties_part_(obj)
             % _core_properties_part (package.py 168-179): the CorePropertiesPart
             %   related to this package, creating a default one if absent (not
-            %   common). Not exercised at M1 (default.docx ships core.xml, so
-            %   part_related_by succeeds and returns it).
+            %   common). UN-STUBBED at P8-3 (the FINAL un-stub sweep). Not exercised
+            %   on the M1 path (default.docx ships core.xml, so part_related_by
+            %   succeeds and returns it); the default-creation branch is the silent
+            %   survivor the zero-stub exit condition must clear. Python:
+            %     try:
+            %         return cast(CorePropertiesPart, self.part_related_by(RT.CORE_PROPERTIES))
+            %     except KeyError:
+            %         core_properties_part = CorePropertiesPart.default(self)
+            %         self.relate_to(core_properties_part, RT.CORE_PROPERTIES)
+            %         return core_properties_part
+            %   Only KeyError (part absent) triggers default creation; a ValueError
+            %   (more than one such rel) propagates. CorePropertiesPart.default(self)
+            %   builds a default core.xml on demand (P2 core properties).
             try
                 % Python: cast(CorePropertiesPart, self.part_related_by(...))
                 part = obj.part_related_by( ...
                     mat2doc.opc.RELATIONSHIP_TYPE.CORE_PROPERTIES);
             catch e
-                if e.identifier == "mat2doc:KeyError"
-                    % Python: CorePropertiesPart.default(self); self.relate_to(...)
-                    % CorePropertiesPart is ported in P2 (core properties).
-                    error("mat2doc:notYetPorted", "%s", ...
-                        "mat2doc.opc.parts.CorePropertiesPart.default (owning " + ...
-                        "WP: P2 core properties) required by " + ...
-                        "mat2doc.opc.OpcPackage._core_properties_part");
+                if e.identifier == "mat2doc:KeyError"   % Python: except KeyError
+                    % Python: core_properties_part = CorePropertiesPart.default(self)
+                    part = mat2doc.opc.parts.CorePropertiesPart.default(obj);
+                    % Python: self.relate_to(core_properties_part, RT.CORE_PROPERTIES)
+                    obj.relate_to(part, ...
+                        mat2doc.opc.RELATIONSHIP_TYPE.CORE_PROPERTIES);
                 else
                     rethrow(e)   % ValueError (more than one) propagates
                 end
