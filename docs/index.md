@@ -464,6 +464,29 @@ syntax, description, example, ported-from).
   the first P7 registry-adding WP) → **P7-4** (`add_picture` wiring + `ImagePart` +
   the picture Word-COM sweep). See the
   [image format-parsers page](api/image_formats.md).
+- **Images tier — DrawingML inline-picture oxml + InlineShape API (P7-3 [N])** —
+  the **first P7 registry-adding WP**: `oxml/drawing.py` (`CT_Drawing`) +
+  `oxml/shape.py` (`CT_Inline` / `CT_Picture` / `CT_Blip` / `CT_GraphicalObject` /
+  `CT_Transform2D` and the rest of the `a:`/`pic:`/`wp:` DrawingML tree, ~17 CT
+  classes) + `shape.py` (`InlineShapes` / `InlineShape`), plus the 16
+  `register_element_cls` rows (`w:drawing` + the inline-shape tags). **★ The
+  headline is `CT_Inline.new_pic_inline(shape_id, rId, filename, cx, cy)`** — the
+  inline-picture XML builder P7-4's `add_picture` emits, **byte-identical to
+  python-docx** across the whole param space (`s0087`, the frozen P7-4 oracle;
+  the `wp:extent` `cx`/`cy` are the image dpi → EMU extent). Re-port/novel split:
+  the shared `a:`/`pic:` DrawingML is re-ported from Mat2Ppt to match **docx**
+  (`CT_Blip` gains `link`, `CT_Picture` is the inline `pic:pic`, `CT_Transform2D`
+  drops the `_new_off`/`_new_ext` overrides), the `wp:` classes (`CT_Inline` /
+  `CT_Anchor` / `CT_Drawing`) are **novel**. The **H8** `pic:pic` redundant-decl
+  suppression on the `_insert_pic` move is the already-signed **D-serializer-nsdecl**
+  (the moved `<pic:pic>` emits no `xmlns:pic/a/r`). `InlineShape` types via
+  `WD_INLINE_SHAPE` (PICTURE / LINKED_PICTURE / CHART / SMART_ART / NOT_IMPLEMENTED)
+  and its width/height setter writes both `wp:extent` and `pic:spPr`.
+  **Registry-adding but M1-neutral** — `default.docx` has no `<w:drawing>`, so M1
+  stays 17/17 and the registry addition flipped **0** pins; **0 new D-numbers**.
+  Next: **P7-4** (`add_picture` wiring + `parts/image.py::ImagePart` + the C6
+  header-image scenario + the picture Word-COM sweep → **Phase 7 complete**). See
+  the [inline-picture oxml + InlineShape API page](api/drawing_shape.md).
 - **Enumerations (enum)** — two pages. The **enumeration base tier**: `BaseEnum`
   (MS-API-value enums) and `BaseXmlEnum` (XML-attribute-mapping enums), the base
   machinery **every docx enum extends** (the concrete `WD_*` enums and the P4–P6

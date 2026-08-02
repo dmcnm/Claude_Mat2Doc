@@ -1,0 +1,18 @@
+{
+  "schema": "p73-byte/1",
+  "image": "monty-truth.png",
+  "mut_cx": 1000000,
+  "mut_cy": 750000,
+  "artifacts": [
+    {
+      "file": "doc_roundtrip.xml",
+      "size": 2334,
+      "sha256": "d172f803e4a6cf63d7dc85129efd7553572f16e6ce3dec83e37343df18b1c99b"
+    },
+    {
+      "file": "doc_mutated.xml",
+      "size": 2332,
+      "sha256": "bf69e34d516d4503201fa7f9052ede0771498e4e682878235f962f29730d9a7c"
+    }
+  ]
+}

@@ -322,6 +322,42 @@ map = registerElementCls_(map, "w:trHeight",  "mat2doc.oxml.table.CT_Height");  
 map = registerElementCls_(map, "w:trPr",      "mat2doc.oxml.table.CT_TrPr");          % __init__.py:184 (P6-2)
 map = registerElementCls_(map, "w:vAlign",    "mat2doc.oxml.table.CT_VerticalJc");    % __init__.py:185 (P6-1)
 map = registerElementCls_(map, "w:vMerge",    "mat2doc.oxml.table.CT_VMerge");        % __init__.py:186 (P6-1)
+% -- DrawingML inline-picture block (docx/oxml/__init__.py:47-62), P7-3 -- the
+% -- picture-oxml foundation (16 rows), in __init__.py source order. The a:/pic:
+% -- DrawingML classes are RE-PORTED from Mat2Ppt but ported to match DOCX
+% -- exactly (docx CT_Blip has embed+link, CT_Picture is pic:pic, CT_ShapeProperties/
+% -- CT_Transform2D are the minimal xfrm/cx/cy forms -- all simpler/different from
+% -- pptx); the wp: classes (CT_Inline/CT_Anchor) + w:drawing/CT_Drawing are NOVEL.
+% -- CT_Drawing lives in docx/oxml/drawing.py (-> +oxml/+drawing); the rest in
+% -- docx/oxml/shape.py (-> +oxml/+shape).
+% --
+% -- M1-NEUTRAL: default.docx has NO <w:drawing> and none of these 16 tags appears
+% -- in any of the 17 default.docx parts (like the P6 table block), so nothing
+% -- transits these CT classes on the M1 parse path; Document().save() stays 17/17
+% -- byte-identical. Flip-neutral: ZERO existing exact-class XmlElement pins
+% -- reference these tags. The rows light up only when an inline-picture subtree is
+% -- loaded/created (first at the P7-4 add_picture API).
+% --
+% -- SHARED-TAG NOTE: <a:ext> AND <wp:extent> both -> CT_PositiveSize2D; <pic:cNvPr>
+% -- AND <wp:docPr> both -> CT_NonVisualDrawingProps (docx registers each tag
+% -- separately to the one shared class, __init__.py:48/61 and :54/60). These are
+% -- FIRST registrations of a/pic/wp element tags (no prior row registers them).
+map = registerElementCls_(map, "a:blip",        "mat2doc.oxml.shape.CT_Blip");                 % __init__.py:47 (P7-3)
+map = registerElementCls_(map, "a:ext",         "mat2doc.oxml.shape.CT_PositiveSize2D");       % __init__.py:48 (P7-3)
+map = registerElementCls_(map, "a:graphic",     "mat2doc.oxml.shape.CT_GraphicalObject");      % __init__.py:49 (P7-3)
+map = registerElementCls_(map, "a:graphicData", "mat2doc.oxml.shape.CT_GraphicalObjectData");  % __init__.py:50 (P7-3)
+map = registerElementCls_(map, "a:off",         "mat2doc.oxml.shape.CT_Point2D");              % __init__.py:51 (P7-3)
+map = registerElementCls_(map, "a:xfrm",        "mat2doc.oxml.shape.CT_Transform2D");          % __init__.py:52 (P7-3)
+map = registerElementCls_(map, "pic:blipFill",  "mat2doc.oxml.shape.CT_BlipFillProperties");   % __init__.py:53 (P7-3)
+map = registerElementCls_(map, "pic:cNvPr",     "mat2doc.oxml.shape.CT_NonVisualDrawingProps");% __init__.py:54 (P7-3)
+map = registerElementCls_(map, "pic:nvPicPr",   "mat2doc.oxml.shape.CT_PictureNonVisual");     % __init__.py:55 (P7-3)
+map = registerElementCls_(map, "pic:pic",       "mat2doc.oxml.shape.CT_Picture");              % __init__.py:56 (P7-3)
+map = registerElementCls_(map, "pic:spPr",      "mat2doc.oxml.shape.CT_ShapeProperties");      % __init__.py:57 (P7-3)
+map = registerElementCls_(map, "w:drawing",     "mat2doc.oxml.drawing.CT_Drawing");            % __init__.py:58 (P7-3)
+map = registerElementCls_(map, "wp:anchor",     "mat2doc.oxml.shape.CT_Anchor");               % __init__.py:59 (P7-3)
+map = registerElementCls_(map, "wp:docPr",      "mat2doc.oxml.shape.CT_NonVisualDrawingProps");% __init__.py:60 (P7-3)
+map = registerElementCls_(map, "wp:extent",     "mat2doc.oxml.shape.CT_PositiveSize2D");       % __init__.py:61 (P7-3)
+map = registerElementCls_(map, "wp:inline",     "mat2doc.oxml.shape.CT_Inline");               % __init__.py:62 (P7-3)
 % -------------------------------------------------------------------------
 % OPC rows (P1-4; docx/opc/oxml.py:240-247): the 5 OPC element classes, keyed by
 % RAW CLARK NAME (condition B2). The Clark URIs come from mat2doc.opc.NAMESPACE
