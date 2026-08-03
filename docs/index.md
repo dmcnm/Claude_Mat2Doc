@@ -36,6 +36,17 @@ syntax, description, example, ported-from).
   clean in real Word** with styles resolved by name. This completes the
   `add_heading` / `add_paragraph` authoring path and **Phase 4**. See the
   **[M2 milestone page](m2_milestone.md)**.
+- **★★ Mat2Doc COMPLETE (2026-08-02).** Every python-docx v1.2.0 catalog symbol
+  (all 95 modules) is ported, adversarially audited, package-validated,
+  permanently tested and documented — cold suite **953/953**, zero live
+  `notYetPorted`, **0 new deviation numbers across the entire port**. The
+  P8-EXIT capstone passed on every axis: system Campaign A (showcase, mirrored
+  in python-docx) **23/23 parts byte-identical**; Campaign B (round-trip corpus
+  of 15 real `.docx`) **240/240 parts byte-identical**; Campaign C (upstream
+  behave sweep) **239 scenarios / 67 feature files** with the mirrored subset
+  matching; the whole-project **Word COM oracle** opened **6/6 clean in real
+  Word 16.0**; and the user manual itself was **dogfooded** — authored entirely
+  through the Mat2Doc public API and verified in real Word.
 
 ## Sections
 
