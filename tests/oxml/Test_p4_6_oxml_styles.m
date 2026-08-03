@@ -34,12 +34,12 @@ classdef Test_p4_6_oxml_styles < matlab.unittest.TestCase
 %       BEFORE an already-present style; CT_LatentStyles lsdException appends. Add
 %       children OUT OF ORDER, assert the serialized BYTES are canonical schema
 %       order. Wrong order -> Word repair. Byte-pinned (serhex) vs the oracle.
-%     * H17 delete() PARENT-SIDE-EFFECT ONLY (test_h17_delete_parent_side_only):
-%       CT_Style.delete() / CT_LsdException.delete() remove the element from its
-%       parent -- assert the PARENT's child count / serialized bytes, and NEVER
-%       inspect the deleted handle afterward (design.md section 9 H17: the MATLAB
-%       handle is invalid post-delete; the Gate-2/Gate-3 Gate-4 alert forbids any
-%       post-delete() element assertion).
+%     * delete_* PARENT-SIDE-EFFECT ONLY (test_h17_delete_parent_side_only):
+%       CT_Style.delete_style() / CT_LsdException.delete_lsd_exception() remove
+%       the element from its parent -- assert the PARENT's child count / serialized
+%       bytes only. These methods are named by the kind of thing they remove (not
+%       `delete`), so MATLAB's handle destructor is never involved (H17 dissolved).
+%       The test still never inspects the removed handle afterward.
 %     * M1 styles.xml SHA pin (test_m1_styles_xml_byte_identical): the
 %       registry-adding parse-path regression guard -- mat2doc.Document().save()
 %       -> word/styles.xml == 349458 B, SHA-256 02d71a68...e384.
@@ -514,20 +514,21 @@ classdef Test_p4_6_oxml_styles < matlab.unittest.TestCase
         % =============================================================== %
 
         function test_h17_delete_parent_side_only(testCase)
-            % Regression (H17, binding Gate-4 rule): CT_Style.delete() and
-            % CT_LsdException.delete() remove the element from its PARENT. Assert the
-            % PARENT's child count / serialized bytes ONLY. NEVER inspect the deleted
-            % handle afterward -- the MATLAB handle is invalid post-delete (design.md
-            % section 9 H17; the Gate-2/Gate-3 Gate-4 alert forbids any post-delete()
-            % element assertion). We do NOT port any "removed element still has tag X".
+            % Regression (binding Gate-4 rule): CT_Style.delete_style() and
+            % CT_LsdException.delete_lsd_exception() remove the element from its
+            % PARENT. Assert the PARENT's child count / serialized bytes ONLY, and
+            % never inspect the removed handle afterward. These methods are named by
+            % the kind of thing they remove (not `delete`), so MATLAB's handle
+            % destructor is never involved (H17 dissolved -- no `delete` override).
+            % We do NOT port any "removed element still has tag X".
 
-            % -- CT_Style.delete(): delete the MIDDLE of three styles --
+            % -- CT_Style.delete_style(): delete the MIDDLE of three styles --
             styles = parse("<w:styles " + nsW() + ">" + ...
                 "<w:style w:styleId=""A""/><w:style w:styleId=""B""/><w:style w:styleId=""C""/>" + ...
                 "</w:styles>");
             kids = styles.xpath("w:style");
             testCase.verifyEqual(numel(kids), 3, 'precondition: 3 styles');
-            kids(2).delete();   % remove B; do NOT touch the handle after this
+            kids(2).delete_style();   % remove B; do NOT touch the handle after this
             after = styles.xpath("w:style");
             testCase.verifyEqual(numel(after), 2, 'parent has 2 styles after delete (parent-side effect)');
             remaining = strings(1, numel(after));
@@ -538,13 +539,13 @@ classdef Test_p4_6_oxml_styles < matlab.unittest.TestCase
                 "<w:style w:styleId=""A""/><w:style w:styleId=""C""/></w:styles>", ...
                 'parent serialized bytes reflect B removed (L1)');
 
-            % -- CT_LsdException.delete(): delete N2 of three --
+            % -- CT_LsdException.delete_lsd_exception(): delete N2 of three --
             ls = parse("<w:latentStyles " + nsW() + ">" + ...
                 "<w:lsdException w:name=""N1""/><w:lsdException w:name=""N2""/>" + ...
                 "<w:lsdException w:name=""N3""/></w:latentStyles>");
             lex = ls.lsdException_lst;
             testCase.verifyEqual(numel(lex), 3, 'precondition: 3 lsdExceptions');
-            lex(2).delete();   % remove N2; do NOT touch the handle after this
+            lex(2).delete_lsd_exception();   % remove N2; do NOT touch the handle after this
             names = strings(1, numel(ls.lsdException_lst));
             afterLex = ls.lsdException_lst;
             for k = 1:numel(afterLex); names(k) = afterLex(k).name; end

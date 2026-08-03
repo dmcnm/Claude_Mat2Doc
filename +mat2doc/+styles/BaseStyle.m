@@ -41,10 +41,12 @@ classdef BaseStyle < mat2doc.shared.ElementProxy & matlab.mixin.Heterogeneous
 %     * style_id: the raw @w:styleId (string or [] when absent).
 %     * type: WD_STYLE_TYPE member; None defaults to PARAGRAPH (style.py 144-147).
 %
-%   DELETE_ (style.py 49-57) -- H17 FLAG-3 method rename delete()->delete_(): the
-%   MATLAB `delete` name is the handle destructor and is NOT overridden here
-%   (GC-safe); the faithful element-removal is exposed as delete_() (byte-
-%   identical to python-docx style.delete()). See the delete_ method below.
+%   DELETE_STYLE (style.py 49-57) -- named `delete_style` (by the kind of thing
+%   it removes) so NO method named `delete` exists anywhere on the styles
+%   surface. MATLAB's `delete` on a handle IS the destructor; with no `delete`
+%   override in this hierarchy the destructor is never touched and no guarded-
+%   destructor machinery is needed (H17 dissolved). Pure naming choice, byte-
+%   identical to python-docx style.delete(). See the delete_style method below.
 %
 %   Example:
 %       se = mat2doc.oxml.OxmlElement("w:style");
@@ -93,9 +95,9 @@ classdef BaseStyle < mat2doc.shared.ElementProxy & matlab.mixin.Heterogeneous
             value = ~(~isequal(cs, []) && cs);
         end
 
-        % ---- delete_ (style.py 49-57; H17 FLAG-3 rename delete -> delete_) ----
-        function delete_(obj)
-            % DELETE_ Remove this style definition from the document.
+        % ---- delete_style (style.py 49-57; renamed from delete to avoid the name) ----
+        function delete_style(obj)
+            % DELETE_STYLE Remove this style definition from the document.
             %
             %   Python (style.py 49-57, `BaseStyle.delete`):
             %       self._element.delete()   % detach the w:style from w:styles
@@ -103,36 +105,25 @@ classdef BaseStyle < mat2doc.shared.ElementProxy & matlab.mixin.Heterogeneous
             %   Note calling this does NOT change the style applied to any content;
             %   content with the deleted style renders using the default.
             %
-            %   H17 ADDENDUM (proxy-layer, SIGNED-PROVISIONAL 2026-07-30,
-            %   design.md section 9 + decision_2026-07-30_h17_delete_destructor.md).
-            %   In MATLAB `delete` on a `handle` IS the destructor. Overriding it on
-            %   a style proxy is UNSAFE at the proxy layer: a BaseStyle is not held
-            %   by the tree, so every transient StyleFactory-minted proxy is GC'd
-            %   while its w:style is still parented -- a faithful override would
-            %   detach the live style on ordinary iteration (empirically proven,
-            %   R2024b: parent 1 kid -> 0). MATLAB gives no signal to tell an
-            %   explicit call from a GC destructor. RESOLUTION (FLAG-3 method
-            %   rename, the same convention as _TableStyle -> TableStyle_): DO NOT
-            %   override `delete`; expose the faithful element-removal as `delete_`.
-            %   This class therefore does NOT declare a `delete` override -- the
-            %   default handle destructor is left in place (GC-safe: no tree effect,
-            %   the wrapped element stays parented via its parent's strong ref).
+            %   NAMING (H17 dissolved): named `delete_style` -- by the kind of thing
+            %   it removes -- so NO method named `delete` exists on the styles
+            %   surface. MATLAB's `delete` on a `handle` IS the destructor; with no
+            %   `delete` override anywhere in this hierarchy the destructor is never
+            %   touched and no guarded-destructor machinery is needed. Pure naming
+            %   choice, byte-identical to python-docx `style.delete()` -- NOT an
+            %   output deviation, NO D-number. The wrapped element method is likewise
+            %   `delete_style` (CT_Style), an ordinary getparent().remove() that is
+            %   never GC's destructor, so the detached element survives (as in Python)
+            %   rather than being destroyed.
             %
-            %   `delete_` is only ever called EXPLICITLY (never by GC), and it
-            %   detaches a PARENTED element via the P4-6 oxml guarded CT_Style.delete
-            %   (safe at the element layer) -- so there is no corruption risk and
-            %   the result is BYTE-IDENTICAL to python-docx's `style.delete()`. This
-            %   is a method-naming resolution (FLAG-3), NOT an output deviation --
-            %   NO D-number.
-            %
-            %   H17 Gate-4 rule: after delete_ the MATLAB element handle is invalid
-            %   (destroyed) whereas Python's element survives detached -- NEVER
-            %   inspect the handle after delete_; assert only the parent-side effect
-            %   (child count / serialized bytes).
+            %   Gate-4 rule: after delete_style the proxy's element_ is [] (Python
+            %   None), so accessing any proxy property errors -- matching python-docx
+            %   (AttributeError). Assert only the parent-side effect (child count /
+            %   serialized bytes); never inspect the proxy after delete_style.
             %
             %   Ported from python-docx v1.2.0: src/docx/styles/style.py::BaseStyle.delete
-            obj.element_.delete();   % Python: self._element.delete() (P4-6 guarded detach)
-            obj.element_ = [];       % Python: self._element = None
+            obj.element_.delete_style();   % Python: self._element.delete() (detach w:style)
+            obj.element_ = [];             % Python: self._element = None
         end
 
         % ---- hidden (style.py 59-71) ----

@@ -20,7 +20,7 @@ the styles delegation across the document object graph
 (`StylesPart`/`DocumentPart`/`Document`/`Run`/`Paragraph`). It adds **no
 `register_element_cls` row and no serialization code**, so equivalence is
 **behavioral** (probe value parity) plus serialized-bytes parity on the
-output-visible whole-part paths (`delete_`, `add_style`, the latent WRITE path)
+output-visible whole-part paths (`delete_style`/`delete_latent_style`, `add_style`, the latent WRITE path)
 and the end-to-end style-by-name document byte pin — **byte-neutral** (M1 stays
 17/17, **zero new D-numbers**). **P4-7b reaches ★ M2** — `add_heading` /
 `add_paragraph` produce a byte-identical `document.xml` that opens clean in real
@@ -528,7 +528,7 @@ x  = ls.add_latent_style("Table Grid");
 x.priority = 59;          % w:uiPriority
 x.hidden = false;         % w:semiHidden="0"
 x.quick_style = true;     % w:qFormat="1"
-x.delete_();              % remove the <w:lsdException> from its parent
+x.delete_latent_style();  % remove the <w:lsdException> from its parent
 ```
 
 **Description**
@@ -556,27 +556,25 @@ convention **`LatentStyle_`** (leading→trailing rotation), matching the siblin
   collapse an absent attribute to `false`).
 
 (id-latentstyle-delete)=
-**`delete_()` — the H17 proxy-layer resolution.** `_LatentStyle.delete()`
+**`delete_latent_style()` — the H17 rename.** `_LatentStyle.delete()`
 (`latent.py:119-128`) detaches the `<w:lsdException>` from its parent then drops
-its element handle (`self._element.delete(); self._element = None`). The **same**
-H17 friction as `BaseStyle.delete()` applies — in MATLAB `delete` on a `handle`
-subclass **is the destructor**, and a `LatentStyle_` is minted transiently
-(`getitem_` / `to_array` / `add_latent_style`) and **not** held by the tree, so
-overriding `delete` would detach a still-parented element on ordinary GC.
-**Resolution (identical to [`BaseStyle`](#id-h17-delete-proxy)):** `delete` is
-**NOT overridden** (GC-safe); the faithful body is exposed as **`delete_()`**,
-which detaches the parented element through the P4-6 element-layer guarded
-`CT_LsdException.delete` and is therefore **byte-identical** to python-docx
-`_LatentStyle.delete()`. A FLAG-3 method-**naming** resolution — **not an output
-deviation → no D-number.**
+its element handle (`self._element.delete(); self._element = None`). It is ported
+as **`delete_latent_style()`** — named by the kind of thing it removes — so **no
+method named `delete` exists**, MATLAB's handle destructor is never overridden, and
+the H17 collision is **dissolved** (see [the H17 note](#id-h17-delete-proxy)). The
+body delegates to the element method `CT_LsdException.delete_lsd_exception()` (a
+plain faithful `getparent().remove()`) then sets `element_ = []` (Python `None`).
+**Byte-identical** to python-docx `_LatentStyle.delete()` — a method-**naming**
+resolution, **not an output deviation → no D-number.**
 
 :::{warning}
-**Binding Gate-4 rule.** After `delete_()` the MATLAB element handle is **invalid**
-(destroyed), whereas Python's element survives detached — **never inspect the
-handle after `delete_`**; assert only the parent-side effect (child count /
-serialized bytes). The GC-invariance safety property was re-proven at Gate-3
-(transient `LatentStyle_` proxies minted + cleared leave the styles part
-bit-for-bit unchanged).
+**Binding Gate-4 rule.** After `delete_latent_style()` the proxy's `element_` is
+`[]` (Python `None`), so any subsequent proxy property access errors, matching
+python-docx `AttributeError` — **never inspect the proxy after
+`delete_latent_style`**; assert only the parent-side effect (child count /
+serialized bytes). Because no `delete` override exists, GC has no tree effect: the
+GC-invariance safety property holds by construction (transient `LatentStyle_`
+proxies minted + cleared leave the styles part bit-for-bit unchanged).
 :::
 
 **Example**
@@ -589,7 +587,7 @@ disp(class(x));                        % mat2doc.styles.LatentStyle_
 disp(x.hidden);                        % []  (raw tri-state: inherit the default)
 x.priority = 59; x.hidden = false; x.quick_style = true;
 before = ls.len_();
-x.delete_();                           % remove the override
+x.delete_latent_style();               % remove the override
 disp(ls.len_() == before - 1);         % 1  (assert the PARENT-side effect only)
 ```
 
@@ -598,58 +596,61 @@ disp(ls.len_() == before - 1);         % 1  (assert the PARENT-side effect only)
 ---
 
 (id-h17-delete-proxy)=
-## The H17 hazard at the proxy layer — `delete()` → `delete_()`
+## H17 — Python `delete()` vs the MATLAB `handle` destructor (resolved by rename)
 
 `BaseStyle.delete()` (`style.py:49-57`) performs
 `self._element.delete(); self._element = None`. In MATLAB, `delete` on a `handle`
 subclass **is the destructor** — MATLAB calls it implicitly during garbage
-collection and there is no way to have a non-destructor method of that name.
+collection, and there is no way to have a non-destructor method of that name. Any
+method literally named `delete` therefore collides with the destructor.
 
-**Why the P4-6 element-layer ruling does NOT transfer.** The design.md §9 H17
-ruling (a *guarded destructor override*) was validated for the **element** layer
-(`CT_Style.delete`, P4-6): a wrapper going out of scope does not fire the child's
-destructor while the tree is alive, because the parent's children array holds a
-**strong** reference. That argument is about the element wrapper. A `BaseStyle` is
-a **separate proxy the tree does NOT reference** — it is minted transiently by
-**every** `StyleFactory` call (`get_by_id` / `getitem_` / `to_array` / `default` /
-`base_style` / `next_paragraph_style` / `get_style_id`) and dropped by its caller.
-So overriding `delete` here with a faithful body (`obj.element_.delete()`) would
-detach a **still-parented** `<w:style>` on **ordinary iteration/GC** (empirically
-proven in R2024b: parent `1 kid → 0 kids`), and MATLAB gives no signal to tell an
-explicit `style.delete()` from a GC destructor.
+**The resolution — a naming convention (user-ratified 2026-08-03, no D-number).**
+python-docx `delete()` methods are renamed **by the kind of thing each removes**,
+`delete_<type>()`, so that **no method named `delete` exists** anywhere on the
+styles surface:
 
-**The resolution — a FLAG-3 method rename (no D-number).** The same collision
-convention as the private-class renames (`_TableStyle`→`TableStyle_`):
+| Python | MATLAB | Layer |
+|---|---|---|
+| `BaseStyle.delete()` | `delete_style()` | proxy |
+| `_LatentStyle.delete()` | `delete_latent_style()` | proxy |
+| `CT_Style.delete()` | `delete_style()` | element |
+| `CT_LsdException.delete()` | `delete_lsd_exception()` | element |
 
-1. **`delete` is NOT overridden** on any style proxy — MATLAB's default `handle`
-   destructor is left in place (GC-safe: no tree effect, the wrapped element stays
-   parented via its parent's strong ref).
-2. **`BaseStyle.delete_()`** (trailing underscore) carries the faithful
-   python-docx `BaseStyle.delete()` semantics: `obj.element_.delete()` (detach via
-   the P4-6 element-layer guarded `CT_Style.delete`, safe there) then
-   `obj.element_ = []`. Inherited by all subclasses.
+Because no method is named `delete`, MATLAB's handle destructor is **never
+overridden** and the GC-driven collision is **dissolved entirely** — there is **no
+guarded destructor, no `isvalid`/`try-catch` machinery, and no GC hazard**. The
+element methods (`delete_style` / `delete_lsd_exception` on `CT_Style` /
+`CT_LsdException`) are the plain faithful port
+`p = obj.getparent(); if ~isequal(p, []); p.remove(obj); end`; since they are never
+the destructor, the detached element **survives** the call exactly as in python-docx
+(`self._element` survives detached). The proxy methods (`delete_style` inherited by
+all `BaseStyle` subclasses; `delete_latent_style` on `LatentStyle_`) delegate to the
+element method then set `element_ = []` (Python `None`).
 
-`delete_()` is only ever called **explicitly** (never by GC) and detaches a
-parented element through the element-layer guard, so there is no corruption risk
-and the result is **byte-identical to python-docx `style.delete()`** (Gate-3
+A `delete_<type>()` call is **byte-identical to python-docx `delete()`** (Gate-3
 re-derived the whole styles-part SHA `cc0bb35d…8614`, 348 872 B, `Heading1`
-removed). This is a method-**naming** resolution (FLAG-3 class), **not an output
-deviation → no D-number.**
+removed). This is a method-**naming** resolution, **not an output deviation → no
+D-number.** It supersedes the earlier interim compromises (an element-layer
+*guarded-destructor override* and a proxy-layer trailing-underscore `delete_()`),
+which are dissolved by this rename.
 
 :::{warning}
-**Binding Gate-4/P4-7a rule.** After `delete_()` the MATLAB element handle is
-**invalid** (destroyed), whereas Python's element survives detached — **never
-inspect the handle after `delete_`**; assert only the parent-side effect (child
-count / serialized bytes). The GC-invariance safety property was independently
-re-proven at Gate-3: minting 25× transient `StyleFactory` proxies and clearing
-them leaves the styles part **bit-for-bit unchanged** (`02d71a68…e384`).
+**Binding Gate-4 rule.** After `delete_style()` / `delete_latent_style()` the
+proxy's `element_` is `[]` (Python `None`), so any subsequent proxy property access
+errors, matching python-docx `AttributeError` — **never inspect the proxy after
+the delete call**; assert only the parent-side effect (child count / serialized
+bytes). Because no `delete` override exists, GC has no tree effect: the
+GC-invariance safety property holds by construction — minting transient
+`StyleFactory` / `LatentStyle_` proxies and clearing them leaves the styles part
+**bit-for-bit unchanged** (`02d71a68…e384`).
 :::
 
-**Status: SIGNED-PROVISIONAL** (adopted under the overnight-decision protocol;
-queued for user ratification). Full record:
-`validation\summary\decision_2026-07-30_h17_delete_destructor.md` (the design.md
-§9 H17 addendum); Gate records `validation\mat2doc\audit_P4-7a_styles_api.md` and
-`validate_P4-7a_styles_api.md`.
+**Status: ✅ user-ratified 2026-08-03** (H17 dissolved; removed from the open
+sign-off queue). Full record:
+`validation\summary\decision_2026-07-30_h17_delete_destructor.md` and design.md
+§9 H17; WP record `validation\mat2doc\audit_H17_delete_rename.md` (byte-neutral,
+0 new D, targeted regression 42/42). Prior gate records:
+`validation\mat2doc\audit_P4-7a_styles_api.md` and `validate_P4-7a_styles_api.md`.
 
 ---
 
@@ -696,8 +697,9 @@ hierarchy with its full property surface and `base_style`/`next_paragraph_style`
 chains, the `Styles` collection, `BabelFish`, and — at **P4-7b** — the
 latent-styles API (`LatentStyles`/`LatentStyle_`, un-stubbing
 `Styles.latent_styles`). The styles delegation is un-stubbed across the document
-object graph, the H17 `delete()` collision is resolved by the byte-faithful
-`delete_()` rename at both the element and proxy layers, and everything stays
+object graph, the H17 `delete()` collision is dissolved by the byte-faithful
+type-based rename (`delete_style` / `delete_latent_style` / `delete_lsd_exception`)
+at both the element and proxy layers, and everything stays
 **byte-neutral** (M1 17/17, **zero new D-numbers**); the latent WRITE path has its
 own 17/17 byte proof (`s0034`, only `word/styles.xml` changes, SHA `3981d463…ab53`).
 

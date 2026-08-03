@@ -244,7 +244,7 @@ the child sequence came out `w:name, w:basedOn, w:next, w:uiPriority,
 w:semiHidden, w:unhideWhenUsed, w:qFormat, w:locked, w:pPr, w:rPr` — canonical
 schema order, byte-identical to the python-docx oracle.
 
-**`delete()` — see [the H17 note below](#id-h17-delete).**
+**`delete_style()` — see [the H17 note below](#id-h17-delete).**
 
 **Example**
 
@@ -325,9 +325,9 @@ a **required** `w:name` (`ST_String`; `getAttrRequired` raises
 returns the named attribute value (`obj.(attr_name)`, the `getattr` analogue —
 `[]` when absent); `set_on_off_prop(attr, value)` sets it.
 
-**`delete()` — see [the H17 note below](#id-h17-delete).** `CT_LsdException.delete`
-is the **first** Python `delete()` element-removal method ported in the whole
-project.
+**`delete_lsd_exception()` — see [the H17 note below](#id-h17-delete).**
+`CT_LsdException.delete` is the **first** Python `delete()` element-removal method
+ported in the whole project.
 
 **Example**
 
@@ -426,7 +426,7 @@ disp(mat2doc.oxml.styles.styleId_from_name("heading 10"));  % "heading10" (no ta
 ---
 
 (id-h17-delete)=
-## The H17 hazard — Python `delete()` vs the MATLAB `handle` destructor
+## H17 — Python `delete()` vs the MATLAB `handle` destructor (resolved by rename)
 
 `CT_Style.delete` (`styles.py:168-170`) and `CT_LsdException.delete`
 (`styles.py:78-80`) both perform `self.getparent().remove(self)` — the **first**
@@ -435,52 +435,48 @@ none, so Mat2Ppt never faced this). In MATLAB, `delete` on a `handle` subclass
 **is the destructor**: there is no way to have a non-destructor method named
 `delete`, and MATLAB also calls it implicitly during garbage collection.
 
-**The ruling (design.md §9 H17).** Port `delete()` as a **guarded destructor
-override** — detach from the parent only when the element is currently parented,
-wrapped in a parent-guard plus `try/catch`:
+**The resolution — a naming convention (user-ratified 2026-08-03, no D-number).**
+Rather than override the destructor, the `delete()` methods are renamed **by the
+kind of thing each removes** so that **no method named `delete` exists**:
+
+| Python | MATLAB |
+|---|---|
+| `CT_Style.delete()` | `delete_style()` |
+| `CT_LsdException.delete()` | `delete_lsd_exception()` |
+
+Each is the plain faithful port:
 
 ```matlab
 p = obj.getparent();
-if ~isequal(p, []) && isvalid(p)   % Python: self.getparent().remove(self)
-    try
-        p.remove(obj);
-    catch
-        % swallow errors raised during MATLAB object teardown only
-    end
+if ~isequal(p, [])   % Python: self.getparent().remove(self)
+    p.remove(obj);
 end
 ```
 
-**Why the implicit-destructor detach does not fire (auditor-probed).** The
-parent's children array holds a **strong** handle reference to each child, so a
-wrapper variable going out of scope / being `clear`ed does **not** trigger the
-child's destructor while the tree is alive; holding only a child keeps the whole
-tree alive via the parent backref. 25 whole-tree constructions dropped unreachable
-emitted zero warnings, and both real callers
-(`styles/style.py:56`, `styles/latent.py:127`) do `self._element.delete();
-self._element = None` — they discard the element **immediately**, so the Python
-"object still usable after `delete()`" property is never relied upon, making the
-destructor-invalidation behavior-neutral on the used surface.
-
-**Known benign divergence (unreachable in python-docx usage).** An explicit
-`delete()` on an **unparented** element is a MATLAB no-op vs Python
-`AttributeError` (`None.remove`) — both real callers always operate on parented
-elements. This is a method-semantics ruling, **not** an output/byte divergence, so
-it carries **no D-number**.
+Because no method is named `delete`, MATLAB's handle destructor is **never
+overridden** and the GC-driven collision is **dissolved entirely** — no
+`isvalid`/`try-catch` guarded-destructor machinery is needed. GC never calls these
+methods, so the detached element **survives** the call exactly as in python-docx
+(`self._element` survives detached). The `~isequal(p, [])` parent-guard keeps an
+explicit call on an **unparented** element a no-op (Python `AttributeError` there,
+unreachable in python-docx usage). The proxy layer
+([`BaseStyle`](styles_api.md#id-h17-delete-proxy) / `LatentStyle_`) uses the same
+convention — `delete_style()` / `delete_latent_style()` — delegating to these
+element methods then setting `element_ = []`.
 
 :::{warning}
-**Binding Gate-4/P4-7a rule.** After an explicit `delete()` the MATLAB handle is
-**invalid** (destroyed), whereas Python's element survives detached — **never port
-a post-`delete()` element assertion** (e.g. "the removed element still has tag X").
-Assert only the parent-side effect (child count / serialized bytes). P4-7a's
-`Style.delete` / `_LatentStyle.delete` must port as `element_.delete();
-element_ = [];` and nothing else.
+**Binding Gate-4 rule.** Assert only the parent-side effect of the delete (child
+count / serialized bytes). At the proxy layer, `element_` is `[]` (Python `None`)
+after the call, so any subsequent proxy property access errors, matching python-docx
+`AttributeError` — never inspect the proxy afterward.
 :::
 
-**Status: SIGNED-PROVISIONAL** (adopted under the overnight-decision protocol;
-queued for user ratification before P4-7a). Full record:
-`validation\summary\decision_2026-07-30_h17_delete_destructor.md`; the auditor's
-adjudication is in `validation\mat2doc\audit_P4-6_oxml_styles.md` (Gate-2, block
-K).
+**Status: ✅ user-ratified 2026-08-03** (H17 dissolved; removed from the open
+sign-off queue). Full record:
+`validation\summary\decision_2026-07-30_h17_delete_destructor.md` and design.md
+§9 H17; WP record `validation\mat2doc\audit_H17_delete_rename.md` (byte-neutral,
+0 new D). Prior gate record: `validation\mat2doc\audit_P4-6_oxml_styles.md`
+(Gate-2, block K).
 
 (id-f1-boolnone)=
 ## The F-1 fix — `set_bool_prop(attr, None)` writes `"0"`, not remove

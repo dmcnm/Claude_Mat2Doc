@@ -166,8 +166,8 @@ Full record: `validation\mat2doc\com_verify_M2.md` (verdict **PASS**).
 ## Deviation posture — ZERO new D-numbers
 
 Every M2 fact is **L1 byte-identical or value-exact**. No canonical-only (L2)
-result appeared anywhere. The H17 `delete_()` friction (on `LatentStyle_`) is a
-FLAG-3 method-**naming** resolution — byte-identical to python-docx
+result appeared anywhere. The H17 `delete_latent_style()` rename (on `LatentStyle_`)
+is a type-based method-**naming** resolution — byte-identical to python-docx
 `_LatentStyle.delete()` — **not an output deviation → NO D-number**. M2 exercises
 only already-signed adopt-only rulings (**D-001** own serializer, byte-proven via
 M1 + M2 + latent-write 17/17; **D-zip-time** envelope-only). **Confirmed ZERO new

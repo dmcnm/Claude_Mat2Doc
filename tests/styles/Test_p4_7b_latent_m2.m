@@ -85,7 +85,7 @@ classdef Test_p4_7b_latent_m2 < matlab.unittest.TestCase
 %                     python-docx 1.2.0 oracle (Gate-3: probe_diff MATCH exit 0).
 %   * Regression   -- the M2 17-part manifest (size+SHA-256) + the M2 document.xml
 %                     whole-bytes + the latent-mutation styles.xml whole-bytes +
-%                     the delete_ parent-side effect + the GC-safety styles.xml
+%                     the delete_latent_style parent-side effect + the GC-safety styles.xml
 %                     invariance + hard-coded escaped/UTF-8 run bytes.
 %   * Upstream     -- the verbatim ValueError ("level must be in range 0-9, got
 %                     %d") / KeyError ("no latent style with name '%s'") messages,
@@ -98,7 +98,7 @@ classdef Test_p4_7b_latent_m2 < matlab.unittest.TestCase
 %   pin of the raw UTF-8 shipping bytes, plus (for document.xml and the latent
 %   styles.xml) a whole-bytes comparison against the co-located frozen fixture.
 %   SHA-256 equality == byte identity (L1). NO D-number granted any L2 relaxation
-%   in this WP (Gate-3: ZERO new; the H17 delete_ is a FLAG-3 method-naming
+%   in this WP (Gate-3: ZERO new; delete_latent_style is a method-naming
 %   resolution, byte-identical to python-docx _LatentStyle.delete()), so every
 %   byte pin is L1. The escaped/UTF-8 substring pins assert byte-exact OOXML
 %   escaping / UTF-8 encoding of the run text -- an independent oracle (the
@@ -396,29 +396,31 @@ classdef Test_p4_7b_latent_m2 < matlab.unittest.TestCase
         end
 
         function test_latent_style_delete_parent_side(testCase)
-            % Regression (H17, latent.py 119-128; PARENT-side effect ONLY): a fresh
-            % LatentStyle_ delete_() detaches its w:lsdException so the parent count
-            % drops back. H17 Gate-4 RULE: assert ONLY the parent-side effect
-            % (len_) -- NEVER inspect the deleted handle after delete_ (in MATLAB the
-            % element handle is invalid post-delete_; in Python it survives detached).
+            % Regression (latent.py 119-128; PARENT-side effect ONLY): a fresh
+            % LatentStyle_ delete_latent_style() detaches its w:lsdException so the
+            % parent count drops back. Gate-4 RULE: assert ONLY the parent-side effect
+            % (len_) -- NEVER inspect the deleted proxy afterward (its element_ is []
+            % post-delete, so proxy property access errors, matching Python's
+            % AttributeError; the detached element itself survives, as in Python).
             d = mat2doc.Document();
             ls = d.styles.latent_styles();
             before = ls.len_();
             s = ls.add_latent_style("Table Grid Probe");
             testCase.verifyEqual(ls.len_(), before + 1, 'precondition: add -> +1');
-            s.delete_();   % detach the w:lsdException; do NOT touch s after this line
+            s.delete_latent_style();   % detach the w:lsdException; do NOT touch s after this line
             testCase.verifyEqual(ls.len_(), before, ...
-                'delete_ -> parent lsdException count back to before (parent-side effect)');
+                'delete_latent_style -> parent lsdException count back to before (parent-side effect)');
         end
 
         function test_gc_safety_latent_proxy_layer(testCase)
-            % Regression (H17 proxy-layer safety property): minting many transient
+            % Regression (proxy-layer GC-safety property): minting many transient
             % LatentStyle_ proxies (getitem_ / to_array) in a loop and letting them
             % go out of scope leaves the styles part bit-for-bit UNCHANGED (349458 B,
-            % 02d71a68... == M1). Because `delete` is NOT overridden on LatentStyle_
-            % (only delete_ is), proxy GC has no tree effect. A regression that
-            % re-introduced a `delete` override (detaching the live w:lsdException on
-            % ordinary iteration) would go RED here. NOTE: only READ proxies are
+            % 02d71a68... == M1). Because no method named `delete` is overridden on
+            % LatentStyle_ OR the element (only delete_latent_style /
+            % delete_lsd_exception exist), proxy GC has no tree effect (H17 dissolved).
+            % A regression that re-introduced a `delete` override (detaching the live
+            % w:lsdException on ordinary iteration) would go RED here. NOTE: only READ proxies are
             % minted (getitem_/to_array) -- add_latent_style mutates and is excluded.
             d = mat2doc.Document();
             styles0 = testCase.saveStylesBytes(d);
@@ -609,7 +611,7 @@ classdef Test_p4_7b_latent_m2 < matlab.unittest.TestCase
         function test_equivalence_full_probe_vs_frozen_oracle(testCase)
             % Equivalence: replay the ENTIRE s0035 probe battery (runProbes -- the .m
             % twin's body VERBATIM: LatentStyles read + setters, add_latent_style +
-            % LatentStyle_ setters + delete_, Styles.latent_styles resolution,
+            % LatentStyle_ setters + delete_latent_style, Styles.latent_styles resolution,
             % add_heading levels + ValueError, add_paragraph + paragraphs, H5
             % identity) and compare EVERY one of the 53 keys to the frozen python-docx
             % 1.2.0 oracle copied into data\s0035_probe_oracle.json. Gate-3 found ZERO
@@ -869,7 +871,7 @@ function o = runProbes()
         o.ls_keyerror_id = errtok(ME.identifier);
     end
 
-    % ---- Section B: add_latent_style + LatentStyle_ setters + delete_ ----
+    % ---- Section B: add_latent_style + LatentStyle_ setters + delete_latent_style ----
     d = mat2doc.Document();
     ls = d.styles.latent_styles();
     o.add_len_before = enc(ls.len_());
@@ -889,7 +891,7 @@ function o = runProbes()
     o.set_quick_style_readback = enc(fresh.quick_style);
     fresh.unhide_when_used = true;
     o.set_unhide_readback = enc(fresh.unhide_when_used);
-    fresh.delete_();
+    fresh.delete_latent_style();
     o.after_delete_len = enc(ls.len_());
 
     % ---- Section C: LatentStyles setters read-back (fresh Document) ------
