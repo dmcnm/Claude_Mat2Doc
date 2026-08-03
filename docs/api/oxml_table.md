@@ -412,8 +412,8 @@ generic docx family (`get.x` / `get_or_add_x` / `new_x_` / `insert_x_` / `add_x_
   `_remove_tblStyle(); if value is None: return; _add_tblStyle().val = value`.
 
 :::{important}
-**★ A2 — `CT_TblPr.alignment` returns a `WD_PARAGRAPH_ALIGNMENT` member; compare by
-NAME or `.value`, never cross-class `==`.** `CT_TblPr` **reuses the same registered
+**★ A2 (RESOLVED-BY-FIX) — `CT_TblPr.alignment` returns a `WD_PARAGRAPH_ALIGNMENT`
+member; cross-class `==` now compares by VALUE.** `CT_TblPr` **reuses the same registered
 `CT_Jc`** that paragraphs use (`w:jc` → `CT_Jc`, registered once at P4-2 — **one
 element class, two context enums**; P6-2 does **not** add a second `w:jc` row).
 `CT_Jc.val` is typed `WD_ALIGN_PARAGRAPH` (`parfmt.py:49`), so `jc.val` yields a
@@ -434,22 +434,27 @@ value** (`WD_TABLE_ALIGNMENT.CENTER.value == 1` → `WD_ALIGN_PARAGRAPH.CENTER` 
 `"center"`), so the **bytes are correct** (`alignment = CENTER` → `<w:jc
 w:val="center"/>`, byte-identical to python-docx).
 
-**Binding user idiom** — because MATLAB enum `==` is **class-scoped** (no `eq`
-override; `member == <int>` and `SomeEnum.X == OtherEnum.X` both return *silent
-false*, `member == "NAME"` returns true), compare an alignment read **by name** or
-by `.value`, never by cross-class `==`:
+**Binding user idiom** — since the **enum-value-eq WP** (2026-08-03), int-enums use
+**value-based `==`** (the shared `BaseIntEnum` root — see
+[enums](enums.md#baseintenum)), so a returned alignment compares **by value**
+across classes, matching python-docx's int-subclass equality. A `== "NAME"`
+(string) comparison is now **false** — use `string(member) == "NAME"` for the name
+compare:
 
 ```matlab
-tblPr.alignment == "CENTER"                 % true  (name compare — the recommended idiom)
-double(tblPr.alignment.value) == 1          % true  (value compare)
-tblPr.alignment == WD_TABLE_ALIGNMENT.CENTER % FALSE in MATLAB (cross-class ==), true in Python
+tblPr.alignment == WD_TABLE_ALIGNMENT.CENTER % true  (value compare, cross-class — THE FIX)
+string(tblPr.alignment) == "CENTER"          % true  (name compare — the recommended name idiom)
+double(tblPr.alignment.value) == 1           % true  (value compare)
+tblPr.alignment == "CENTER"                  % false (int-enum vs string is never equal)
 ```
 
-This mirrors an upstream typing quirk through the project's ratified class-scoped
-enum design; it is **not a deviation** (bytes and the returned member's name/value
-are identical to Python) and carries **no D-number** — ruled *no-D* at Gate-2 and
-recorded in **design.md §2** (the A2 note). See also the
-[A2 cross-enum idiom row](../python_matlab_mapping.md) in the mapping reference.
+This resolves the upstream typing quirk faithfully: bytes and the returned
+member's name/value are identical to Python, and cross-class `==` now agrees with
+Python's int-subclass equality. **A2 §2 RESOLVED-BY-FIX** — byte-neutral, **no
+D-number** (recorded in **design.md §2**; the identical change is replicating to
+Mat2Ppt in a sibling WP in progress). See also the
+[enum `==` value-equality idiom row](../python_matlab_mapping.md) in the mapping
+reference.
 :::
 
 :::{note}
@@ -889,8 +894,11 @@ registration is byte-neutral (registering changes only a parsed node's class;
 `CT_TblPr` adds no parse-time behavior). The 6 round-trip fixtures include loose
 `tblPr` / `trPr` / `tr` (the custom-inserter order `[tblPrEx, trPr]`) and two
 real-`add_table` subtrees with the full 18-decl nsmap. **Zero new D-numbers** —
-every leg is L1 byte-identical or value-exact; the A2 cross-class `==` gap is
-non-byte / non-output and is ruled **no-D** (design.md §2).
+every leg is L1 byte-identical or value-exact. The A2 cross-class `==` gap
+(non-byte / non-output) has since been **RESOLVED-BY-FIX** by the enum-value-eq WP
+(2026-08-03): value-based enum `==` makes `tblPr.alignment == WD_TABLE_ALIGNMENT.CENTER`
+return true, matching Python — still byte-neutral, still **no D-number**
+(design.md §2).
 
 :::{note}
 **Milestone flag (COM).** The s0060 (leaf) and s0062 (property) table subtrees emit

@@ -310,12 +310,15 @@ syntax, description, example, ported-from).
   `_new_tc` / `tc_at_grid_offset`→P6-3a). The **first NON-neutral** table WP:
   registering `w:tblPr` puts the 100 `<w:tblPr>` nodes in the shipped table styles
   on the live `word/styles.xml` parse path, proven byte-neutral by the M1 17/17
-  `styles.xml` `02d71a68…` match. **★ A2 cross-enum:** `CT_TblPr.alignment` reuses
-  the single registered `CT_Jc` (one element, two context enums — **no second
-  `w:jc` row**) and faithfully returns a `WD_PARAGRAPH_ALIGNMENT` member
-  (python-docx's `cast` is a runtime no-op; a converting getter would crash on the
-  legal `<w:jc w:val="both">` = Justify) — the binding idiom is compare **by name**
-  (`== "CENTER"`) or `.value`, never cross-class `==` (design.md §2, ruled no-D).
+  `styles.xml` `02d71a68…` match. **★ A2 cross-enum (RESOLVED-BY-FIX):**
+  `CT_TblPr.alignment` reuses the single registered `CT_Jc` (one element, two
+  context enums — **no second `w:jc` row**) and faithfully returns a
+  `WD_PARAGRAPH_ALIGNMENT` member (python-docx's `cast` is a runtime no-op; a
+  converting getter would crash on the legal `<w:jc w:val="both">` = Justify). The
+  **enum-value-eq WP** (2026-08-03) then gave int-enums **value-based `==`** (the
+  shared `BaseIntEnum` root), so `alignment == WD_TABLE_ALIGNMENT.CENTER` now
+  returns **true**, matching python-docx's int-subclass equality — name compares
+  use `string(member) == "CENTER"` (design.md §2, byte-neutral, no-D).
   P6-2 also closes the `w:tblStyle`→`CT_String` and `w:gridAfter`/`w:gridBefore`→
   `CT_DecimalNumber` deferrals; props round-trip **6/6 byte-identical**
   (`references\s0062`, incl. the `w:jc val="both"` edge), **0 new D-numbers**.
@@ -352,9 +355,10 @@ syntax, description, example, ported-from).
   **P6-4a/b** + the table Word-COM sweep (the `s0063` merged-cell + `s0065` new_tbl
   fixtures COM-verified at P6-4b). See the [table oxml page](api/oxml_table.md).
   **P6-4a** then opens the **table API/proxy tier**: `mat2doc.table.Table` (the
-  `<w:tbl>` proxy — `alignment` [**★ A2 cross-enum** — returns a
-  `WD_PARAGRAPH_ALIGNMENT` member, compare by name `== "CENTER"` or `.value`,
-  never cross-class `==`], `autofit`, `style`, `table_direction`, the
+  `<w:tbl>` proxy — `alignment` [**★ A2 cross-enum (RESOLVED-BY-FIX)** — returns a
+  `WD_PARAGRAPH_ALIGNMENT` member; value-based enum `==` makes cross-class
+  `== WD_TABLE_ALIGNMENT.CENTER` true; `string(member) == "CENTER"` for names],
+  `autofit`, `style`, `table_direction`, the
   `@lazyproperty`-cached `rows`/`columns`, `_column_count`; `add_row`/`add_column`
   → P6-4b), the row/column collections `_Rows`→`Rows_` / `_Columns`→`Columns_`
   (the **0-based** `getitem_` int/negative/slice, `to_array`, `len_`) and the
