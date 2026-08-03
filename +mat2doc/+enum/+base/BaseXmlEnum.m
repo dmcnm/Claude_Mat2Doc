@@ -1,4 +1,4 @@
-classdef BaseXmlEnum
+classdef BaseXmlEnum < mat2doc.enum.base.BaseIntEnum
 % BASEXMLENUM Base class for enumerations that also map XML attribute values.
 %
 %   A concrete enumeration derives from this class and declares an

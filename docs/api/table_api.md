@@ -203,8 +203,8 @@ Dependent read-only property + private cache + computed-flag idiom — never
 
 (id-table-a2)=
 :::{important}
-**★ A2 — `Table.alignment` returns a `WD_PARAGRAPH_ALIGNMENT` member; compare by
-NAME or `.value`, never cross-class `==`.** `Table.alignment` get →
+**★ A2 (RESOLVED-BY-FIX) — `Table.alignment` returns a `WD_PARAGRAPH_ALIGNMENT`
+member; cross-class `==` now compares by VALUE.** `Table.alignment` get →
 `self._tblPr.alignment` = `CT_TblPr.alignment` (P6-2), which returns a
 **paragraph-alignment** member (`CT_Jc.val`) because python-docx's
 `cast("WD_TABLE_ALIGNMENT | None", jc.val)` is a **runtime no-op**. This port
@@ -214,20 +214,25 @@ converting getter would crash on the legal `<w:jc w:val="both">` = Justify that
 `mat2doc.enum.text.WD_PARAGRAPH_ALIGNMENT` (of which `WD_ALIGN_PARAGRAPH` is an
 alias class), **exactly** what `Paragraph.alignment` returns.
 
-Because MATLAB enum `==` is **class-scoped**, compare an alignment read **by name**
-or by `.value`, never by cross-class `==`:
+Since the **enum-value-eq WP** (2026-08-03), int-enums use **value-based `==`**
+(the shared `BaseIntEnum` root — see [enums](enums.md#baseintenum)), so a returned
+alignment compares **by value** across classes, matching python-docx's
+int-subclass equality. Note that `== "CENTER"` (a **string**) is now **false** —
+use `string(member) == "CENTER"` for the name compare:
 
 ```matlab
-tbl.alignment == "CENTER"                              % true  (name compare — the recommended idiom)
-double(tbl.alignment.value) == 1                       % true  (value compare)
-tbl.alignment == mat2doc.enum.table.WD_TABLE_ALIGNMENT.CENTER  % FALSE in MATLAB, true in Python
+tbl.alignment == mat2doc.enum.table.WD_TABLE_ALIGNMENT.CENTER  % true  (value compare, cross-class — THE FIX)
+string(tbl.alignment) == "CENTER"                     % true  (name compare — the recommended name idiom)
+double(tbl.alignment.value) == 1                      % true  (value compare)
+tbl.alignment == "CENTER"                             % false (int-enum vs string is never equal)
 ```
 
 The **setter** accepts a `WD_TABLE_ALIGNMENT` value and writes it through
 `CT_TblPr` (the cross-enum `to_xml` resolves by **int value** → the correct
-`"left"`/`"center"`/`"right"` bytes). This is the same ratified A2 note as
-`CT_TblPr.alignment` (design.md §2) — **not a deviation, no D-number** (bytes and
-the member's name/value are identical to Python).
+`"left"`/`"center"`/`"right"` bytes). This is the same **A2 §2 RESOLVED-BY-FIX**
+as `CT_TblPr.alignment` (design.md §2) — byte-neutral, **no D-number** (the fix
+adds only `eq`/`ne`; the identical change is replicating to Mat2Ppt in a sibling
+WP in progress).
 :::
 
 (id-table-direction)=
@@ -237,9 +242,11 @@ logical.** `table_direction` get → `self._tbl.bidiVisual_val`. python-docx's
 `bidiVisual_val` returns `[]` (None) or a **logical** (`CT_OnOff.val`), so the
 getter returns that verbatim (as python-docx returns the bool cast). The setter →
 `self._element.bidiVisual_val = value` (a `WD_TABLE_DIRECTION` member; `CT_Tbl`
-applies `bool(value)` — LTR=0 → `"0"`, RTL=1 → a bare `<w:bidiVisual/>`). If a user
-compares against a `WD_TABLE_DIRECTION` member, the same by-name/`.value` idiom
-applies.
+applies `bool(value)` — LTR=0 → `"0"`, RTL=1 → a bare `<w:bidiVisual/>`). The
+getter returns a **logical** (or `[]`), not a member; with value-based enum `==`
+(the `BaseIntEnum` root) a `WD_TABLE_DIRECTION` member also compares by value, so
+`WD_TABLE_DIRECTION.RTL == true` → true (RTL's value is 1) and
+`WD_TABLE_DIRECTION.LTR == false` → true (value 0).
 
 (id-table-p6-4b)=
 **★ The P6-4b cell/mutator members are now LIVE.** The eight members that needed
@@ -258,7 +265,8 @@ tbl = d.add_table(2, 3);                                    % public API: (rows,
 disp(tbl.rows.len_());                                      % 2
 disp(tbl.columns.len_());                                   % 3
 tbl.alignment = mat2doc.enum.table.WD_TABLE_ALIGNMENT.CENTER;
-disp(tbl.alignment == "CENTER");                           % 1  (by-name idiom — NEVER cross-class ==)
+disp(tbl.alignment == mat2doc.enum.table.WD_TABLE_ALIGNMENT.CENTER);  % 1  (value-based cross-class == — the fix)
+disp(string(tbl.alignment) == "CENTER");                   % 1  (name compare — the recommended name idiom)
 disp(double(tbl.alignment.value) == 1);                    % 1  (value compare)
 tbl.autofit = false;
 disp(tbl.autofit);                                         % 0  (<w:tblLayout w:type="fixed"/>)

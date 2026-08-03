@@ -106,10 +106,18 @@ no-metaclass, no-runtime-dispatch pattern). Members are enumerated via
 first-declared-wins, matching Python enum alias resolution.
 
 **`int(member)` sites port as `double(member.value)`.** MATLAB enum members are
-not numeric, so Python `int(member)` and `member == ms_api_value` each port
-explicitly as `double(member.value)` at the call site (design.md §2). No
-`eq`-with-int override is added on the base (the Mat2Ppt precedent); downstream
-int-comparison sites in P4 / P5 / P6 consumers port the same way (VERIFY-P3-1b).
+not numeric, so an explicit `int(member)` in the library port keeps the
+`double(member.value)` spelling at the call site (design.md §2).
+
+**Enum `==` / `~=` is VALUE-BASED (the `BaseIntEnum` root).** python-docx's
+`BaseEnum(int, enum.Enum)` and `BaseXmlEnum(int, enum.Enum)` are **int
+subclasses**, so their members compare by the MS-API integer value. The port
+replicates this: both bases now derive from the shared root
+`mat2doc.enum.base.BaseIntEnum`, whose inherited `eq`/`ne` compare
+`double(value)`. See the [`BaseIntEnum`](#baseintenum) section below for the full
+operand matrix and the `string(member) == "NAME"` name-compare idiom that this
+mandates. Plain `enum.Enum` ports (`WD_BREAK_TYPE`, `WD_INLINE_SHAPE_TYPE`) do
+**not** derive from `BaseIntEnum` and keep identity `==`.
 
 ### H3 tri-state — None vs `""` vs `<missing>`
 
@@ -143,6 +151,94 @@ this WP.) The `DocsPageFormatter` class (base.py:80-151) is **not ported** — i
 generates a ReStructuredText doc page for an enum and is docs-tooling with no
 runtime consumer (grep-confirmed; Mat2Ppt **VERIFY-E4** precedent). The `doc`
 property is still stored on every member for fidelity but is non-behavioral.
+
+---
+
+(baseintenum)=
+## `BaseIntEnum`
+
+**Syntax**
+
+```matlab
+% Shared root of BaseEnum / BaseXmlEnum — never instantiated or subclassed directly.
+% Gives every int-enum member value-based == / ~= (Python int-subclass equality).
+memberA == memberB     % double(a.value) == double(b.value)  (cross-class included)
+member  == 1           % value compare (Python int(member) == 1)
+member  == "CENTER"    % false           (Python int != str)
+string(member) == "CENTER"   % the NAME-compare idiom (Python member.name == "CENTER")
+```
+
+**Description**
+
+`BaseIntEnum` is the value-class root introduced (2026-08-03) to replicate
+python-docx's **int-subclass equality**. In python-docx, `BaseEnum(int,
+enum.Enum)` and `BaseXmlEnum(int, enum.Enum)` construct their members with
+`int.__new__(cls, ms_api_value)` (`base.py:15,23,33,43`) — the members **are
+ints**, so Python compares them by their MS-API integer value. MATLAB
+`enumeration` classes compare `==` by **member identity** by default, which made a
+cross-class comparison silently false and a member-vs-int comparison an
+error/false. `BaseIntEnum` restores the Python semantics by overriding `eq`/`ne`
+so that every `BaseEnum`/`BaseXmlEnum` member (17 concrete int-enums + 11 aliases)
+compares by `double(value)`. Because a single inherited `eq` lives at the shared
+root, two members of **any** two int-enum classes — same base or the two different
+bases — dispatch to the same method with no ambiguity.
+
+**Operand matrix** (element-wise, native `==` broadcasting):
+
+| Right operand | Result vs an int-enum member | Python parity |
+|---|---|---|
+| int-enum member (any `BaseEnum`/`BaseXmlEnum`) | `double(a.value) == double(b.value)` — **cross-class equal-by-value → true** | `int == int` |
+| numeric (`double`/`int32`/…) | value compare (`== 1` → true iff `value == 1`) | `int == int` |
+| `logical` | value compare (`CENTER(1) == true`, `LEFT(0) == false`) | Python `bool` is an `int` subclass |
+| `string` / `char` | **false** | `int == str` → False |
+| `[]` (None sentinel) / `missing` | **false** (`~=` → true); the `[]` sentinel is treated as a **scalar** | `member == None` → False |
+| genuinely empty enum/numeric **array** (`X.empty`) | native empty logical (broadcasting preserved) | n/a (MATLAB extension) |
+
+A NaN comparison-vector encodes every non-numeric/None operand: `NaN == anything`
+is false (even `NaN == NaN`), which is exactly "an int is never equal to a
+str/None". `isequal` (hence `verifyEqual`) is **not** loosened — value-object
+`isequal` stays class-strict.
+
+**The name-compare idiom flips to `string(member) == "NAME"`.** Because
+`member == "NAME"` is now **false** for an int-enum, compare a member's name via
+`string(member) == "NAME"` (Python `member.name == "NAME"`) or its value via
+`double(member.value) == N`. `switch member` now routes through the overridden
+`eq` (a `case OtherClass.CENTER` matches cross-class by value; a `case "CENTER"`
+string case is dead) — faithful to Python `if/elif ==`, and no library or test
+code switches on an int-enum.
+
+**Plain-enum exclusion + residual.** `WD_BREAK_TYPE` and `WD_INLINE_SHAPE_TYPE`
+are declared `class X(enum.Enum)` in python-docx — **not** int subclasses — so
+they compare by identity and are **not** equal to their int. They do not derive
+from `BaseIntEnum` and keep MATLAB's default identity `==`, matching Python.
+**Documented residual:** MATLAB's built-in enumeration name-compare still makes
+`WD_BREAK_TYPE.LINE == "LINE"` → **true** where Python is **false** — the sole
+remaining enum-`==` divergence (no toolbox/test consumer; pinned empirically in
+`Test_enum_value_eq`).
+
+**Byte-neutral, 0 D-number.** Only `eq`/`ne` were added; `value`, `xml_value`,
+`from_xml`, `to_xml` and every serialization path are untouched, so saved `.docx`
+output is unchanged. This change **resolves the A2 §2 cross-enum divergence** (see
+[Table API](table_api.md) — `Table.alignment == WD_TABLE_ALIGNMENT.CENTER` now
+returns **true**, matching python-docx). The identical change is replicating to
+Mat2Ppt in a sibling WP (in progress); shipped Mat2Ppt (M3) still has the old
+class-scoped identity `==`.
+
+**Example**
+
+```matlab
+import mat2doc.enum.text.WD_PARAGRAPH_ALIGNMENT
+import mat2doc.enum.table.WD_TABLE_ALIGNMENT
+WD_PARAGRAPH_ALIGNMENT.CENTER == WD_TABLE_ALIGNMENT.CENTER    % true  — cross-class equal-by-value (the fix)
+WD_PARAGRAPH_ALIGNMENT.JUSTIFY == WD_TABLE_ALIGNMENT.CENTER   % false — value 3 ~= value 1
+WD_PARAGRAPH_ALIGNMENT.CENTER == 1                            % true  — value compare
+WD_PARAGRAPH_ALIGNMENT.CENTER == "CENTER"                     % false — int != str
+string(WD_PARAGRAPH_ALIGNMENT.CENTER) == "CENTER"            % true  — the name-compare idiom
+WD_PARAGRAPH_ALIGNMENT.CENTER == []                           % false (scalar); ~= [] -> true
+```
+
+*Ported from python-docx v1.2.0: `src/docx/enum/base.py::BaseEnum` /
+`BaseXmlEnum` (the `int`-subclass equality of `int.__new__(cls, ...)`)*
 
 ---
 
