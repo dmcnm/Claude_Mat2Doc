@@ -11,24 +11,24 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
 %   serialization-path change (the byte-critical CT_* layer landed at P4-6). So
 %   equivalence is BEHAVIORAL (probe value parity, proven at Gate-3 by probe_diff
 %   MATCH exit 0 over the full surface + a re-proven 164-row template dump) PLUS
-%   serialized-bytes parity on the two output-visible whole-part paths (delete_,
+%   serialized-bytes parity on the two output-visible whole-part paths (delete_style,
 %   add_style) PLUS the end-to-end style-by-name document byte pin (the M2
 %   add_heading precursor). This class permanently FREEZES that surface --
 %   byte/value-identical to python-docx 1.2.0.
 %
 %   THE HIGHEST-VALUE PERMANENT PINS IN THIS WP (a regression goes RED loudly):
-%     * delete_() whole-part byte pin (test_delete_byte_pin): a proxy
-%       delete_("Heading 1") over a real Document -> the serialized styles part is
-%       EXACTLY 348872 B, SHA-256 cc0bb35d...8614, byte-identical to python-docx
-%       style.delete(). H17 Gate-4 rule: only the PARENT-side serialized bytes are
-%       asserted -- the destroyed proxy handle is NEVER inspected after delete_.
+%     * delete_style() whole-part byte pin (test_delete_byte_pin): a proxy
+%       delete_style("Heading 1") over a real Document -> the serialized styles part
+%       is EXACTLY 348872 B, SHA-256 cc0bb35d...8614, byte-identical to python-docx
+%       style.delete(). Gate-4 rule: only the PARENT-side serialized bytes are
+%       asserted -- the proxy handle is NEVER inspected after delete_style.
 %     * GC-safety pin (test_gc_safety_proxy_layer): minting several transient
 %       StyleFactory proxies in a loop and letting them go out of scope leaves the
-%       styles part bit-for-bit UNCHANGED (349458 B, 02d71a68...e384). This is the
-%       H17 proxy-layer safety property -- because `delete` is NOT overridden on
-%       any style proxy, proxy GC has no tree effect. A regression that
-%       re-introduces a `delete` override (detaching the live w:style on ordinary
-%       iteration) goes RED here.
+%       styles part bit-for-bit UNCHANGED (349458 B, 02d71a68...e384). Because no
+%       method named `delete` is overridden on the proxy OR the element, proxy GC
+%       has no tree effect (H17 dissolved). A regression that re-introduces a
+%       `delete` override (detaching the live w:style on ordinary iteration) goes
+%       RED here.
 %     * add_style whole-part byte pin (test_add_style_byte_pin): two add_style
 %       calls (custom CHARACTER + builtin PARAGRAPH) -> the serialized styles part
 %       is EXACTLY 349670 B, SHA-256 37e2136b...6541, byte-identical to python-docx.
@@ -89,7 +89,7 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
 %                     leaf to the frozen python-docx 1.2.0 oracle (Gate-3 found
 %                     ZERO divergences).
 %   * Regression   -- hard-coded expected property values + the four whole-part /
-%                     document SHA-256 + size byte pins (delete_, add_style, GC,
+%                     document SHA-256 + size byte pins (delete_style, add_style, GC,
 %                     G-scenario).
 %   * Upstream     -- BabelFish's 12-alias table, StyleFactory's 4-way dispatch +
 %                     KeyError-on-None, the next_paragraph_style fallback matrix and
@@ -101,7 +101,7 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
 %   pin of the raw UTF-8 shipping bytes (serialize_part_xml for the styles part;
 %   the extracted word/document.xml for the G-scenario). SHA-256 equality == byte
 %   identity (L1). No D-number granted any L2 relaxation in this WP (Gate-3: zero
-%   new; delete_ is a FLAG-3 method-naming resolution, byte-identical to
+%   new; delete_style is a method-naming resolution, byte-identical to
 %   python-docx style.delete()), so every byte pin is L1. The 164-count / leaf-key
 %   guards in the equivalence leg are the only looser-than-byte checks and are
 %   commented at their site.
@@ -115,7 +115,7 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
     properties (Constant)
         W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
-        % --- delete_("Heading 1") whole styles part (Gate-3 s0031 byteproof) ---
+        % --- delete_style("Heading 1") whole styles part (Gate-3 s0031 byteproof) ---
         SIZE_DELETE = 348872
         SHA_DELETE  = "cc0bb35d40c717a8329a01ea66e8aeaa592aaa89b9624c882e7a9083dbbc8614"
 
@@ -500,22 +500,22 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
         end
 
         % =============================================================== %
-        % 7. H17 delete_() whole-part byte pin (PARENT-side effect only)   %
+        % 7. delete_style() whole-part byte pin (PARENT-side effect only)  %
         % =============================================================== %
 
         function test_delete_byte_pin(testCase)
-            % Regression (H17, style.py 49-57; the whole-part byte proof): a proxy
-            % delete_("Heading 1") over a real Document -> the serialized styles part
-            % is EXACTLY 348872 B, SHA-256 cc0bb35d...8614, byte-identical to
-            % python-docx style.delete(). H17 Gate-4 RULE: assert ONLY the
-            % parent-side serialized bytes -- NEVER inspect the handle after delete_.
+            % Regression (style.py 49-57; the whole-part byte proof): a proxy
+            % delete_style("Heading 1") over a real Document -> the serialized styles
+            % part is EXACTLY 348872 B, SHA-256 cc0bb35d...8614, byte-identical to
+            % python-docx style.delete(). Gate-4 RULE: assert ONLY the parent-side
+            % serialized bytes -- NEVER inspect the handle after delete_style.
             d = mat2doc.Document();
             st = d.styles;
             h = st.getitem_("Heading 1");
-            h.delete_();   % detach the w:style; do NOT touch h after this line
+            h.delete_style();   % detach the w:style; do NOT touch h after this line
             proof = shaOfElement(st.element());
             testCase.verifyEqual(proof.size, testCase.SIZE_DELETE, ...
-                sprintf('styles part must be exactly %d B after delete_', testCase.SIZE_DELETE));
+                sprintf('styles part must be exactly %d B after delete_style', testCase.SIZE_DELETE));
             testCase.verifyEqual(proof.sha256, testCase.SHA_DELETE, ...
                 'styles part SHA-256 == python-docx style.delete() (byte-identical L1)');
             % looser-than-byte cross-check (justified: proves Heading1 is the one gone):
@@ -525,12 +525,13 @@ classdef Test_p4_7a_styles_api < matlab.unittest.TestCase
         end
 
         function test_gc_safety_proxy_layer(testCase)
-            % Regression (H17 proxy-layer safety property): minting several transient
+            % Regression (proxy-layer GC-safety property): minting several transient
             % StyleFactory proxies in a loop and letting them go out of scope leaves
             % the styles part bit-for-bit UNCHANGED (349458 B, 02d71a68...e384).
-            % Because `delete` is NOT overridden on any style proxy, proxy GC has no
-            % tree effect. A regression that re-introduces a `delete` override
-            % (detaching the live w:style on ordinary iteration) goes RED here.
+            % Because no method named `delete` is overridden on the proxy OR the
+            % element, proxy GC has no tree effect (H17 dissolved). A regression that
+            % re-introduces a `delete` override (detaching the live w:style on
+            % ordinary iteration) goes RED here.
             ST = @(n) mat2doc.enum.style.WD_STYLE_TYPE.(n);
             d = mat2doc.Document();
             st = d.styles;
@@ -1020,7 +1021,7 @@ function P = runProbes()
     d = mat2doc.Document();
     st = d.styles;
     h = st.getitem_("Heading 1");
-    h.delete_();
+    h.delete_style();
     bp.delete_heading1 = shaOfElement(st.element());
     d = mat2doc.Document();
     st = d.styles;

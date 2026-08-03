@@ -17,8 +17,9 @@ classdef CT_LsdException < mat2doc.oxml.BaseOxmlElement
 %   named property (Python getattr/setattr -> obj.(attr_name)); LatentStyle
 %   (P4-7a) calls these with "semiHidden"/"unhideWhenUsed"/"qFormat"/"locked".
 %
-%   delete(): see the DELETE / handle-destructor note on the method below
-%   (this is the FIRST Python `delete()` element method ported in the project).
+%   delete_lsd_exception(): faithful port of CT_LsdException.delete (see the
+%   method below); named by the kind of thing it removes so no method named
+%   `delete` (MATLAB's handle destructor) exists here (H17 dissolved).
 %
 %   TRANSPARENT PASS-THROUGH CONSTRUCTOR (design.md section 2 INT-1): the parser
 %   instantiates this on the many <w:lsdException> nodes inside styles.xml.
@@ -80,34 +81,24 @@ classdef CT_LsdException < mat2doc.oxml.BaseOxmlElement
         function v = get.unhideWhenUsed(obj);    v = obj.getAttrTyped(obj.UNHIDEWHENUSED_ATTR, obj.UNHIDEWHENUSED_TYPE); end
         function set.unhideWhenUsed(obj, v);     obj.setAttrTyped(obj.UNHIDEWHENUSED_ATTR, obj.UNHIDEWHENUSED_TYPE, v); end
 
-        function delete(obj)
-            % DELETE Remove this `w:lsdException` element from the XML document.
+        function delete_lsd_exception(obj)
+            % DELETE_LSD_EXCEPTION Remove this `w:lsdException` from its parent.
             %
-            %   Ported from python-docx v1.2.0: src/docx/oxml/styles.py::
-            %   CT_LsdException.delete (lines 78-80): self.getparent().remove(self).
+            %   Faithful port of CT_LsdException.delete (styles.py 78-80):
+            %   self.getparent().remove(self).
             %
-            %   VERIFY / candidate-H17 (handle-destructor collision -- FIRST
-            %   Python `delete()` element method in the project). MATLAB `delete`
-            %   on a handle subclass IS the destructor: MATLAB invalidates the
-            %   handle after this body runs, and also calls it during garbage
-            %   collection. The single python-docx caller (styles/latent.py:127
-            %   LatentStyle.delete) does `self._element.delete(); self._element =
-            %   None` -- it discards the element IMMEDIATELY, so the Python
-            %   "object still usable after delete()" property is never relied
-            %   upon, making the destructor-invalidation behavior-neutral on the
-            %   USED surface. The parent-guard + try/catch make GC teardown
-            %   harmless (destruction order is undefined; a loose/already-detached
-            %   element must not error during teardown). DIVERGENCE (unreachable
-            %   in python-docx usage): an EXPLICIT delete() on an UNPARENTED
-            %   element is a no-op here vs AttributeError (None.remove) in Python.
-            %   Flagged for the Auditor to confirm the naming/semantics ruling.
+            %   Named `delete_lsd_exception` (not `delete`) so this element method is
+            %   NEVER MATLAB's handle destructor -- H17 dissolved: with no `delete`
+            %   override, GC never calls this and no guarded-destructor machinery
+            %   (try/catch, isvalid guard) is needed. The parent-guard keeps an
+            %   explicit call on an UNPARENTED element a no-op, preserving the
+            %   pre-rename behavior (python-docx would raise AttributeError there,
+            %   but no python-docx caller reaches it).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/oxml/styles.py::CT_LsdException.delete
             p = obj.getparent();
-            if ~isequal(p, []) && isvalid(p)   % Python: self.getparent().remove(self)
-                try
-                    p.remove(obj);
-                catch
-                    % swallow errors raised during MATLAB object teardown only
-                end
+            if ~isequal(p, [])   % Python: self.getparent().remove(self)
+                p.remove(obj);
             end
         end
 

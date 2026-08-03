@@ -95,7 +95,8 @@ syntax, description, example, ported-from).
   `CT_DecimalNumber` leaf) — the **first WP of the styles chain**, which registers
   the 12 styles-block tags **byte-neutrally** (the 349 KB `styles.xml` now transits
   `CT_Styles`, M1 17/17 preserved), raises the **H17** `delete()`/destructor-collision
-  ruling (guarded-destructor override, SIGNED-PROVISIONAL), and carries the F-1
+  ruling (resolved by the type-based `delete_<type>()` rename — H17 dissolved,
+  user-ratified 2026-08-03), and carries the F-1
   `bool(None)→"0"` truthiness fix — **styles-oxml COMPLETE → the styles API
   (P4-7a/b) is next → M2**.
 - **OPC layer (opc)** — the two-tier serializer that regenerates
@@ -203,9 +204,9 @@ syntax, description, example, ported-from).
   sequence surface plus `add_style`/`default`/`get_by_id`/`get_style_id`/`element`,
   and the still-stubbed `latent_styles` → P4-7b), and `BabelFish` (the
   case-sensitive UI↔internal style-name alias table). Documents the **H17
-  proxy-layer resolution** — `delete()`→`delete_()` (why `delete` cannot be
-  overridden at the proxy layer; `delete_()` is byte-faithful, a FLAG-3-class
-  method-naming resolution, **no D-number**), the project's **first ported
+  resolution** — the type-based rename `delete()`→`delete_style()`/`delete_latent_style()`
+  (no method named `delete`, so the handle destructor is never overridden and H17 is
+  dissolved; byte-faithful, a method-naming resolution, **no D-number**), the project's **first ported
   `warnings.warn`** (`mat2doc:UserWarning` house convention on the deprecated by-id
   `getitem_` path), and the un-stub that makes `Paragraph.style`/`Run.style`/
   `get_style` resolve end-to-end (the style-by-name path byte-proven, the direct M2
@@ -215,7 +216,7 @@ syntax, description, example, ported-from).
   and the `default_priority`/`default_to_*`/`load_count` writers) and
   `mat2doc.styles.LatentStyle_` (`_LatentStyle`→`LatentStyle_`, a `<w:lsdException>`
   override with the RAW tri-state `hidden`/`locked`/`quick_style`/`unhide_when_used`
-  and the H17 `delete_()` proxy-layer rename) — un-stubbing `Styles.latent_styles`;
+  and the H17 `delete_latent_style()` type-based rename) — un-stubbing `Styles.latent_styles`;
   the latent WRITE path is byte-proven (`s0034`, only `styles.xml` changes). **API/
   proxy tier — no registry row, no serialization change → behavioral equivalence,
   byte-neutral (M1 17/17, 0 new D-numbers). With latent styles live, P4-7b un-stubs

@@ -358,30 +358,25 @@ classdef CT_Style < mat2doc.oxml.BaseOxmlElement
             end
         end
 
-        % ---- delete (styles.py 168-170) ----
-        function delete(obj)
-            % DELETE Remove this `w:style` element from its parent `w:styles` element.
+        % ---- delete_style (styles.py 168-170) ----
+        function delete_style(obj)
+            % DELETE_STYLE Remove this `w:style` element from its parent `w:styles`.
             %
-            %   Ported from python-docx v1.2.0: src/docx/oxml/styles.py::
-            %   CT_Style.delete (lines 168-170): self.getparent().remove(self).
+            %   Faithful port of CT_Style.delete (styles.py 168-170):
+            %   self.getparent().remove(self).
             %
-            %   VERIFY / candidate-H17 (handle-destructor collision). See the full
-            %   rationale on CT_LsdException.delete: MATLAB `delete` on a handle
-            %   subclass IS the destructor. The single python-docx caller
-            %   (styles/style.py:56 BaseStyle.delete) does `self._element.delete();
-            %   self._element = None`, discarding the element immediately, so the
-            %   Python "usable after delete()" property is never relied upon --
-            %   behavior-neutral on the USED surface. The parent-guard + try/catch
-            %   keep MATLAB GC teardown harmless. DIVERGENCE (unreachable in
-            %   python-docx usage): explicit delete() on an UNPARENTED style is a
-            %   no-op here vs AttributeError in Python. Flagged for the Auditor.
+            %   Named `delete_style` (not `delete`) so this element method is NEVER
+            %   MATLAB's handle destructor -- H17 dissolved: with no `delete`
+            %   override, GC never calls this and no guarded-destructor machinery
+            %   (try/catch, isvalid guard) is needed. The parent-guard keeps an
+            %   explicit call on an UNPARENTED element a no-op, preserving the
+            %   pre-rename behavior (python-docx would raise AttributeError there,
+            %   but no python-docx caller reaches it).
+            %
+            %   Ported from python-docx v1.2.0: src/docx/oxml/styles.py::CT_Style.delete
             p = obj.getparent();
-            if ~isequal(p, []) && isvalid(p)   % Python: self.getparent().remove(self)
-                try
-                    p.remove(obj);
-                catch
-                    % swallow errors raised during MATLAB object teardown only
-                end
+            if ~isequal(p, [])   % Python: self.getparent().remove(self)
+                p.remove(obj);
             end
         end
     end

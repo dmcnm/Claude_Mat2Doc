@@ -19,13 +19,12 @@ classdef LatentStyle_ < mat2doc.shared.ElementProxy
 %   REQUIRED @w:name (always present) through BabelFish.internal2ui; priority is
 %   the ST_DecimalNumber @w:uiPriority (int or []).
 %
-%   DELETE_ (latent.py 119-128; H17 FLAG-3 method rename delete()->delete_()):
-%   the MATLAB `delete` name is the handle destructor and is NOT overridden here
-%   (GC-safe); the faithful element-removal is exposed as delete_(), byte-
-%   identical to python-docx `_LatentStyle.delete()`. See the delete_ method and
-%   the H17 addendum below. This mirrors BaseStyle.delete_ exactly (design.md
-%   section 9 H17 addendum; decision_2026-07-30_h17_delete_destructor.md names
-%   P4-7b explicitly).
+%   DELETE_LATENT_STYLE (latent.py 119-128): named `delete_latent_style` (by the
+%   kind of thing it removes) so NO method named `delete` exists on the styles
+%   surface. MATLAB's `delete` on a handle IS the destructor; with no `delete`
+%   override the destructor is never touched and no guarded-destructor machinery
+%   is needed (H17 dissolved). Byte-identical to python-docx
+%   `_LatentStyle.delete()`. Mirrors BaseStyle.delete_style. See the method below.
 %
 %   Example:
 %       d  = mat2doc.Document();
@@ -34,7 +33,7 @@ classdef LatentStyle_ < mat2doc.shared.ElementProxy
 %       x.priority = 59;          % w:uiPriority
 %       x.hidden = false;         % w:semiHidden="0"
 %       x.quick_style = true;     % w:qFormat="1"
-%       x.delete_();              % remove the <w:lsdException> from its parent
+%       x.delete_latent_style();  % remove the <w:lsdException> from its parent
 %
 %   Ported from python-docx v1.2.0: src/docx/styles/latent.py::_LatentStyle
 
@@ -60,10 +59,11 @@ classdef LatentStyle_ < mat2doc.shared.ElementProxy
             obj@mat2doc.shared.ElementProxy(lsdException);   % Python: super().__init__ (parent None)
         end
 
-        % ---- delete_ (latent.py 119-128; H17 FLAG-3 rename delete -> delete_) ----
-        function delete_(obj)
-            % DELETE_ Remove this latent-style definition so the containing
-            %   LatentStyles defaults provide the effective value again (latent.py 119-128).
+        % ---- delete_latent_style (latent.py 119-128; renamed from delete) ----
+        function delete_latent_style(obj)
+            % DELETE_LATENT_STYLE Remove this latent-style definition so the
+            %   containing LatentStyles defaults provide the effective value again
+            %   (latent.py 119-128).
             %
             %   Python (latent.py 127-128, `_LatentStyle.delete`):
             %       self._element.delete()   % detach the w:lsdException from w:latentStyles
@@ -71,30 +71,24 @@ classdef LatentStyle_ < mat2doc.shared.ElementProxy
             %   Python notes that accessing any attribute afterward raises
             %   AttributeError (self._element is now None).
             %
-            %   H17 ADDENDUM (proxy-layer, SIGNED-PROVISIONAL 2026-07-30,
-            %   design.md section 9 + decision_2026-07-30_h17_delete_destructor.md,
-            %   which names P4-7b explicitly). In MATLAB `delete` on a `handle` IS
-            %   the destructor; overriding it on a transient proxy is UNSAFE (GC
-            %   would detach the live element). RESOLUTION (FLAG-3 method rename,
-            %   same convention as _TableStyle -> TableStyle_): DO NOT override
-            %   `delete`; expose the faithful element-removal as `delete_`. This
-            %   class therefore does NOT declare a `delete` override -- the default
-            %   handle destructor is left in place (GC-safe: no tree effect).
+            %   NAMING (H17 dissolved): named `delete_latent_style` -- by the kind of
+            %   thing it removes -- so NO method named `delete` exists on the styles
+            %   surface. MATLAB's `delete` on a `handle` IS the destructor; with no
+            %   `delete` override the destructor is never touched and no guarded-
+            %   destructor machinery is needed. Pure naming choice, byte-identical to
+            %   python-docx `_LatentStyle.delete()` -- NOT an output deviation, NO
+            %   D-number. The wrapped element method is likewise `delete_lsd_exception`
+            %   (CT_LsdException), an ordinary getparent().remove() that is never GC's
+            %   destructor, so the detached element survives (as in Python).
             %
-            %   `delete_` is only ever called EXPLICITLY (never by GC) and detaches
-            %   a PARENTED element via the P4-6/oxml CT_LsdException.delete (a
-            %   guarded getparent().remove(self)) -- so the result is BYTE-IDENTICAL
-            %   to python-docx `_LatentStyle.delete()`. Method-naming resolution
-            %   (FLAG-3), NOT an output deviation -- NO D-number.
-            %
-            %   H17 Gate-4 rule: after delete_ the MATLAB element handle is invalid
-            %   whereas Python's element survives detached -- NEVER inspect the
-            %   handle after delete_; assert only the parent-side effect (child
-            %   count / serialized bytes).
+            %   Gate-4 rule: after delete_latent_style the proxy's element_ is []
+            %   (Python None), so accessing any proxy property errors -- matching
+            %   python-docx (AttributeError). Assert only the parent-side effect
+            %   (child count / serialized bytes); never inspect the proxy after it.
             %
             %   Ported from python-docx v1.2.0: styles/latent.py::_LatentStyle.delete
-            obj.element_.delete();   % Python: self._element.delete() (CT_LsdException.delete)
-            obj.element_ = [];       % Python: self._element = None
+            obj.element_.delete_lsd_exception();   % Python: self._element.delete() (detach w:lsdException)
+            obj.element_ = [];                     % Python: self._element = None
         end
 
         % ---- hidden (latent.py 130-142) ----
