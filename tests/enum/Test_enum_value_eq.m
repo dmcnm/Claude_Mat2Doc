@@ -21,12 +21,14 @@ classdef Test_enum_value_eq < matlab.unittest.TestCase
 %       one-line superclass edits to BaseEnum.m / BaseXmlEnum.m.
 %     * Reference: python-docx v1.2.0 src/docx/enum/base.py.
 %
-%   This class LOCKS every row of the Gate-1/2 operand matrix plus the two
-%   audit-flagged behaviors that Gate-4 was told to pin empirically rather than
-%   assume (switch routing through eq; the residual plain-enum ==string delta).
-%   All ``switch`` / plain-enum-==string assertions below were OBSERVED on
-%   R2024b (scratchpad\probe_g4.m), not assumed -- so a future change to the
-%   dispatch surface goes RED here.
+%   This class LOCKS every row of the Gate-1/2 operand matrix plus the
+%   audit-flagged switch-routing behavior (pinned empirically, not assumed).
+%   The plain-enum ``== "NAME"`` residual is now CLOSED: the plain-enum-identity
+%   WP gives WD_BREAK_TYPE / WD_INLINE_SHAPE_TYPE Python plain-Enum identity eq
+%   via mat2doc.enum.base.BasePlainEnum, so ``member == "NAME"`` is now FALSE
+%   (matching python-docx), pinned in test_plain_enum_string_is_false. All
+%   ``switch`` / plain-enum assertions below were OBSERVED on R2024b, not
+%   assumed -- so a future change to the dispatch surface goes RED here.
 %
 %   Member values used (from the concrete classes, for reference):
 %     WD_PARAGRAPH_ALIGNMENT (BaseXmlEnum): LEFT=0 CENTER=1 RIGHT=2 JUSTIFY=3
@@ -40,11 +42,13 @@ classdef Test_enum_value_eq < matlab.unittest.TestCase
 %   * Nominal     -- same-class ==/~= true/false; the headline cross-class fix.
 %   * Edge        -- cross-base; enum vs numeric/logical; enum vs string/char
 %     (false) with the NAME idiom still working; enum vs [] (None) / missing;
-%     empty-array broadcasting; the plain-enum exclusion + residual delta.
+%     empty-array broadcasting; the plain-enum exclusion + identity eq
+%     (== "NAME" now false, residual closed).
 %   * Equivalence -- every asserted truth value matches the frozen python-docx
 %     oracle cell in audit_enum_value_eq.md section 4 (cited per method).
 %   * Regression  -- hard-coded expected logicals + element-wise array vectors;
-%     the switch-routing behavior and the ==string residual pinned exactly.
+%     the switch-routing behavior pinned exactly; plain-enum == "NAME" pinned
+%     FALSE (residual closed) instead of the former true.
 %
 %   Deviations exercised: 0 new D-numbers (byte-neutral; comparison operators
 %   only, no serialization path touched).
@@ -367,18 +371,35 @@ classdef Test_enum_value_eq < matlab.unittest.TestCase
                 'WD_INLINE_SHAPE_TYPE must NOT be a BaseIntEnum (plain-enum exclusion)');
         end
 
-        function test_plain_enum_string_residual_divergence(testCase)
-            % KNOWN RESIDUAL (pre-existing, NOT introduced by this WP): a plain
-            % enum compared to its NAME string returns true in MATLAB (built-in
-            % enumeration name-compare), whereas python-docx plain enum == "LINE"
-            % is False. Pinned here as the CURRENT observed behavior so a future
-            % change is caught; flagged for the design.md section 2 rewrite as the
-            % only remaining enum-== divergence from Python. (Observed R2024b.)
-            testCase.verifyTrue( ...
+        function test_plain_enum_string_is_false(testCase)
+            % RESIDUAL CLOSED (plain-enum-identity WP): a plain enum compared to
+            % its NAME string is now FALSE in MATLAB -- matching python-docx, where
+            % a plain ``enum.Enum`` member is never equal to a str. Previously this
+            % returned true via MATLAB's built-in enumeration name-compare; the new
+            % ``mat2doc.enum.base.BasePlainEnum`` identity eq fixes it. This closes
+            % the last enum-vs-string divergence from Python. (Observed R2024b.)
+            testCase.verifyFalse( ...
                 mat2doc.enum.text.WD_BREAK_TYPE.LINE == "LINE", ...
-                ['RESIDUAL DIVERGENCE (flagged for design.md): plain WD_BREAK_TYPE.LINE ' ...
-                 '== "LINE" is TRUE in MATLAB (name-compare) vs False in python-docx. ' ...
-                 'Pinned as current behavior -- NOT introduced by this WP.']);
+                'plain WD_BREAK_TYPE.LINE == "LINE" must be false (int/str-identity; residual closed)');
+            testCase.verifyFalse( ...
+                mat2doc.enum.text.WD_BREAK_TYPE.LINE == 'LINE', ...
+                'plain WD_BREAK_TYPE.LINE == ''LINE'' (char) must be false');
+            testCase.verifyTrue( ...
+                mat2doc.enum.text.WD_BREAK_TYPE.LINE ~= "LINE", ...
+                'plain WD_BREAK_TYPE.LINE ~= "LINE" must be true (inverse)');
+            % Value idiom is also false (plain enum is NOT its int, unlike int-enums).
+            testCase.verifyFalse( ...
+                mat2doc.enum.text.WD_BREAK_TYPE.LINE == 6, ...
+                'plain WD_BREAK_TYPE.LINE == 6 (its value) must be false');
+            % Cross-class plain enum sharing no value: false, no error.
+            testCase.verifyFalse( ...
+                mat2doc.enum.text.WD_BREAK_TYPE.LINE == ...
+                mat2doc.enum.shape.WD_INLINE_SHAPE_TYPE.PICTURE, ...
+                'cross-class plain enums must compare false');
+            % The name idiom still works (string<->string, unaffected).
+            testCase.verifyTrue( ...
+                string(mat2doc.enum.text.WD_BREAK_TYPE.LINE) == "LINE", ...
+                'string(member) == "LINE" name idiom preserved for plain enums');
         end
 
         % =============================================================== %

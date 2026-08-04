@@ -1,4 +1,4 @@
-classdef WD_INLINE_SHAPE_TYPE
+classdef WD_INLINE_SHAPE_TYPE < mat2doc.enum.base.BasePlainEnum
 % WD_INLINE_SHAPE_TYPE Corresponds to the MS WdInlineShapeType enumeration.
 %
 %   http://msdn.microsoft.com/en-us/library/office/ff192587.aspx.
@@ -9,7 +9,11 @@ classdef WD_INLINE_SHAPE_TYPE
 %   a PLAIN ``enum.Enum`` whose members carry only a bare integer value (no
 %   xml_value, no per-member docstring, no from_xml/to_xml). The port is a plain
 %   value classdef with an ``enumeration`` block and a single immutable ``value``
-%   (int32) property, mirroring the WD_BREAK_TYPE plain-enum precedent (P3-3).
+%   (int32) property, mirroring the WD_BREAK_TYPE plain-enum precedent (P3-3). It
+%   derives from ``mat2doc.enum.base.BasePlainEnum`` SOLELY for Python plain-Enum
+%   IDENTITY ``==``/``~=`` (a member equals only the same member of the same
+%   class; never a string/int/other-class member/None) -- see that class. The
+%   plain enums do NOT derive from the int-enum value-eq root ``BaseIntEnum``.
 %
 %   NO internal member alias. Verified against the python-docx v1.2.0 oracle: the
 %   5 members carry 5 DISTINCT integer values (CHART 12, LINKED_PICTURE 4,

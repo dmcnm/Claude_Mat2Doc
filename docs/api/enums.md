@@ -5,7 +5,10 @@ title: "mat2doc.enum.base — the enumeration base tier"
 # `mat2doc.enum.base` — the enumeration base tier
 
 Ported from python-docx v1.2.0 `src/docx/enum/base.py` (the `BaseEnum` /
-`BaseXmlEnum` base classes, package `+mat2doc/+enum/+base/`). This is the
+`BaseXmlEnum` base classes, package `+mat2doc/+enum/+base/`), plus the two
+equality roots realized in that package — **`BaseIntEnum`** (value-based `==`
+for the int-enums) and **`BasePlainEnum`** (identity `==` for the two plain
+`enum.Enum` ports). This is the
 **base machinery every docx enumeration extends** — the MS-API-value enums
 (`BaseEnum`) and the XML-attribute-mapping enums (`BaseXmlEnum`) consumed by
 **P3-3 / P3-4** (the concrete `WD_*` enums) and by every **P4 / P5 / P6**
@@ -117,7 +120,8 @@ replicates this: both bases now derive from the shared root
 `double(value)`. See the [`BaseIntEnum`](#baseintenum) section below for the full
 operand matrix and the `string(member) == "NAME"` name-compare idiom that this
 mandates. Plain `enum.Enum` ports (`WD_BREAK_TYPE`, `WD_INLINE_SHAPE_TYPE`) do
-**not** derive from `BaseIntEnum` and keep identity `==`.
+**not** derive from `BaseIntEnum`; they derive from the identity sibling
+[`BasePlainEnum`](#baseplainenum) (Python plain-Enum **identity** `==`).
 
 ### H3 tri-state — None vs `""` vs `<missing>`
 
@@ -207,14 +211,21 @@ str/None". `isequal` (hence `verifyEqual`) is **not** loosened — value-object
 string case is dead) — faithful to Python `if/elif ==`, and no library or test
 code switches on an int-enum.
 
-**Plain-enum exclusion + residual.** `WD_BREAK_TYPE` and `WD_INLINE_SHAPE_TYPE`
-are declared `class X(enum.Enum)` in python-docx — **not** int subclasses — so
-they compare by identity and are **not** equal to their int. They do not derive
-from `BaseIntEnum` and keep MATLAB's default identity `==`, matching Python.
-**Documented residual:** MATLAB's built-in enumeration name-compare still makes
-`WD_BREAK_TYPE.LINE == "LINE"` → **true** where Python is **false** — the sole
-remaining enum-`==` divergence (no toolbox/test consumer; pinned empirically in
-`Test_enum_value_eq`).
+**Plain-enum identity `==` (`BasePlainEnum`) — residual CLOSED.**
+`WD_BREAK_TYPE` and `WD_INLINE_SHAPE_TYPE` are declared `class X(enum.Enum)` in
+python-docx — **not** int subclasses — so they compare by **identity** and are
+**not** equal to their int. They do not derive from `BaseIntEnum`; instead they
+derive from the dedicated identity sibling root
+[`BasePlainEnum`](#baseplainenum) (2026-08-03), whose `eq`/`ne` make a member
+equal ONLY to the same member of the same plain-enum class. So
+`WD_BREAK_TYPE.LINE == "LINE"` (and `== 'LINE'`, `== 6`, a cross-class member,
+`[]`/None, `missing`) is now **false** — matching python-docx exactly. **The
+enum-vs-string residual named by the value-eq WP is CLOSED for Mat2Doc**: with
+int-enums value-based (`BaseIntEnum`) and plain enums identity-based
+(`BasePlainEnum`), no known enum-`==` divergence from python-docx remains. Use
+`string(member) == "NAME"` for a name compare (Python `member.name == "NAME"`),
+exactly as for the int-enums. (Mat2Ppt's own plain-enum `PROG_ID` residual is
+handled by a sibling WP, in progress.)
 
 **Byte-neutral, 0 D-number.** Only `eq`/`ne` were added; `value`, `xml_value`,
 `from_xml`, `to_xml` and every serialization path are untouched, so saved `.docx`
@@ -239,6 +250,93 @@ WD_PARAGRAPH_ALIGNMENT.CENTER == []                           % false (scalar); 
 
 *Ported from python-docx v1.2.0: `src/docx/enum/base.py::BaseEnum` /
 `BaseXmlEnum` (the `int`-subclass equality of `int.__new__(cls, ...)`)*
+
+---
+
+(baseplainenum)=
+## `BasePlainEnum`
+
+**Syntax**
+
+```matlab
+% Identity sibling of BaseIntEnum — the root of the two PLAIN enum.Enum ports.
+% Never instantiated or subclassed except by WD_BREAK_TYPE / WD_INLINE_SHAPE_TYPE.
+memberA == memberB            % same member of the same plain-enum class -> true
+WD_BREAK_TYPE.LINE == "LINE"  % false   (Python plain Enum: member != str)
+WD_BREAK_TYPE.LINE == 6       % false   (plain Enum is NOT an int subclass)
+string(member) == "LINE"      % the NAME-compare idiom (Python member.name == "LINE")
+```
+
+**Description**
+
+`BasePlainEnum` is the value-class root introduced (2026-08-03) to give the two
+plain `enum.Enum` ports **Python identity** `==` / `~=`. python-docx declares
+`WD_BREAK_TYPE` (`enum/text.py:70`) and `WD_INLINE_SHAPE_TYPE` (`enum/shape.py:6`)
+as `class X(enum.Enum)` — **not** int subclasses — so a member compares by
+IDENTITY: equal only to the same member, never to a string, its own int, another
+class's member, or `None`. These two were correctly excluded from `BaseIntEnum`
+(they are not ints), but MATLAB's built-in `enumeration` `==` compared a member
+to a string by NAME, so `WD_BREAK_TYPE.LINE == "LINE"` used to return **true** —
+the last enum-`==` divergence from python-docx. `BasePlainEnum` overrides
+`eq`/`ne` so a member equals ONLY a member of the SAME plain-enum class with the
+SAME name (Python member identity).
+
+**Operand matrix** (element-wise, native `==` broadcasting):
+
+| Right operand | Result vs a plain-enum member | Python parity |
+|---|---|---|
+| same member, same class | **true** | `member is member` |
+| other member / other plain-enum class (even equal `value`) | **false** | `member is other` → False |
+| `string` / `char` (e.g. `"LINE"`) | **false** — THE FIX (was true) | `Enum member == str` → False |
+| numeric / `logical` (incl. its own value `6`) | **false** | plain Enum is **not** an int |
+| `[]` (None sentinel) / `missing` | **false** (`~=` → true); `[]` treated as a **scalar** | `member == None` → False |
+| genuinely empty enum/string **array** | native empty logical (broadcasting preserved) | n/a (MATLAB extension) |
+
+Within one plain-enum class member names are unique (an alias such as
+`WD_BREAK_TYPE.TEXT_WRAPPING` resolves to the canonical `LINE_CLEAR_ALL` member,
+name `"LINE_CLEAR_ALL"`), so `string(a) == string(b)` **is** member identity. The
+cross-class and non-member cases map both operands to NaN comparison vectors
+(`NaN == NaN` is false) — exactly "a plain Enum member is never equal to a
+non-member". `ne = ~eq` is the literal negation.
+
+**Divergence from the int-enum sibling (intentional).** For a numeric operand
+`BaseIntEnum` returns value equality (`CENTER == 1` → true) whereas
+`BasePlainEnum` returns **false** (a plain Enum is not its int); for same-class
+members `BaseIntEnum` compares `double(value)` whereas `BasePlainEnum` compares
+the NAME (identity), so two members that share a `value` only via an alias still
+resolve to one canonical name and cross-class value collisions never match.
+
+**Residual CLOSED.** With int-enums value-based (`BaseIntEnum`) and plain enums
+identity-based (`BasePlainEnum`), **no known enum-`==` divergence from
+python-docx remains for Mat2Doc** — the enum-vs-string residual named by the
+value-eq WP is retired. Use `string(member) == "NAME"` for a name compare, the
+same idiom as the int-enums.
+
+**Byte-neutral, 0 D-number.** Only `eq`/`ne` were added; the `value` property,
+member declarations, constructors and the `TEXT_WRAPPING` alias are untouched,
+and plain enums carry no `xml_value`/`from_xml`/`to_xml` serialization path, so
+saved `.docx` output is unchanged. A faithful side effect: `Run.add_break("PAGE")`
+now raises `mat2doc:KeyError` like python-docx (the old name-compare silently
+accepted the string). Mat2Ppt's own plain-enum `PROG_ID` residual is handled by a
+sibling WP (in progress).
+
+**Example**
+
+```matlab
+import mat2doc.enum.text.WD_BREAK_TYPE
+import mat2doc.enum.shape.WD_INLINE_SHAPE_TYPE
+WD_BREAK_TYPE.LINE == WD_BREAK_TYPE.LINE                 % true  — same member
+WD_BREAK_TYPE.LINE == WD_BREAK_TYPE.PAGE                 % false — other member
+WD_BREAK_TYPE.LINE == "LINE"                             % false — Python member != str (THE FIX)
+WD_BREAK_TYPE.LINE == 6                                  % false — plain Enum is not its int
+WD_BREAK_TYPE.TEXT_WRAPPING == WD_BREAK_TYPE.LINE_CLEAR_ALL  % true  — alias is the canonical member
+string(WD_BREAK_TYPE.LINE) == "LINE"                     % true  — the name-compare idiom
+WD_BREAK_TYPE.LINE == WD_INLINE_SHAPE_TYPE.PICTURE       % false — cross plain-enum class
+WD_BREAK_TYPE.LINE == []                                 % false (scalar); ~= [] -> true
+```
+
+*Ported from python-docx v1.2.0: `src/docx/enum/text.py::WD_BREAK_TYPE` /
+`src/docx/enum/shape.py::WD_INLINE_SHAPE_TYPE` (plain `enum.Enum` identity `==`)*
 
 ---
 
