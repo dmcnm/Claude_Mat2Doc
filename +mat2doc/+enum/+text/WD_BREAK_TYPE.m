@@ -1,4 +1,4 @@
-classdef WD_BREAK_TYPE
+classdef WD_BREAK_TYPE < mat2doc.enum.base.BasePlainEnum
 % WD_BREAK_TYPE Corresponds to the MS WdBreakType enumeration.
 %
 %   http://msdn.microsoft.com/en-us/library/office/ff195905.aspx
@@ -9,7 +9,12 @@ classdef WD_BREAK_TYPE
 %   a PLAIN ``enum.Enum`` whose members carry only a bare integer value (no
 %   xml_value, no per-member docstring, no from_xml/to_xml). The port is a plain
 %   value classdef with an ``enumeration`` block and a single immutable ``value``
-%   (int32) property, mirroring the PROG_ID plain-enum precedent in Mat2Ppt.
+%   (int32) property, mirroring the PROG_ID plain-enum precedent in Mat2Ppt. It
+%   derives from ``mat2doc.enum.base.BasePlainEnum`` SOLELY for Python plain-Enum
+%   IDENTITY ``==``/``~=`` (a member equals only the same member of the same
+%   class; never a string/int/other-class member/None) -- see that class. This is
+%   the identity sibling of the int-enum value-eq root ``BaseIntEnum``; the plain
+%   enums do NOT derive from ``BaseIntEnum`` (they are not int subclasses).
 %
 %   MEMBER ALIAS (closes the P3-1 WD_BREAK_TYPE carry-forward). python-docx
 %   declares ``LINE_CLEAR_ALL = 11`` and ``TEXT_WRAPPING = 11`` (text.py lines

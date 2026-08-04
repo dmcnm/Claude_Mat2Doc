@@ -34,9 +34,10 @@ classdef BaseIntEnum
 %
 %   NOT applied to the plain-``enum.Enum`` ports WD_BREAK_TYPE and
 %   WD_INLINE_SHAPE_TYPE: those are NOT int subclasses in python-docx (they
-%   compare by identity and are NOT equal to their int), and they do NOT derive
-%   from this class, so their default MATLAB identity ``==`` is retained -
-%   matching Python.
+%   compare by identity and are NOT equal to their int), so they do NOT derive
+%   from this class - they derive from the sibling root ``BasePlainEnum`` which
+%   gives them identity ``==`` (same member true; string/int/other-class/None
+%   false), matching Python plain-``enum.Enum`` semantics.
 %
 %   Byte-neutral: this class changes ONLY comparison operators; ``value``,
 %   ``xml_value``, ``from_xml``, ``to_xml`` and every serialization path are
